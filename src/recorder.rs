@@ -9,7 +9,7 @@ pub(crate) struct Recorder {
 impl Recorder {
   pub(crate) fn frame(&mut self, frame: Image, time: Instant) -> Result {
     let path = self.tempdir_path.join(format!("{}.png", self.frames.len()));
-    log::trace!("saving frame to {}", path);
+    log::trace!("saving frame to {path}");
     frame.save(&path)?;
     self.frames.push(time);
     Ok(())

@@ -9,9 +9,6 @@ include = ["/src", "/templates"]
 license = "CC0-1.0"
 repository = "https://github.com/casey/x"
 
-[workspace]
-members = [".", "crates/*"]
-
 [dependencies]
 blake3 = { version = "1.8.2", features = ["rayon", "mmap"] }
 boilerplate = "1.0.1"

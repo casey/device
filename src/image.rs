@@ -134,7 +134,13 @@ mod tests {
   #[test]
   fn color_type_reduction() {
     #[track_caller]
-    fn case(dir: &Path, data: &[u8], color_type: ColorType, bit_depth: BitDepth, expected: &[u8]) {
+    fn case(
+      dir: &Utf8Path,
+      data: &[u8],
+      color_type: ColorType,
+      bit_depth: BitDepth,
+      expected: &[u8],
+    ) {
       let image = Image {
         data: data.into(),
         width: 2,
@@ -156,9 +162,10 @@ mod tests {
     }
 
     let tempdir = tempfile::tempdir().unwrap();
+    let path = tempdir.path().into_utf8_path().unwrap();
 
     case(
-      tempdir.path(),
+      path,
       &[0, 0, 0, 255, 255, 255, 255, 255],
       ColorType::Grayscale,
       BitDepth::One,
@@ -166,7 +173,7 @@ mod tests {
     );
 
     case(
-      tempdir.path(),
+      path,
       &[0, 0, 0, 255, 127, 127, 127, 255],
       ColorType::Grayscale,
       BitDepth::Eight,
@@ -174,7 +181,7 @@ mod tests {
     );
 
     case(
-      tempdir.path(),
+      path,
       &[0, 0, 0, 255, 255, 255, 255, 127],
       ColorType::GrayscaleAlpha,
       BitDepth::Eight,
@@ -182,7 +189,7 @@ mod tests {
     );
 
     case(
-      tempdir.path(),
+      path,
       &[0, 0, 0, 255, 0, 127, 255, 255],
       ColorType::Rgb,
       BitDepth::Eight,
@@ -190,7 +197,7 @@ mod tests {
     );
 
     case(
-      tempdir.path(),
+      path,
       &[0, 0, 0, 255, 0, 127, 255, 127],
       ColorType::Rgba,
       BitDepth::Eight,

@@ -37,7 +37,7 @@ impl Binary {
       .watch(parent.as_ref(), RecursiveMode::NonRecursive)
       .unwrap();
 
-    Ok(Self { watcher, state })
+    Ok(Self { state, watcher })
   }
 
   pub(crate) fn state(&self) -> Option<State> {
@@ -88,6 +88,7 @@ impl EventHandler for Handler {
       }
     }
 
+    #[allow(clippy::zombie_processes)]
     let child = Command::new(&self.path)
       .stdout(Stdio::piped())
       .spawn()

@@ -54,15 +54,15 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: winit::error::OsError,
   },
-  #[snafu(display("failed to get current texture"))]
-  CurrentTexture {
-    backtrace: Option<Backtrace>,
-    source: wgpu::SurfaceError,
-  },
   #[snafu(display("failed to get current directory"))]
   CurrentDir {
     backtrace: Option<Backtrace>,
     source: io::Error,
+  },
+  #[snafu(display("failed to get current texture"))]
+  CurrentTexture {
+    backtrace: Option<Backtrace>,
+    source: wgpu::SurfaceError,
   },
   #[snafu(display("failed to open audio file"))]
   DecoderOpen {
@@ -165,7 +165,7 @@ pub(crate) enum Error {
   #[snafu(
     display(
       "more than one match for song: {}",
-      matches.iter().map(|path| path.to_string()).collect::<Vec<String>>().join(", ")
+      matches.iter().map(ToString::to_string).collect::<Vec<String>>().join(", ")
     )
   )]
   SongAmbiguous {

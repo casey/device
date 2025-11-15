@@ -67,7 +67,7 @@ impl App {
       };
 
       if song.is_match(haystack) {
-        matches.push(path.into_utf8_path()?.into())
+        matches.push(path.into_utf8_path()?.into());
       }
     }
 
@@ -351,7 +351,7 @@ impl App {
       }
     }
 
-    if let Some(state) = self.binary.as_ref().and_then(|binary| binary.state()) {
+    if let Some(state) = self.binary.as_ref().and_then(Binary::state) {
       log::info!("updating state from binary");
       self.state = state;
     }
