@@ -3,6 +3,7 @@ use super::*;
 pub(crate) struct Analyzer {
   complex_frequencies: Vec<Complex<f32>>,
   frequencies: Vec<f32>,
+  history: Vec<(u16, Vec<f32>)>,
   planner: FftPlanner<f32>,
   rms: f32,
   samples: Vec<f32>,
@@ -14,10 +15,15 @@ impl Analyzer {
     &self.frequencies
   }
 
+  pub(crate) fn history(&self) -> &[(u16, Vec<f32>)] {
+    &self.history
+  }
+
   pub(crate) fn new() -> Self {
     Self {
       complex_frequencies: Vec::new(),
       frequencies: Vec::new(),
+      history: Vec::new(),
       planner: FftPlanner::new(),
       rms: 0.0,
       samples: Vec::new(),
@@ -37,18 +43,25 @@ impl Analyzer {
     if stream.done() {
       self.samples.clear();
     } else {
-      let mut samples = Vec::new();
-      stream.drain(&mut samples);
-      let old = self.samples.len();
       let channels = stream.channels();
+
+      if self.history.last().is_none_or(|(c, _h)| *c != channels) {
+        self.history.push((channels, Vec::new()));
+      }
+
+      let (_, history) = self.history.last_mut().unwrap();
+
+      let start = history.len();
+      stream.drain(history);
+      let stale = self.samples.len();
       self.samples.extend(
-        samples
+        history[start..]
           .chunks(channels.into())
           .map(|chunk| chunk.iter().sum::<f32>() / channels as f32),
       );
       self
         .samples
-        .drain(..self.samples.len().saturating_sub(128).min(old));
+        .drain(..self.samples.len().saturating_sub(128).min(stale));
     }
 
     let samples = &self.samples[..self.samples.len() & !1];

@@ -690,8 +690,13 @@ impl Renderer {
 
     if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();
+      let samples = analyzer
+        .history()
+        .iter()
+        .map(|(channels, samples)| samples.len() / usize::from(*channels))
+        .sum();
       self.capture(move |frame| {
-        if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
+        if let Err(err) = recorder.lock().unwrap().frame(frame, now, samples) {
           eprintln!("failed to save recorded frame: {err}");
         }
       })?;
@@ -934,9 +939,9 @@ impl Renderer {
     });
   }
 
-  pub(crate) fn save_recording(&mut self) -> Result {
+  pub(crate) fn save_recording(&mut self, analyzer: &Analyzer) -> Result {
     if let Some(recorder) = self.recorder.take() {
-      recorder.lock().unwrap().save()?;
+      recorder.lock().unwrap().save(analyzer)?;
     }
     Ok(())
   }

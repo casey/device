@@ -8,7 +8,7 @@ use {
 
 #[derive(Clone, Default, Parser)]
 #[command(
-  group(ArgGroup::new("audio").args(["input", "song", "track"])),
+  group(ArgGroup::new("audio").args(["input", "song", "synthesizer", "track"])),
   version,
   styles = Styles::styled()
     .error(AnsiColor::Red.on_default() | Effects::BOLD)
@@ -41,6 +41,8 @@ pub(crate) struct Options {
   pub(crate) song: Option<String>,
   #[arg(long)]
   pub(crate) status: bool,
+  #[arg(long)]
+  pub(crate) synthesizer: bool,
   #[arg(long)]
   pub(crate) tile: bool,
   #[arg(long)]

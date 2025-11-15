@@ -2,11 +2,11 @@ use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, device::Device,
     error::Error, event::Event, field::Field, filter::Filter, format::Format, frame::Frame,
-    hub::Hub, image::Image, input::Input, into_usize::IntoUsize, message::Message,
-    options::Options, parameter::Parameter, program::Program, recorder::Recorder,
+    hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_usize::IntoUsize,
+    message::Message, options::Options, parameter::Parameter, program::Program, recorder::Recorder,
     renderer::Renderer, shared::Shared, state::State, stream::Stream, subcommand::Subcommand,
-    tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
-    uniforms::Uniforms,
+    synthesizer::Synthesizer, tally::Tally, target::Target, templates::ShaderWgsl, text::Text,
+    tiling::Tiling, track::Track, uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   clap::{Parser, ValueEnum},
@@ -27,6 +27,7 @@ use {
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     collections::VecDeque,
+    f32,
     fmt::{self, Display, Formatter, Write},
     fs::{self, File},
     io::{self, BufReader, BufWriter},
@@ -87,6 +88,7 @@ mod frame;
 mod hub;
 mod image;
 mod input;
+mod into_u64;
 mod into_usize;
 mod message;
 mod options;
@@ -98,6 +100,7 @@ mod shared;
 mod state;
 mod stream;
 mod subcommand;
+mod synthesizer;
 mod tally;
 mod target;
 mod templates;
