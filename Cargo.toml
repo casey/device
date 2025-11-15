@@ -9,6 +9,14 @@ include = ["/src", "/templates"]
 license = "CC0-1.0"
 repository = "https://github.com/casey/x"
 
+[workspace]
+members = [".", "crates/*"]
+
+[workspace.dependencies]
+nalgebra = { version = "0.34.1", features = ["serde-serialize"] }
+serde = { version = "1.0.228", features = ["derive"] }
+strum = { version = "0.27.1", features = ["derive"] }
+
 [dependencies]
 blake3 = { version = "1.8.2", features = ["rayon", "mmap"] }
 boilerplate = "1.0.1"
@@ -16,10 +24,11 @@ camino = "1.2.1"
 clap = { version = "4.5.21", features = ["derive"] }
 dirs = "6.0.0"
 env_logger = "0.11.0"
+hypermedia = { path = "crates/hypermedia" }
 log = "0.4.22"
 midir = "0.10.1"
 midly = "0.5.3"
-nalgebra = { version = "0.34.1", features = ["serde-serialize"] }
+nalgebra.workspace = true
 notify = "8.2.0"
 parley = "0.6.0"
 png = "0.18.0"
@@ -27,10 +36,10 @@ pollster = "0.4.0"
 regex = "1.11.1"
 rodio = { version = "0.21.1", features = ["playback", "symphonia-all"], default-features = false }
 rustfft = "6.2.0"
-serde = { version = "1.0.228", features = ["derive"] }
+serde.workspace = true
 serde_json = "1.0.145"
 snafu = "0.8.5"
-strum = { version = "0.27.1", features = ["derive"] }
+strum.workspace = true
 symphonia = { version = "*", features = [ "all-codecs", "all-formats" ] }
 tabled = "0.20.0"
 tempfile = "3.17.1"

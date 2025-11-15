@@ -2,7 +2,7 @@ use super::*;
 
 #[derive(Clone, Copy, Deserialize, EnumIter, IntoStaticStr)]
 #[repr(u32)]
-pub(crate) enum Field {
+pub enum Field {
   All,
   Bottom,
   Circle,
@@ -21,15 +21,15 @@ impl Default for Field {
 }
 
 impl Field {
-  pub(crate) fn constant(self) -> String {
+  pub fn constant(self) -> String {
     format!("FIELD_{}", self.name().to_uppercase())
   }
 
-  pub(crate) fn function(self) -> String {
+  pub fn function(self) -> String {
     format!("field_{}", self.name().to_lowercase())
   }
 
-  pub(crate) fn icon(self) -> char {
+  pub fn icon(self) -> char {
     match self {
       Self::All => 'A',
       Self::Bottom => 'B',

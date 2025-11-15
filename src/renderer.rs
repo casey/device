@@ -697,7 +697,7 @@ impl Renderer {
 
     frame.present();
 
-    info!(
+    log::info!(
       "{}",
       Frame {
         filters: state.filters.len(),

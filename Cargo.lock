@@ -1246,6 +1246,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
+name = "hypermedia"
+version = "0.0.0"
+dependencies = [
+ "nalgebra",
+ "serde",
+ "strum",
+]
+
+[[package]]
 name = "icu_locale_core"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2635,6 +2644,10 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
+
+[[package]]
+name = "scratch"
+version = "0.1.0"
 
 [[package]]
 name = "sctk-adwaita"
@@ -4197,6 +4210,7 @@ dependencies = [
  "clap",
  "dirs",
  "env_logger",
+ "hypermedia",
  "log",
  "midir",
  "midly",
