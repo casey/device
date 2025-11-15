@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Default)]
+#[derive(Default, Deserialize)]
 pub(crate) struct State {
   pub(crate) alpha: Parameter,
   pub(crate) db: f32,

@@ -11,7 +11,8 @@ pub(crate) enum ParameterError {
   PositiveOverflow { value: i8 },
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, Deserialize)]
+#[serde(transparent)]
 pub(crate) struct Parameter(i8);
 
 impl From<i8> for Parameter {

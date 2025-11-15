@@ -351,6 +351,11 @@ impl App {
       }
     }
 
+    if let Some(state) = self.binary.as_ref().and_then(|binary| binary.state()) {
+      log::info!("updating state from binary");
+      self.state = state;
+    }
+
     if let Some(stream) = self.stream.as_mut() {
       self.analyzer.update(stream.as_mut(), &self.state);
     }

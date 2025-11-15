@@ -5,6 +5,8 @@ use {
 };
 
 pub(crate) struct Binary {
+  state: Arc<Mutex<Option<State>>>,
+  #[allow(unused)]
   watcher: RecommendedWatcher,
 }
 
@@ -21,7 +23,13 @@ impl Binary {
 
     eprintln!("watching {parent} for {name}");
 
-    let handler = Handler { path, hash: None };
+    let state = Arc::new(Mutex::new(None));
+
+    let handler = Handler {
+      path,
+      hash: None,
+      state: state.clone(),
+    };
 
     let mut watcher = RecommendedWatcher::new(handler, notify::Config::default()).unwrap();
 
@@ -29,13 +37,24 @@ impl Binary {
       .watch(parent.as_ref(), RecursiveMode::NonRecursive)
       .unwrap();
 
-    Ok(Self { watcher })
+    Ok(Self { watcher, state })
+  }
+
+  pub(crate) fn state(&self) -> Option<State> {
+    match self.state.lock() {
+      Err(err) => {
+        log::error!("binary mutex poisoned: {err}");
+        None
+      }
+      Ok(mut state) => state.take(),
+    }
   }
 }
 
 struct Handler {
   hash: Option<Hash>,
   path: Utf8PathBuf,
+  state: Arc<Mutex<Option<State>>>,
 }
 
 impl EventHandler for Handler {
@@ -79,6 +98,10 @@ impl EventHandler for Handler {
       let mut line = String::new();
       reader.read_line(&mut line).unwrap();
       eprint!("{line}");
+      match serde_json::from_str::<State>(&line) {
+        Err(err) => eprintln!("error deserializing state {err}"),
+        Ok(state) => *self.state.lock().unwrap() = Some(state),
+      }
     }
   }
 }

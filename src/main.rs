@@ -23,6 +23,7 @@ use {
     },
   },
   rustfft::{FftPlanner, num_complex::Complex},
+  serde::Deserialize,
   snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu},
   std::{
     backtrace::{Backtrace, BacktraceStatus},

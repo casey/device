@@ -1,4 +1,6 @@
-#[derive(Clone)]
+use super::*;
+
+#[derive(Clone, Deserialize)]
 pub(crate) struct Text {
   pub(crate) size: f32,
   pub(crate) string: String,
