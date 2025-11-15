@@ -21,6 +21,8 @@ use {
 )]
 pub(crate) struct Options {
   #[arg(long)]
+  pub(crate) binary: Option<Utf8PathBuf>,
+  #[arg(long)]
   pub(crate) db: Option<f32>,
   #[arg(long)]
   pub(crate) fit: bool,
@@ -44,7 +46,7 @@ pub(crate) struct Options {
   #[arg(long)]
   pub(crate) tile: bool,
   #[arg(long)]
-  pub(crate) track: Option<PathBuf>,
+  pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
   pub(crate) volume: Option<f32>,
 }

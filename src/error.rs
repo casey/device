@@ -59,10 +59,15 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: wgpu::SurfaceError,
   },
+  #[snafu(display("failed to get current directory"))]
+  CurrentDir {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
   #[snafu(display("failed to open audio file"))]
   DecoderOpen {
     backtrace: Option<Backtrace>,
-    path: PathBuf,
+    path: Utf8PathBuf,
     source: rodio::decoder::DecoderError,
   },
   #[snafu(display("failed to get default config"))]
@@ -77,9 +82,9 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: winit::error::EventLoopError,
   },
-  #[snafu(display("I/O error at `{}`", path.display()))]
+  #[snafu(display("I/O error at `{}`", path))]
   FilesystemIo {
-    path: PathBuf,
+    path: Utf8PathBuf,
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
@@ -115,16 +120,22 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: midir::PortInfoError,
   },
-  #[snafu(display("failed to encode PNG at {}", path.display()))]
+  #[snafu(display("path not valid unicode: `{}`", path.display()))]
+  PathUnicode {
+    backtrace: Option<Backtrace>,
+    path: std::path::PathBuf,
+    source: camino::FromPathError,
+  },
+  #[snafu(display("failed to encode PNG at {}", path))]
   PngEncode {
     backtrace: Option<Backtrace>,
-    path: PathBuf,
+    path: Utf8PathBuf,
     source: png::EncodingError,
   },
-  #[snafu(display("PNG cannot fit in memory: {}", path.display()))]
+  #[snafu(display("PNG cannot fit in memory: {}", path))]
   PngOutputBufferSize {
     backtrace: Option<Backtrace>,
-    path: PathBuf,
+    path: Utf8PathBuf,
   },
   #[snafu(display("failed to invoke recording command"))]
   RecordingInvoke {
@@ -154,12 +165,12 @@ pub(crate) enum Error {
   #[snafu(
     display(
       "more than one match for song: {}",
-      matches.iter().map(|path| path.display().to_string()).collect::<Vec<String>>().join(", ")
+      matches.iter().map(|path| path.to_string()).collect::<Vec<String>>().join(", ")
     )
   )]
   SongAmbiguous {
     backtrace: Option<Backtrace>,
-    matches: Vec<PathBuf>,
+    matches: Vec<Utf8PathBuf>,
   },
   #[snafu(display("could not match song `{song}`"))]
   SongMatch {

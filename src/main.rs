@@ -1,14 +1,15 @@
 use {
   self::{
-    analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, device::Device,
-    error::Error, event::Event, field::Field, filter::Filter, format::Format, frame::Frame,
-    hub::Hub, image::Image, input::Input, into_usize::IntoUsize, message::Message,
-    options::Options, parameter::Parameter, program::Program, recorder::Recorder,
-    renderer::Renderer, shared::Shared, state::State, stream::Stream, subcommand::Subcommand,
-    tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
-    uniforms::Uniforms,
+    analyzer::Analyzer, app::App, arguments::Arguments, binary::Binary, bindings::Bindings,
+    device::Device, error::Error, event::Event, field::Field, filter::Filter, format::Format,
+    frame::Frame, hub::Hub, image::Image, input::Input, into_usize::IntoUsize,
+    into_utf8_path::IntoUtf8Path, message::Message, options::Options, parameter::Parameter,
+    program::Program, recorder::Recorder, renderer::Renderer, shared::Shared, state::State,
+    stream::Stream, subcommand::Subcommand, tally::Tally, target::Target, templates::ShaderWgsl,
+    text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
+  camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
   log::info,
   parley::{FontContext, LayoutContext},
@@ -27,13 +28,13 @@ use {
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     collections::VecDeque,
+    env,
     fmt::{self, Display, Formatter, Write},
     fs::{self, File},
-    io::{self, BufReader, BufWriter},
+    io::{self, BufRead, BufReader, BufWriter},
     num,
     ops::{Add, AddAssign, SubAssign},
-    path::{Path, PathBuf},
-    process::{self, Command, ExitStatus},
+    process::{self, Command, ExitStatus, Stdio},
     str::FromStr,
     sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
     time::Instant,
@@ -76,6 +77,7 @@ macro_rules! label {
 mod analyzer;
 mod app;
 mod arguments;
+mod binary;
 mod bindings;
 mod device;
 mod error;
@@ -88,6 +90,7 @@ mod hub;
 mod image;
 mod input;
 mod into_usize;
+mod into_utf8_path;
 mod message;
 mod options;
 mod parameter;

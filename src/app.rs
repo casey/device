@@ -2,6 +2,7 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
+  binary: Option<Binary>,
   error: Option<Error>,
   horizontal: f32,
   hub: Hub,
@@ -38,13 +39,13 @@ impl App {
     self.error
   }
 
-  fn find_song(song: &str) -> Result<PathBuf> {
+  fn find_song(song: &str) -> Result<Utf8PathBuf> {
     let song = RegexBuilder::new(song)
       .case_insensitive(true)
       .build()
       .context(error::SongRegex)?;
 
-    let mut matches = Vec::<PathBuf>::new();
+    let mut matches = Vec::<Utf8PathBuf>::new();
 
     let home = dirs::home_dir().context(error::Home)?;
 
@@ -66,7 +67,7 @@ impl App {
       };
 
       if song.is_match(haystack) {
-        matches.push(path.into());
+        matches.push(path.into_utf8_path()?.into())
       }
     }
 
@@ -137,6 +138,11 @@ impl App {
 
     Ok(Self {
       analyzer: Analyzer::new(),
+      binary: options
+        .binary
+        .as_ref()
+        .map(|path| Binary::new(path))
+        .transpose()?,
       error: None,
       horizontal: 0.0,
       hub: Hub::new()?,

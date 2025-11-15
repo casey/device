@@ -21,7 +21,7 @@ impl Image {
     self.data.resize((width * height * 4).into_usize(), 0);
   }
 
-  pub(crate) fn save(&self, path: &Path) -> Result {
+  pub(crate) fn save(&self, path: &Utf8Path) -> Result {
     let file = File::create(path).context(error::FilesystemIo { path })?;
 
     let writer = BufWriter::new(file);
