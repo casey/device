@@ -689,6 +689,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c87e182de0887fd5361989c677c4e8f5000cd9491d6d563161a8f3a5519fc7f"
 
 [[package]]
+name = "device"
+version = "0.0.0"
+dependencies = [
+ "nalgebra",
+ "serde",
+ "strum",
+]
+
+[[package]]
 name = "dirs"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1244,15 +1253,6 @@ name = "hexf-parse"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
-
-[[package]]
-name = "hypermedia"
-version = "0.0.0"
-dependencies = [
- "nalgebra",
- "serde",
- "strum",
-]
 
 [[package]]
 name = "icu_locale_core"
@@ -2644,10 +2644,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "scratch"
-version = "0.1.0"
 
 [[package]]
 name = "sctk-adwaita"
@@ -4208,9 +4204,9 @@ dependencies = [
  "boilerplate",
  "camino",
  "clap",
+ "device",
  "dirs",
  "env_logger",
- "hypermedia",
  "log",
  "midir",
  "midly",

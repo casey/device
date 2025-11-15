@@ -7,10 +7,10 @@ use {
     shared::Shared, stream::Stream, subcommand::Subcommand, tally::Tally, target::Target,
     templates::ShaderWgsl, tiling::Tiling, track::Track, uniforms::Uniforms,
   },
+  ::device::{Field, Filter, Parameter, State, Text, invert_color},
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
-  hypermedia::{Field, Filter, Parameter, State, Text, invert_color},
   parley::{FontContext, LayoutContext},
   regex::{Regex, RegexBuilder},
   rodio::{
