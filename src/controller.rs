@@ -1,5 +1,5 @@
 #[derive(Clone, Copy, Debug)]
-pub(crate) enum Device {
+pub(crate) enum Controller {
   Spectra,
   Twister,
 }

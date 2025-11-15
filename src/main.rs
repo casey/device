@@ -1,16 +1,16 @@
 use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, binary::Binary, bindings::Bindings,
-    device::Device, error::Error, event::Event, format::Format, frame::Frame, hub::Hub,
+    controller::Controller, error::Error, event::Event, format::Format, frame::Frame, hub::Hub,
     image::Image, input::Input, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
     message::Message, options::Options, program::Program, recorder::Recorder, renderer::Renderer,
     shared::Shared, stream::Stream, subcommand::Subcommand, tally::Tally, target::Target,
     templates::ShaderWgsl, tiling::Tiling, track::Track, uniforms::Uniforms,
   },
-  ::device::{Field, Filter, Parameter, State, Text, invert_color},
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
+  device::{Field, Filter, Parameter, State, Text, invert_color},
   parley::{FontContext, LayoutContext},
   regex::{Regex, RegexBuilder},
   rodio::{
@@ -75,7 +75,7 @@ mod app;
 mod arguments;
 mod binary;
 mod bindings;
-mod device;
+mod controller;
 mod error;
 mod event;
 mod format;

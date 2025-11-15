@@ -283,60 +283,60 @@ impl App {
   fn redraw(&mut self, event_loop: &ActiveEventLoop) {
     for message in self.hub.messages().lock().unwrap().drain(..) {
       match message.tuple() {
-        (Device::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Top,
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 1, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 1, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Bottom,
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 2, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 2, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::X,
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Circle,
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 4, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 4, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_scaling(2.0),
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 5, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 5, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_scaling(0.5),
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 6, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 6, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_translation(&Vec2f::new(-0.1, 0.0)),
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 7, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 7, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_translation(&Vec2f::new(0.1, 0.0)),
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 8, Event::Button(true)) => {
+        (Controller::Spectra, 8, Event::Button(true)) => {
           self.state.filters.pop();
         }
-        (Device::Twister, control, Event::Button(true)) => match control {
+        (Controller::Twister, control, Event::Button(true)) => match control {
           4 => self.translation.x = 0.0,
           5 => self.translation.y = 0.0,
           6 => self.scaling = 1.0,
           _ => {}
         },
-        (Device::Twister, control, Event::Encoder(parameter)) => {
+        (Controller::Twister, control, Event::Encoder(parameter)) => {
           self.state.parameter = parameter;
           match control {
             0 => self.state.alpha = parameter,
