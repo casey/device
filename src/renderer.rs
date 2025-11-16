@@ -534,24 +534,6 @@ impl Renderer {
 
     let rms = analyzer.rms();
 
-    // way too many things for single key keyboard shortcuts
-    // also too many for controller
-    // need named commands
-    // - best way to control things, right now, is in terminal
-    //   - rust is already a language where things can be named
-    //   - tight integration
-    //   - don't need to open another window
-    // - type the name and hit return
-    // - custom programming language
-    // - rust dll?
-    //   - dll is gagging for trouble
-    // - hot reload thing
-    //   - path to binary
-    //   - watch path, if it's changed, run it
-    //   - program can either be a name, in which case it's a named, built-in program
-    //     or a path, in which case it's a binary
-    //     doing this for hot reload and low compilation time
-
     for (i, filter) in state.filters.iter().enumerate() {
       let i = u32::try_from(i).unwrap();
       uniforms.push(Uniforms {
