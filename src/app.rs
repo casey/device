@@ -435,7 +435,7 @@ impl App {
 
 impl ApplicationHandler for App {
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
-    if let Some(recorder) = self.recorder.take()
+    if let Some(recorder) = &self.recorder
       && let Err(err) = recorder.lock().unwrap().save()
     {
       eprintln!("failed to save recording: {err}");
