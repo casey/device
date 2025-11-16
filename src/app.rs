@@ -168,7 +168,7 @@ impl App {
           match command.as_str() {
             "spread" => self.state.spread = !self.state.spread,
             "status" => self.state.status = !self.state.status,
-            _ => todo!(),
+            _ => eprintln!("unknown command: {command}"),
           }
           self.command = None;
         }
