@@ -1,6 +1,6 @@
 use super::*;
 
-pub struct Renderer {
+pub(crate) struct Renderer {
   bind_group_layout: BindGroupLayout,
   bindings: Option<Bindings>,
   blitter: TextureBlitter,
@@ -286,7 +286,7 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
-  pub async fn new(options: &Options, window: Arc<Window>) -> Result<Self> {
+  pub(crate) async fn new(options: &Options, window: Arc<Window>) -> Result<Self> {
     let mut size = window.inner_size();
     size.width = size.width.max(1);
     size.height = size.height.max(1);

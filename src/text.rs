@@ -1,7 +1,7 @@
 #[derive(Clone)]
-pub struct Text {
-  pub size: f32,
-  pub string: String,
-  pub x: f64,
-  pub y: f64,
+pub(crate) struct Text {
+  pub(crate) size: f32,
+  pub(crate) string: String,
+  pub(crate) x: f64,
+  pub(crate) y: f64,
 }

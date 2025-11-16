@@ -1,7 +1,7 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub struct Parameter(i8);
+pub(crate) struct Parameter(i8);
 
 impl From<i8> for Parameter {
   fn from(value: i8) -> Self {
@@ -43,7 +43,7 @@ impl Parameter {
   const MAX: i8 = 63;
   const MIN: i8 = -64;
 
-  pub fn bipolar(self) -> f32 {
+  pub(crate) fn bipolar(self) -> f32 {
     if self.0 < 0 {
       f32::from(self.0) / 64.0
     } else {
@@ -51,11 +51,11 @@ impl Parameter {
     }
   }
 
-  pub fn unipolar(self) -> f32 {
+  pub(crate) fn unipolar(self) -> f32 {
     f32::from(self.0 + 64) / 127.0
   }
 
-  pub fn value(self) -> i8 {
+  pub(crate) fn value(self) -> i8 {
     self.0
   }
 }

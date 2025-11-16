@@ -1,12 +1,12 @@
 use super::*;
 
 #[derive(Clone)]
-pub struct Filter {
-  pub color: Mat4f,
-  pub coordinates: bool,
-  pub field: Field,
-  pub position: Mat3f,
-  pub wrap: bool,
+pub(crate) struct Filter {
+  pub(crate) color: Mat4f,
+  pub(crate) coordinates: bool,
+  pub(crate) field: Field,
+  pub(crate) position: Mat3f,
+  pub(crate) wrap: bool,
 }
 
 impl Default for Filter {
@@ -22,7 +22,7 @@ impl Default for Filter {
 }
 
 impl Filter {
-  pub fn icon(&self) -> char {
+  pub(crate) fn icon(&self) -> char {
     self.field.icon()
   }
 }
