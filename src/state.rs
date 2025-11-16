@@ -8,8 +8,11 @@ pub(crate) struct State {
   pub(crate) filters: Vec<Filter>,
   pub(crate) fit: bool,
   pub(crate) parameter: Parameter,
+  pub(crate) record: bool,
   pub(crate) repeat: bool,
+  pub(crate) resolution: Option<u32>,
   pub(crate) spread: bool,
+  pub(crate) status: bool,
   pub(crate) text: Option<Text>,
   pub(crate) tile: bool,
 }
@@ -53,6 +56,13 @@ impl State {
   pub(crate) fn push(mut self) -> Self {
     self.filters.push(self.filter.clone());
     self
+  }
+
+  pub(crate) fn resolution(&self, window_size: PhysicalSize<u32>) -> u32 {
+    self
+      .resolution
+      .unwrap_or(window_size.height.max(window_size.width))
+      .max(1)
   }
 
   pub(crate) fn samples(mut self) -> Self {

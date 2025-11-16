@@ -7,7 +7,6 @@ pub(crate) struct App {
   horizontal: f32,
   hub: Hub,
   makro: Vec<Key>,
-  options: Options,
   #[allow(unused)]
   output_stream: OutputStream,
   recording: Option<Vec<Key>>,
@@ -130,11 +129,7 @@ impl App {
       None
     };
 
-    let mut state = options.program.map(Program::state).unwrap_or_default();
-
-    if let Some(db) = options.db {
-      state.db = db;
-    }
+    let state = options.program.map(Program::state).unwrap_or_default();
 
     Ok(Self {
       analyzer: Analyzer::new(),
@@ -143,7 +138,6 @@ impl App {
       horizontal: 0.0,
       hub: Hub::new()?,
       makro: Vec::new(),
-      options,
       output_stream,
       recording: None,
       renderer: None,
@@ -164,20 +158,21 @@ impl App {
     let mut capture = true;
 
     if let Some(command) = self.command.as_mut() {
-      match key {
-        Key::Character(ref c) => command.push_str(c.as_str()),
-        Key::Named(key) => match key {
-          NamedKey::Enter => match command.as_str() {
+      match &key {
+        Key::Character(c) => command.push_str(c.as_str()),
+        Key::Named(NamedKey::Enter) => {
+          match command.as_str() {
             "spread" => self.state.spread = !self.state.spread,
-            _ => {}
-          },
-          _ => {}
-        },
+            "status" => self.state.status = !self.state.status,
+            _ => todo!(),
+          }
+          self.command = None;
+        }
         _ => {}
       }
     } else {
-      match key {
-        Key::Character(ref c) => match c.as_str() {
+      match &key {
+        Key::Character(c) => match c.as_str() {
           "+" => {
             self.state.db += 1.0;
           }
@@ -382,12 +377,11 @@ impl App {
       ..default()
     });
 
-    if let Err(err) =
-      self
-        .renderer
-        .as_mut()
-        .unwrap()
-        .render(&self.options, &self.analyzer, &self.state)
+    if let Err(err) = self
+      .renderer
+      .as_mut()
+      .unwrap()
+      .render(&self.analyzer, &self.state)
     {
       self.error = Some(err);
       event_loop.exit();
@@ -461,7 +455,7 @@ impl ApplicationHandler for App {
 
       self.window = Some(window.clone());
 
-      let renderer = match pollster::block_on(Renderer::new(&self.options, window)) {
+      let renderer = match pollster::block_on(Renderer::new(&self.state, window)) {
         Ok(renderer) => renderer,
         Err(err) => {
           self.error = Some(err);
@@ -491,7 +485,7 @@ impl ApplicationHandler for App {
         self.redraw(event_loop);
       }
       WindowEvent::Resized(size) => {
-        self.renderer.as_mut().unwrap().resize(&self.options, size);
+        self.renderer.as_mut().unwrap().resize(&self.state, size);
         self.window().request_redraw();
       }
       _ => {}

@@ -286,7 +286,7 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
-  pub(crate) async fn new(options: &Options, window: Arc<Window>) -> Result<Self> {
+  pub(crate) async fn new(state: &State, window: Arc<Window>) -> Result<Self> {
     let mut size = window.inner_size();
     size.width = size.width.max(1);
     size.height = size.height.max(1);
@@ -422,7 +422,7 @@ impl Renderer {
 
     let frequency_view = frequencies.create_view(&TextureViewDescriptor::default());
 
-    let resolution = options.resolution(size);
+    let resolution = state.resolution(size);
 
     let overlay_renderer = vello::Renderer::new(
       &device,
@@ -435,7 +435,7 @@ impl Renderer {
     )
     .context(error::CreateOverlayRenderer)?;
 
-    let recorder = if options.record {
+    let recorder = if state.record {
       Some(Arc::new(Mutex::new(Recorder::new()?)))
     } else {
       None
@@ -471,12 +471,12 @@ impl Renderer {
       uniform_buffer_stride,
     };
 
-    renderer.resize(options, size);
+    renderer.resize(state, size);
 
     Ok(renderer)
   }
 
-  pub(crate) fn render(&mut self, options: &Options, analyzer: &Analyzer, state: &State) -> Result {
+  pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State) -> Result {
     match self.error_channel.try_recv() {
       Ok(error) => return Err(error::Validation.into_error(error)),
       Err(mpsc::TryRecvError::Empty) => {}
@@ -653,7 +653,7 @@ impl Renderer {
       &self.bindings().tiling_view,
     );
 
-    if options.status || state.text.is_some() {
+    if state.status || state.text.is_some() {
       self.render_overlay(state, fps)?;
 
       self.draw(
@@ -863,10 +863,10 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn resize(&mut self, options: &Options, size: PhysicalSize<u32>) {
+  pub(crate) fn resize(&mut self, state: &State, size: PhysicalSize<u32>) {
     self.config.height = size.height.max(1);
     self.config.width = size.width.max(1);
-    self.resolution = options.resolution(size);
+    self.resolution = state.resolution(size);
     self.size = Vec2u::new(size.width, size.height);
     self.surface.configure(&self.device, &self.config);
 

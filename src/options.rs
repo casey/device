@@ -21,33 +21,15 @@ use {
 )]
 pub(crate) struct Options {
   #[arg(long)]
-  pub(crate) db: Option<f32>,
-  #[arg(long)]
   pub(crate) input: bool,
   #[arg(long)]
   pub(crate) program: Option<Program>,
   #[arg(long)]
   pub(crate) record: bool,
-  #[arg(
-    long,
-    value_parser = clap::value_parser!(u32).range(1..),
-  )]
-  pub(crate) resolution: Option<u32>,
   #[arg(long)]
   pub(crate) song: Option<String>,
-  #[arg(long)]
-  pub(crate) status: bool,
   #[arg(long)]
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
   pub(crate) volume: Option<f32>,
-}
-
-impl Options {
-  pub(crate) fn resolution(&self, window_size: PhysicalSize<u32>) -> u32 {
-    self
-      .resolution
-      .unwrap_or(window_size.height.max(window_size.width))
-      .max(1)
-  }
 }
