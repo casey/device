@@ -9,6 +9,16 @@ impl From<i8> for Parameter {
   }
 }
 
+impl From<midly::num::u7> for Parameter {
+  fn from(n: midly::num::u7) -> Self {
+    if n == 63 {
+      Self(0)
+    } else {
+      (i8::try_from(u8::from(n)).unwrap() + Self::MIN).into()
+    }
+  }
+}
+
 impl Add<i8> for Parameter {
   type Output = Self;
 

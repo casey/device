@@ -38,22 +38,8 @@ impl Message {
       }
     };
 
-    // impl From<midly::num::u7> for Parameter {
-    //   fn from(n: midly::num::u7) -> Self {
-    //     if n == 63 {
-    //       Self(0)
-    //     } else {
-    //       (i8::try_from(u8::from(n)).unwrap() + Self::MIN).into()
-    //     }
-    //   }
-    // }
-
     let (controller, control, event) = match (channel, key) {
-      (0, 0..=15) => {
-        // todo: 63 should map to 0 for some reason
-        let parameter = i8::try_from(u8::from(parameter)).unwrap();
-        (Controller::Twister, key, Event::Encoder(parameter.into()))
-      }
+      (0, 0..=15) => (Controller::Twister, key, Event::Encoder(parameter.into())),
       (1, 0..=15) => (Controller::Twister, key, Event::Button(press)),
       (2, 36..=51) => (
         Controller::Spectra,
