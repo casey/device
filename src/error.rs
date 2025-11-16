@@ -77,7 +77,7 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: winit::error::EventLoopError,
   },
-  #[snafu(display("I/O error at `{}`", path))]
+  #[snafu(display("I/O error at `{path}`"))]
   FilesystemIo {
     path: Utf8PathBuf,
     backtrace: Option<Backtrace>,
