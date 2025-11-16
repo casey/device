@@ -18,7 +18,7 @@ env_logger = "0.11.0"
 log = "0.4.22"
 midir = "0.10.1"
 midly = "0.5.3"
-nalgebra = { version = "0.34.1", features = ["serde-serialize"] }
+nalgebra = "0.34.1"
 parley = "0.6.0"
 png = "0.18.0"
 pollster = "0.4.0"
