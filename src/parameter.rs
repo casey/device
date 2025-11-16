@@ -1,22 +1,21 @@
 use super::*;
 
-#[derive(Debug, Snafu)]
-#[snafu(context(suffix(Error)))]
-pub(crate) enum ParameterError {
-  #[snafu(display("value less than minimum: {value}"))]
-  NegativeOverflow { value: i8 },
-  #[snafu(transparent)]
-  Parse { source: num::ParseIntError },
-  #[snafu(display("value greater than maximum: {value}"))]
-  PositiveOverflow { value: i8 },
-}
-
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Parameter(i8);
 
 impl From<i8> for Parameter {
   fn from(value: i8) -> Self {
     Self(value.clamp(Self::MIN, Self::MAX))
+  }
+}
+
+impl From<midly::num::u7> for Parameter {
+  fn from(n: midly::num::u7) -> Self {
+    if n == 63 {
+      Self(0)
+    } else {
+      (i8::try_from(u8::from(n)).unwrap() + Self::MIN).into()
+    }
   }
 }
 
@@ -37,32 +36,6 @@ impl AddAssign<i8> for Parameter {
 impl SubAssign<i8> for Parameter {
   fn sub_assign(&mut self, rhs: i8) {
     *self = self.0.saturating_sub(rhs).into();
-  }
-}
-
-impl From<midly::num::u7> for Parameter {
-  fn from(n: midly::num::u7) -> Self {
-    if n == 63 {
-      Self(0)
-    } else {
-      (i8::try_from(u8::from(n)).unwrap() + Self::MIN).into()
-    }
-  }
-}
-
-impl FromStr for Parameter {
-  type Err = ParameterError;
-
-  fn from_str(s: &str) -> Result<Self, Self::Err> {
-    let value = s.parse()?;
-
-    if value < Self::MIN {
-      Err(NegativeOverflowError { value }.build())
-    } else if value > Self::MAX {
-      Err(PositiveOverflowError { value }.build())
-    } else {
-      Ok(Self(value))
-    }
   }
 }
 

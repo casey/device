@@ -14,7 +14,7 @@ pub(crate) enum MessageParseError {
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Message {
   pub(crate) control: u8,
-  pub(crate) device: Device,
+  pub(crate) controller: Controller,
   pub(crate) event: Event,
 }
 
@@ -38,11 +38,11 @@ impl Message {
       }
     };
 
-    let (device, control, event) = match (channel, key) {
-      (0, 0..=15) => (Device::Twister, key, Event::Encoder(parameter.into())),
-      (1, 0..=15) => (Device::Twister, key, Event::Button(press)),
+    let (controller, control, event) = match (channel, key) {
+      (0, 0..=15) => (Controller::Twister, key, Event::Encoder(parameter.into())),
+      (1, 0..=15) => (Controller::Twister, key, Event::Button(press)),
       (2, 36..=51) => (
-        Device::Spectra,
+        Controller::Spectra,
         match key {
           48 => 0,
           49 => 1,
@@ -65,7 +65,7 @@ impl Message {
         Event::Button(press),
       ),
       (3, 20..=25) => (
-        Device::Spectra,
+        Controller::Spectra,
         match key {
           22 => 16,
           21 => 17,
@@ -77,7 +77,7 @@ impl Message {
         },
         Event::Button(press),
       ),
-      (3, 8..=13) => (Device::Twister, key - 8 + 16, Event::Button(press)),
+      (3, 8..=13) => (Controller::Twister, key - 8 + 16, Event::Button(press)),
       _ => {
         return Err(MessageParseError::Unrecognized {
           event: event.to_static(),
@@ -87,12 +87,12 @@ impl Message {
 
     Ok(Self {
       control,
-      device,
+      controller,
       event,
     })
   }
 
-  pub(crate) fn tuple(self) -> (Device, u8, Event) {
-    (self.device, self.control, self.event)
+  pub(crate) fn tuple(self) -> (Controller, u8, Event) {
+    (self.controller, self.control, self.event)
   }
 }

@@ -10,7 +10,7 @@ struct Inner {
 }
 
 impl Track {
-  pub(crate) fn new(path: &Path) -> Result<Self> {
+  pub(crate) fn new(path: &Utf8Path) -> Result<Self> {
     let file = File::open(path).context(error::FilesystemIo { path })?;
     let reader = BufReader::new(file);
     let source = Decoder::new(reader).context(error::DecoderOpen { path })?;

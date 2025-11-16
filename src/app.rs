@@ -2,14 +2,15 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
+  command: Option<String>,
   error: Option<Error>,
   horizontal: f32,
   hub: Hub,
+  macro_recording: Option<Vec<Key>>,
   makro: Vec<Key>,
-  options: Options,
   #[allow(unused)]
   output_stream: OutputStream,
-  recording: Option<Vec<Key>>,
+  recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
   scaling: f32,
   #[allow(unused)]
@@ -30,21 +31,20 @@ impl App {
       if let Err(err) = capture.save("capture.png".as_ref()) {
         eprintln!("failed to save capture: {err}");
       }
-    })?;
-    Ok(())
+    })
   }
 
   pub(crate) fn error(self) -> Option<Error> {
     self.error
   }
 
-  fn find_song(song: &str) -> Result<PathBuf> {
+  fn find_song(song: &str) -> Result<Utf8PathBuf> {
     let song = RegexBuilder::new(song)
       .case_insensitive(true)
       .build()
       .context(error::SongRegex)?;
 
-    let mut matches = Vec::<PathBuf>::new();
+    let mut matches = Vec::<Utf8PathBuf>::new();
 
     let home = dirs::home_dir().context(error::Home)?;
 
@@ -66,7 +66,7 @@ impl App {
       };
 
       if song.is_match(haystack) {
-        matches.push(path.into());
+        matches.push(path.into_utf8_path()?.into());
       }
     }
 
@@ -129,21 +129,21 @@ impl App {
       None
     };
 
-    let mut state = options.program.map(Program::state).unwrap_or_default();
-
-    if let Some(db) = options.db {
-      state.db = db;
-    }
+    let state = options.program.map(Program::state).unwrap_or_default();
 
     Ok(Self {
       analyzer: Analyzer::new(),
+      command: None,
       error: None,
       horizontal: 0.0,
       hub: Hub::new()?,
+      macro_recording: None,
       makro: Vec::new(),
-      options,
       output_stream,
-      recording: None,
+      recorder: options
+        .record
+        .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
+        .transpose()?,
       renderer: None,
       scaling: 1.0,
       sink,
@@ -161,115 +161,133 @@ impl App {
   fn press(&mut self, event_loop: &ActiveEventLoop, key: Key) {
     let mut capture = true;
 
-    match key {
-      Key::Character(ref c) => match c.as_str() {
-        "+" => {
-          self.state.db += 1.0;
-        }
-        "-" => {
-          self.state.db -= 1.0;
-        }
-        ">" => {
-          if let Err(err) = self.capture() {
-            self.error = Some(err);
-            event_loop.exit();
+    if let Some(command) = self.command.as_mut() {
+      match &key {
+        Key::Character(c) => command.push_str(c.as_str()),
+        Key::Named(NamedKey::Enter) => {
+          match command.as_str() {
+            "spread" => self.state.spread = !self.state.spread,
+            "status" => self.state.status = !self.state.status,
+            _ => eprintln!("unknown command: {command}"),
           }
-        }
-        "@" => {
-          for key in self.makro.clone() {
-            self.press(event_loop, key);
-          }
-          capture = false;
-        }
-        "a" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::All,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "c" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::Circle,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "d" => self.state.filters.push(Filter {
-          coordinates: true,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "f" => {
-          self.options.fit = !self.options.fit;
-        }
-        "l" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::Frequencies,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "n" => self.state.filters.push(Filter {
-          field: Field::None,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "q" => {
-          if let Some(recording) = self.recording.take() {
-            self.makro = recording;
-          } else {
-            self.recording = Some(Vec::new());
-          }
-          capture = false;
-        }
-        "r" => {
-          self.options.repeat = !self.options.repeat;
-        }
-        "s" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::Samples,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "t" => {
-          self.options.tile = !self.options.tile;
-        }
-        "w" => {
-          self.wrap = !self.wrap;
-        }
-        "x" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::X,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "z" => self.state.filters.push(Filter {
-          position: Mat3f::new_scaling(2.0),
-          wrap: self.wrap,
-          ..default()
-        }),
-        _ => {}
-      },
-      Key::Named(key) => match key {
-        NamedKey::Backspace => {
-          self.state.filters.pop();
-        }
-        NamedKey::ArrowLeft => {
-          self.state.filters.push(Filter {
-            position: Mat3f::new_rotation(-0.01),
-            ..default()
-          });
-        }
-        NamedKey::ArrowRight => {
-          self.state.filters.push(Filter {
-            position: Mat3f::new_rotation(0.01),
-            ..default()
-          });
+          self.command = None;
         }
         _ => {}
-      },
-      _ => {}
+      }
+    } else {
+      match &key {
+        Key::Character(c) => match c.as_str() {
+          "+" => {
+            self.state.db += 1.0;
+          }
+          "-" => {
+            self.state.db -= 1.0;
+          }
+          ":" => {
+            self.command = Some(String::new());
+          }
+          ">" => {
+            if let Err(err) = self.capture() {
+              self.error = Some(err);
+              event_loop.exit();
+            }
+          }
+          "@" => {
+            for key in self.makro.clone() {
+              self.press(event_loop, key);
+            }
+            capture = false;
+          }
+          "a" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::All,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "c" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::Circle,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "d" => self.state.filters.push(Filter {
+            coordinates: true,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "f" => {
+            self.state.fit = !self.state.fit;
+          }
+          "l" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::Frequencies,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "n" => self.state.filters.push(Filter {
+            field: Field::None,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "q" => {
+            if let Some(recording) = self.macro_recording.take() {
+              self.makro = recording;
+            } else {
+              self.macro_recording = Some(Vec::new());
+            }
+            capture = false;
+          }
+          "r" => {
+            self.state.repeat = !self.state.repeat;
+          }
+          "s" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::Samples,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "t" => {
+            self.state.tile = !self.state.tile;
+          }
+          "w" => {
+            self.wrap = !self.wrap;
+          }
+          "x" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::X,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "z" => self.state.filters.push(Filter {
+            position: Mat3f::new_scaling(2.0),
+            wrap: self.wrap,
+            ..default()
+          }),
+          _ => {}
+        },
+        Key::Named(key) => match key {
+          NamedKey::Backspace => {
+            self.state.filters.pop();
+          }
+          NamedKey::ArrowLeft => {
+            self.state.filters.push(Filter {
+              position: Mat3f::new_rotation(-0.01),
+              ..default()
+            });
+          }
+          NamedKey::ArrowRight => {
+            self.state.filters.push(Filter {
+              position: Mat3f::new_rotation(0.01),
+              ..default()
+            });
+          }
+          _ => {}
+        },
+        _ => {}
+      }
     }
 
-    if capture && let Some(recording) = &mut self.recording {
+    if capture && let Some(recording) = &mut self.macro_recording {
       recording.push(key);
     }
   }
@@ -277,60 +295,60 @@ impl App {
   fn redraw(&mut self, event_loop: &ActiveEventLoop) {
     for message in self.hub.messages().lock().unwrap().drain(..) {
       match message.tuple() {
-        (Device::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Top,
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 1, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 1, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Bottom,
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 2, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 2, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::X,
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Circle,
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 4, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 4, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_scaling(2.0),
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 5, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 5, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_scaling(0.5),
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 6, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 6, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_translation(&Vec2f::new(-0.1, 0.0)),
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 7, Event::Button(true)) => self.state.filters.push(Filter {
+        (Controller::Spectra, 7, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_translation(&Vec2f::new(0.1, 0.0)),
           wrap: self.wrap,
           ..default()
         }),
-        (Device::Spectra, 8, Event::Button(true)) => {
+        (Controller::Spectra, 8, Event::Button(true)) => {
           self.state.filters.pop();
         }
-        (Device::Twister, control, Event::Button(true)) => match control {
+        (Controller::Twister, control, Event::Button(true)) => match control {
           4 => self.translation.x = 0.0,
           5 => self.translation.y = 0.0,
           6 => self.scaling = 1.0,
           _ => {}
         },
-        (Device::Twister, control, Event::Encoder(parameter)) => {
+        (Controller::Twister, control, Event::Encoder(parameter)) => {
           self.state.parameter = parameter;
           match control {
             0 => self.state.alpha = parameter,
@@ -363,16 +381,25 @@ impl App {
       ..default()
     });
 
-    if let Err(err) =
-      self
-        .renderer
-        .as_mut()
-        .unwrap()
-        .render(&self.options, &self.analyzer, &self.state)
-    {
+    let renderer = self.renderer.as_mut().unwrap();
+
+    if let Err(err) = renderer.render(&self.analyzer, &self.state, now) {
       self.error = Some(err);
       event_loop.exit();
       return;
+    }
+
+    if let Some(recorder) = &self.recorder {
+      let recorder = recorder.clone();
+      if let Err(err) = renderer.capture(move |frame| {
+        if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
+          eprintln!("failed to save recorded frame: {err}");
+        }
+      }) {
+        self.error = Some(err);
+        event_loop.exit();
+        return;
+      }
     }
 
     self.state.filters.pop();
@@ -408,7 +435,9 @@ impl App {
 
 impl ApplicationHandler for App {
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
-    if let Err(err) = self.renderer.as_mut().unwrap().save_recording() {
+    if let Some(recorder) = &self.recorder
+      && let Err(err) = recorder.lock().unwrap().save()
+    {
       eprintln!("failed to save recording: {err}");
     }
   }
@@ -442,7 +471,7 @@ impl ApplicationHandler for App {
 
       self.window = Some(window.clone());
 
-      let renderer = match pollster::block_on(Renderer::new(&self.options, window)) {
+      let renderer = match pollster::block_on(Renderer::new(&self.state, window)) {
         Ok(renderer) => renderer,
         Err(err) => {
           self.error = Some(err);
@@ -472,7 +501,7 @@ impl ApplicationHandler for App {
         self.redraw(event_loop);
       }
       WindowEvent::Resized(size) => {
-        self.renderer.as_mut().unwrap().resize(&self.options, size);
+        self.renderer.as_mut().unwrap().resize(&self.state, size);
         self.window().request_redraw();
       }
       _ => {}

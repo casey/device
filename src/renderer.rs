@@ -1,6 +1,6 @@
 use super::*;
 
-pub struct Renderer {
+pub(crate) struct Renderer {
   bind_group_layout: BindGroupLayout,
   bindings: Option<Bindings>,
   blitter: TextureBlitter,
@@ -17,7 +17,6 @@ pub struct Renderer {
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
   queue: Queue,
-  recorder: Option<Arc<Mutex<Recorder>>>,
   render_pipeline: RenderPipeline,
   resolution: u32,
   sample_view: TextureView,
@@ -286,7 +285,7 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
-  pub async fn new(options: &Options, window: Arc<Window>) -> Result<Self> {
+  pub(crate) async fn new(state: &State, window: Arc<Window>) -> Result<Self> {
     let mut size = window.inner_size();
     size.width = size.width.max(1);
     size.height = size.height.max(1);
@@ -315,7 +314,7 @@ impl Renderer {
         trace: Trace::Off,
       })
       .await
-      .context(error::Device)?;
+      .context(error::RequestDevice)?;
 
     let (tx, error_channel) = mpsc::channel();
 
@@ -422,7 +421,7 @@ impl Renderer {
 
     let frequency_view = frequencies.create_view(&TextureViewDescriptor::default());
 
-    let resolution = options.resolution(size);
+    let resolution = state.resolution(size);
 
     let overlay_renderer = vello::Renderer::new(
       &device,
@@ -434,12 +433,6 @@ impl Renderer {
       },
     )
     .context(error::CreateOverlayRenderer)?;
-
-    let recorder = if options.record {
-      Some(Arc::new(Mutex::new(Recorder::new()?)))
-    } else {
-      None
-    };
 
     let mut renderer = Renderer {
       bind_group_layout,
@@ -458,7 +451,6 @@ impl Renderer {
       overlay_renderer,
       overlay_scene: vello::Scene::new(),
       queue,
-      recorder,
       render_pipeline,
       resolution,
       sample_view,
@@ -471,12 +463,12 @@ impl Renderer {
       uniform_buffer_stride,
     };
 
-    renderer.resize(options, size);
+    renderer.resize(state, size);
 
     Ok(renderer)
   }
 
-  pub(crate) fn render(&mut self, options: &Options, analyzer: &Analyzer, state: &State) -> Result {
+  pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {
     match self.error_channel.try_recv() {
       Ok(error) => return Err(error::Validation.into_error(error)),
       Err(mpsc::TryRecvError::Empty) => {}
@@ -486,8 +478,6 @@ impl Renderer {
     if self.frame_times.len() == self.frame_times.capacity() {
       self.frame_times.pop_front();
     }
-
-    let now = Instant::now();
 
     self.frame_times.push_back(now);
 
@@ -501,7 +491,7 @@ impl Renderer {
     let mut uniforms = Vec::new();
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    let tiling_size = if options.tile {
+    let tiling_size = if state.tile {
       (state.filters.len().max(1) as f64).sqrt().ceil() as u32
     } else {
       1
@@ -552,7 +542,11 @@ impl Renderer {
         position: filter.position,
         repeat: false,
         resolution: tiling.resolution(),
-        rms,
+        rms: if state.spread {
+          rms * (i as f32 + 1.0) / state.filters.len() as f32
+        } else {
+          rms
+        },
         sample_range,
         tiling: tiling.size,
         wrap: filter.wrap,
@@ -565,7 +559,7 @@ impl Renderer {
       coordinates: false,
       field: Field::None,
       filters: filter_count,
-      fit: options.fit,
+      fit: state.fit,
       frequency_range,
       front_offset: Vec2f::new(0.0, 0.0),
       front_read: tiling.front_read(filter_count),
@@ -573,7 +567,7 @@ impl Renderer {
       index: filter_count,
       offset: Vec2f::default(),
       position: Mat3f::identity(),
-      repeat: options.repeat,
+      repeat: state.repeat,
       resolution: Vec2f::new(self.resolution as f32, self.resolution as f32),
       rms,
       sample_range,
@@ -587,7 +581,7 @@ impl Renderer {
       coordinates: false,
       field: Field::None,
       filters: filter_count,
-      fit: options.fit,
+      fit: state.fit,
       frequency_range,
       front_offset: Vec2f::new(0.0, 0.0),
       front_read: true,
@@ -595,7 +589,7 @@ impl Renderer {
       index: filter_count,
       offset: Vec2f::default(),
       position: Mat3f::identity(),
-      repeat: options.repeat,
+      repeat: state.repeat,
       resolution: Vec2f::new(self.size.x as f32, self.size.y as f32),
       rms,
       sample_range,
@@ -649,8 +643,8 @@ impl Renderer {
       &self.bindings().tiling_view,
     );
 
-    if options.status || state.text.is_some() {
-      self.render_overlay(options, state, fps)?;
+    if state.status || state.text.is_some() {
+      self.render_overlay(state, fps)?;
 
       self.draw(
         &self.bindings().overlay_bind_group,
@@ -679,7 +673,7 @@ impl Renderer {
 
     frame.present();
 
-    info!(
+    log::info!(
       "{}",
       Frame {
         filters: state.filters.len(),
@@ -688,26 +682,12 @@ impl Renderer {
       }
     );
 
-    if let Some(recorder) = &self.recorder {
-      let recorder = recorder.clone();
-      self.capture(move |frame| {
-        if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
-          eprintln!("failed to save recorded frame: {err}");
-        }
-      })?;
-    }
-
     self.frame += 1;
 
     Ok(())
   }
 
-  pub(crate) fn render_overlay(
-    &mut self,
-    options: &Options,
-    state: &State,
-    fps: Option<f32>,
-  ) -> Result {
+  pub(crate) fn render_overlay(&mut self, state: &State, fps: Option<f32>) -> Result {
     use {
       kurbo::{Affine, Rect, Vec2},
       parley::{
@@ -748,7 +728,7 @@ impl Renderer {
       }
     };
 
-    let bounds = if options.fit {
+    let bounds = if state.fit {
       Rect {
         x0: 0.0,
         y0: 0.0,
@@ -864,10 +844,10 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn resize(&mut self, options: &Options, size: PhysicalSize<u32>) {
+  pub(crate) fn resize(&mut self, state: &State, size: PhysicalSize<u32>) {
     self.config.height = size.height.max(1);
     self.config.width = size.width.max(1);
-    self.resolution = options.resolution(size);
+    self.resolution = state.resolution(size);
     self.size = Vec2u::new(size.width, size.height);
     self.surface.configure(&self.device, &self.config);
 
@@ -932,13 +912,6 @@ impl Renderer {
       tiling_bind_group,
       tiling_view,
     });
-  }
-
-  pub(crate) fn save_recording(&mut self) -> Result {
-    if let Some(recorder) = self.recorder.take() {
-      recorder.lock().unwrap().save()?;
-    }
-    Ok(())
   }
 
   fn target(&self, back: &TextureView) -> Target {
