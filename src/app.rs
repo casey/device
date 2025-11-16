@@ -2,6 +2,7 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
+  command: Option<String>,
   error: Option<Error>,
   horizontal: f32,
   hub: Hub,
@@ -137,6 +138,7 @@ impl App {
 
     Ok(Self {
       analyzer: Analyzer::new(),
+      command: None,
       error: None,
       horizontal: 0.0,
       hub: Hub::new()?,
@@ -161,112 +163,129 @@ impl App {
   fn press(&mut self, event_loop: &ActiveEventLoop, key: Key) {
     let mut capture = true;
 
-    match key {
-      Key::Character(ref c) => match c.as_str() {
-        "+" => {
-          self.state.db += 1.0;
-        }
-        "-" => {
-          self.state.db -= 1.0;
-        }
-        ">" => {
-          if let Err(err) = self.capture() {
-            self.error = Some(err);
-            event_loop.exit();
-          }
-        }
-        "@" => {
-          for key in self.makro.clone() {
-            self.press(event_loop, key);
-          }
-          capture = false;
-        }
-        "a" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::All,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "c" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::Circle,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "d" => self.state.filters.push(Filter {
-          coordinates: true,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "f" => {
-          self.options.fit = !self.options.fit;
-        }
-        "l" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::Frequencies,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "n" => self.state.filters.push(Filter {
-          field: Field::None,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "q" => {
-          if let Some(recording) = self.recording.take() {
-            self.makro = recording;
-          } else {
-            self.recording = Some(Vec::new());
-          }
-          capture = false;
-        }
-        "r" => {
-          self.options.repeat = !self.options.repeat;
-        }
-        "s" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::Samples,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "t" => {
-          self.options.tile = !self.options.tile;
-        }
-        "w" => {
-          self.wrap = !self.wrap;
-        }
-        "x" => self.state.filters.push(Filter {
-          color: invert_color(),
-          field: Field::X,
-          wrap: self.wrap,
-          ..default()
-        }),
-        "z" => self.state.filters.push(Filter {
-          position: Mat3f::new_scaling(2.0),
-          wrap: self.wrap,
-          ..default()
-        }),
+    if let Some(command) = self.command.as_mut() {
+      match key {
+        Key::Character(ref c) => command.push_str(c.as_str()),
+        Key::Named(key) => match key {
+          NamedKey::Enter => match command.as_str() {
+            "spread" => self.state.spread = !self.state.spread,
+            _ => {}
+          },
+          _ => {}
+        },
         _ => {}
-      },
-      Key::Named(key) => match key {
-        NamedKey::Backspace => {
-          self.state.filters.pop();
-        }
-        NamedKey::ArrowLeft => {
-          self.state.filters.push(Filter {
-            position: Mat3f::new_rotation(-0.01),
+      }
+    } else {
+      match key {
+        Key::Character(ref c) => match c.as_str() {
+          "+" => {
+            self.state.db += 1.0;
+          }
+          "-" => {
+            self.state.db -= 1.0;
+          }
+          ":" => {
+            self.command = Some(String::new());
+          }
+          ">" => {
+            if let Err(err) = self.capture() {
+              self.error = Some(err);
+              event_loop.exit();
+            }
+          }
+          "@" => {
+            for key in self.makro.clone() {
+              self.press(event_loop, key);
+            }
+            capture = false;
+          }
+          "a" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::All,
+            wrap: self.wrap,
             ..default()
-          });
-        }
-        NamedKey::ArrowRight => {
-          self.state.filters.push(Filter {
-            position: Mat3f::new_rotation(0.01),
+          }),
+          "c" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::Circle,
+            wrap: self.wrap,
             ..default()
-          });
-        }
+          }),
+          "d" => self.state.filters.push(Filter {
+            coordinates: true,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "f" => {
+            self.state.fit = !self.state.fit;
+          }
+          "l" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::Frequencies,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "n" => self.state.filters.push(Filter {
+            field: Field::None,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "q" => {
+            if let Some(recording) = self.recording.take() {
+              self.makro = recording;
+            } else {
+              self.recording = Some(Vec::new());
+            }
+            capture = false;
+          }
+          "r" => {
+            self.state.repeat = !self.state.repeat;
+          }
+          "s" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::Samples,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "t" => {
+            self.state.tile = !self.state.tile;
+          }
+          "w" => {
+            self.wrap = !self.wrap;
+          }
+          "x" => self.state.filters.push(Filter {
+            color: invert_color(),
+            field: Field::X,
+            wrap: self.wrap,
+            ..default()
+          }),
+          "z" => self.state.filters.push(Filter {
+            position: Mat3f::new_scaling(2.0),
+            wrap: self.wrap,
+            ..default()
+          }),
+          _ => {}
+        },
+        Key::Named(key) => match key {
+          NamedKey::Backspace => {
+            self.state.filters.pop();
+          }
+          NamedKey::ArrowLeft => {
+            self.state.filters.push(Filter {
+              position: Mat3f::new_rotation(-0.01),
+              ..default()
+            });
+          }
+          NamedKey::ArrowRight => {
+            self.state.filters.push(Filter {
+              position: Mat3f::new_rotation(0.01),
+              ..default()
+            });
+          }
+          _ => {}
+        },
         _ => {}
-      },
-      _ => {}
+      }
     }
 
     if capture && let Some(recording) = &mut self.recording {

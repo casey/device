@@ -501,7 +501,7 @@ impl Renderer {
     let mut uniforms = Vec::new();
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    let tiling_size = if options.tile {
+    let tiling_size = if state.tile {
       (state.filters.len().max(1) as f64).sqrt().ceil() as u32
     } else {
       1
@@ -552,7 +552,11 @@ impl Renderer {
         position: filter.position,
         repeat: false,
         resolution: tiling.resolution(),
-        rms: rms * (i as f32 + 1.0) / state.filters.len() as f32,
+        rms: if state.spread {
+          rms * (i as f32 + 1.0) / state.filters.len() as f32
+        } else {
+          rms
+        },
         sample_range,
         tiling: tiling.size,
         wrap: filter.wrap,
@@ -565,7 +569,7 @@ impl Renderer {
       coordinates: false,
       field: Field::None,
       filters: filter_count,
-      fit: options.fit,
+      fit: state.fit,
       frequency_range,
       front_offset: Vec2f::new(0.0, 0.0),
       front_read: tiling.front_read(filter_count),
@@ -573,7 +577,7 @@ impl Renderer {
       index: filter_count,
       offset: Vec2f::default(),
       position: Mat3f::identity(),
-      repeat: options.repeat,
+      repeat: state.repeat,
       resolution: Vec2f::new(self.resolution as f32, self.resolution as f32),
       rms,
       sample_range,
@@ -587,7 +591,7 @@ impl Renderer {
       coordinates: false,
       field: Field::None,
       filters: filter_count,
-      fit: options.fit,
+      fit: state.fit,
       frequency_range,
       front_offset: Vec2f::new(0.0, 0.0),
       front_read: true,
@@ -595,7 +599,7 @@ impl Renderer {
       index: filter_count,
       offset: Vec2f::default(),
       position: Mat3f::identity(),
-      repeat: options.repeat,
+      repeat: state.repeat,
       resolution: Vec2f::new(self.size.x as f32, self.size.y as f32),
       rms,
       sample_range,
@@ -650,7 +654,7 @@ impl Renderer {
     );
 
     if options.status || state.text.is_some() {
-      self.render_overlay(options, state, fps)?;
+      self.render_overlay(state, fps)?;
 
       self.draw(
         &self.bindings().overlay_bind_group,
@@ -702,12 +706,7 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn render_overlay(
-    &mut self,
-    options: &Options,
-    state: &State,
-    fps: Option<f32>,
-  ) -> Result {
+  pub(crate) fn render_overlay(&mut self, state: &State, fps: Option<f32>) -> Result {
     use {
       kurbo::{Affine, Rect, Vec2},
       parley::{
@@ -748,7 +747,7 @@ impl Renderer {
       }
     };
 
-    let bounds = if options.fit {
+    let bounds = if state.fit {
       Rect {
         x0: 0.0,
         y0: 0.0,

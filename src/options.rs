@@ -23,15 +23,11 @@ pub(crate) struct Options {
   #[arg(long)]
   pub(crate) db: Option<f32>,
   #[arg(long)]
-  pub(crate) fit: bool,
-  #[arg(long)]
   pub(crate) input: bool,
   #[arg(long)]
   pub(crate) program: Option<Program>,
   #[arg(long)]
   pub(crate) record: bool,
-  #[arg(long)]
-  pub(crate) repeat: bool,
   #[arg(
     long,
     value_parser = clap::value_parser!(u32).range(1..),
@@ -41,8 +37,6 @@ pub(crate) struct Options {
   pub(crate) song: Option<String>,
   #[arg(long)]
   pub(crate) status: bool,
-  #[arg(long)]
-  pub(crate) tile: bool,
   #[arg(long)]
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]

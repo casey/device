@@ -6,8 +6,12 @@ pub(crate) struct State {
   pub(crate) db: f32,
   pub(crate) filter: Filter,
   pub(crate) filters: Vec<Filter>,
+  pub(crate) fit: bool,
   pub(crate) parameter: Parameter,
+  pub(crate) repeat: bool,
+  pub(crate) spread: bool,
   pub(crate) text: Option<Text>,
+  pub(crate) tile: bool,
 }
 
 impl State {
