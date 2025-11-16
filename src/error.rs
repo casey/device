@@ -121,13 +121,13 @@ pub(crate) enum Error {
     path: std::path::PathBuf,
     source: camino::FromPathError,
   },
-  #[snafu(display("failed to encode PNG at {}", path))]
+  #[snafu(display("failed to encode PNG at {path}"))]
   PngEncode {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
     source: png::EncodingError,
   },
-  #[snafu(display("PNG cannot fit in memory: {}", path))]
+  #[snafu(display("PNG cannot fit in memory: {path}"))]
   PngOutputBufferSize {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
