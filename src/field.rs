@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Copy, Deserialize, EnumIter, IntoStaticStr)]
+#[derive(Clone, Copy, EnumIter, IntoStaticStr)]
 #[repr(u32)]
 pub enum Field {
   All,

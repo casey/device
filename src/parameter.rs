@@ -1,7 +1,6 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, Default, Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Parameter(i8);
 
 impl From<i8> for Parameter {

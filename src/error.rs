@@ -54,11 +54,6 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: winit::error::OsError,
   },
-  #[snafu(display("failed to get current directory"))]
-  CurrentDir {
-    backtrace: Option<Backtrace>,
-    source: io::Error,
-  },
   #[snafu(display("failed to get current texture"))]
   CurrentTexture {
     backtrace: Option<Backtrace>,

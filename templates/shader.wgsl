@@ -121,8 +121,8 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
 
   // convert fragment coordinates to [-1, 1]
   var centered = vec2(0.0, 0.0);
-  if (all(uniforms.resolution > vec2(1.0, 1.0))) {
-    let extent = uniforms.resolution - vec2(1.0, 1.0);
+  let extent = uniforms.resolution - vec2(1.0, 1.0);
+  if (all(extent > vec2(0.0, 0.0))) {
     centered = ((tile - vec2(0.5, 0.5)) / extent) * 2 - 1;
   }
 

@@ -2,7 +2,6 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
-  binary: Option<Binary>,
   error: Option<Error>,
   horizontal: f32,
   hub: Hub,
@@ -138,11 +137,6 @@ impl App {
 
     Ok(Self {
       analyzer: Analyzer::new(),
-      binary: options
-        .binary
-        .as_ref()
-        .map(|path| Binary::new(path))
-        .transpose()?,
       error: None,
       horizontal: 0.0,
       hub: Hub::new()?,
@@ -349,11 +343,6 @@ impl App {
         }
         _ => {}
       }
-    }
-
-    if let Some(state) = self.binary.as_ref().and_then(Binary::state) {
-      log::info!("updating state from binary");
-      self.state = state;
     }
 
     if let Some(stream) = self.stream.as_mut() {

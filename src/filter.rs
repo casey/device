@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone)]
 pub struct Filter {
   pub color: Mat4f,
   pub coordinates: bool,

@@ -1,6 +1,4 @@
-use super::*;
-
-#[derive(Clone, Deserialize)]
+#[derive(Clone)]
 pub struct Text {
   pub size: f32,
   pub string: String,

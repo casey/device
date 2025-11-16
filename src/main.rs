@@ -1,16 +1,16 @@
 use {
   self::{
-    analyzer::Analyzer, app::App, arguments::Arguments, binary::Binary, bindings::Bindings,
-    controller::Controller, error::Error, event::Event, format::Format, frame::Frame, hub::Hub,
-    image::Image, input::Input, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
-    message::Message, options::Options, program::Program, recorder::Recorder, renderer::Renderer,
-    shared::Shared, stream::Stream, subcommand::Subcommand, tally::Tally, target::Target,
-    templates::ShaderWgsl, tiling::Tiling, track::Track, uniforms::Uniforms,
+    analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, controller::Controller,
+    error::Error, event::Event, field::Field, filter::Filter, format::Format, frame::Frame,
+    hub::Hub, image::Image, input::Input, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
+    message::Message, options::Options, parameter::Parameter, program::Program, recorder::Recorder,
+    renderer::Renderer, shared::Shared, state::State, stream::Stream, subcommand::Subcommand,
+    tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
+    uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
-  device::{Field, Filter, Parameter, State, Text, invert_color},
   parley::{FontContext, LayoutContext},
   regex::{Regex, RegexBuilder},
   rodio::{
@@ -27,15 +27,15 @@ use {
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     collections::VecDeque,
-    env,
     fmt::{self, Display, Formatter, Write},
     fs::{self, File},
-    io::{self, BufRead, BufReader, BufWriter},
-    process::{self, Command, ExitStatus, Stdio},
+    io::{self, BufReader, BufWriter},
+    ops::{Add, AddAssign, SubAssign},
+    process::{self, Command, ExitStatus},
     sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
     time::Instant,
   },
-  strum::IntoEnumIterator,
+  strum::{EnumIter, IntoEnumIterator, IntoStaticStr},
   tempfile::TempDir,
   vello::{kurbo, peniko},
   walkdir::WalkDir,
@@ -73,11 +73,12 @@ macro_rules! label {
 mod analyzer;
 mod app;
 mod arguments;
-mod binary;
 mod bindings;
 mod controller;
 mod error;
 mod event;
+mod field;
+mod filter;
 mod format;
 mod frame;
 mod hub;
@@ -87,15 +88,18 @@ mod into_usize;
 mod into_utf8_path;
 mod message;
 mod options;
+mod parameter;
 mod program;
 mod recorder;
 mod renderer;
 mod shared;
+mod state;
 mod stream;
 mod subcommand;
 mod tally;
 mod target;
 mod templates;
+mod text;
 mod tiling;
 mod track;
 mod uniforms;
@@ -112,9 +116,14 @@ type Mat3f = nalgebra::Matrix3<f32>;
 type Mat4f = nalgebra::Matrix4<f32>;
 type Vec2f = nalgebra::Vector2<f32>;
 type Vec2u = nalgebra::Vector2<u32>;
+type Vec4f = nalgebra::Vector4<f32>;
 
 fn default<T: Default>() -> T {
   T::default()
+}
+
+fn invert_color() -> Mat4f {
+  Mat4f::from_diagonal(&Vec4f::new(-1.0, -1.0, -1.0, 1.0))
 }
 
 fn pad(i: usize, alignment: usize) -> usize {
