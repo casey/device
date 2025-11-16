@@ -57,10 +57,10 @@ impl State {
     self
   }
 
-  pub(crate) fn resolution(&self, window_size: PhysicalSize<u32>) -> u32 {
+  pub(crate) fn resolution(&self, size: PhysicalSize<u32>) -> u32 {
     self
       .resolution
-      .unwrap_or(window_size.height.max(window_size.width))
+      .unwrap_or(size.height.max(size.width))
       .max(1)
   }
 
