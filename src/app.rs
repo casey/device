@@ -31,8 +31,7 @@ impl App {
       if let Err(err) = capture.save("capture.png".as_ref()) {
         eprintln!("failed to save capture: {err}");
       }
-    })?;
-    Ok(())
+    })
   }
 
   pub(crate) fn error(self) -> Option<Error> {
@@ -392,13 +391,15 @@ impl App {
 
     if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();
-      renderer
-        .capture(move |frame| {
-          if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
-            eprintln!("failed to save recorded frame: {err}");
-          }
-        })
-        .unwrap();
+      if let Err(err) = renderer.capture(move |frame| {
+        if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
+          eprintln!("failed to save recorded frame: {err}");
+        }
+      }) {
+        self.error = Some(err);
+        event_loop.exit();
+        return;
+      }
     }
 
     self.state.filters.pop();
