@@ -17,7 +17,6 @@ pub(crate) struct Renderer {
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
   queue: Queue,
-  recorder: Option<Arc<Mutex<Recorder>>>,
   render_pipeline: RenderPipeline,
   resolution: u32,
   sample_view: TextureView,
@@ -435,12 +434,6 @@ impl Renderer {
     )
     .context(error::CreateOverlayRenderer)?;
 
-    let recorder = if state.record {
-      Some(Arc::new(Mutex::new(Recorder::new()?)))
-    } else {
-      None
-    };
-
     let mut renderer = Renderer {
       bind_group_layout,
       bindings: None,
@@ -458,7 +451,6 @@ impl Renderer {
       overlay_renderer,
       overlay_scene: vello::Scene::new(),
       queue,
-      recorder,
       render_pipeline,
       resolution,
       sample_view,
@@ -476,7 +468,7 @@ impl Renderer {
     Ok(renderer)
   }
 
-  pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State) -> Result {
+  pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {
     match self.error_channel.try_recv() {
       Ok(error) => return Err(error::Validation.into_error(error)),
       Err(mpsc::TryRecvError::Empty) => {}
@@ -486,8 +478,6 @@ impl Renderer {
     if self.frame_times.len() == self.frame_times.capacity() {
       self.frame_times.pop_front();
     }
-
-    let now = Instant::now();
 
     self.frame_times.push_back(now);
 
@@ -691,15 +681,6 @@ impl Renderer {
         number: self.frame,
       }
     );
-
-    if let Some(recorder) = &self.recorder {
-      let recorder = recorder.clone();
-      self.capture(move |frame| {
-        if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
-          eprintln!("failed to save recorded frame: {err}");
-        }
-      })?;
-    }
 
     self.frame += 1;
 
@@ -931,13 +912,6 @@ impl Renderer {
       tiling_bind_group,
       tiling_view,
     });
-  }
-
-  pub(crate) fn save_recording(&mut self) -> Result {
-    if let Some(recorder) = self.recorder.take() {
-      recorder.lock().unwrap().save()?;
-    }
-    Ok(())
   }
 
   fn target(&self, back: &TextureView) -> Target {

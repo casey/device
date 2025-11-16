@@ -6,10 +6,11 @@ pub(crate) struct App {
   error: Option<Error>,
   horizontal: f32,
   hub: Hub,
+  macro_recording: Option<Vec<Key>>,
   makro: Vec<Key>,
   #[allow(unused)]
   output_stream: OutputStream,
-  recording: Option<Vec<Key>>,
+  recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
   scaling: f32,
   #[allow(unused)]
@@ -137,9 +138,13 @@ impl App {
       error: None,
       horizontal: 0.0,
       hub: Hub::new()?,
+      macro_recording: None,
       makro: Vec::new(),
       output_stream,
-      recording: None,
+      recorder: options
+        .record
+        .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
+        .transpose()?,
       renderer: None,
       scaling: 1.0,
       sink,
@@ -226,10 +231,10 @@ impl App {
             ..default()
           }),
           "q" => {
-            if let Some(recording) = self.recording.take() {
+            if let Some(recording) = self.macro_recording.take() {
               self.makro = recording;
             } else {
-              self.recording = Some(Vec::new());
+              self.macro_recording = Some(Vec::new());
             }
             capture = false;
           }
@@ -283,7 +288,7 @@ impl App {
       }
     }
 
-    if capture && let Some(recording) = &mut self.recording {
+    if capture && let Some(recording) = &mut self.macro_recording {
       recording.push(key);
     }
   }
@@ -377,15 +382,23 @@ impl App {
       ..default()
     });
 
-    if let Err(err) = self
-      .renderer
-      .as_mut()
-      .unwrap()
-      .render(&self.analyzer, &self.state)
-    {
+    let renderer = self.renderer.as_mut().unwrap();
+
+    if let Err(err) = renderer.render(&self.analyzer, &self.state, now) {
       self.error = Some(err);
       event_loop.exit();
       return;
+    }
+
+    if let Some(recorder) = &self.recorder {
+      let recorder = recorder.clone();
+      renderer
+        .capture(move |frame| {
+          if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
+            eprintln!("failed to save recorded frame: {err}");
+          }
+        })
+        .unwrap();
     }
 
     self.state.filters.pop();
@@ -421,7 +434,9 @@ impl App {
 
 impl ApplicationHandler for App {
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
-    if let Err(err) = self.renderer.as_mut().unwrap().save_recording() {
+    if let Some(recorder) = self.recorder.take()
+      && let Err(err) = recorder.lock().unwrap().save()
+    {
       eprintln!("failed to save recording: {err}");
     }
   }

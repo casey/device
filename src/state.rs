@@ -8,7 +8,6 @@ pub(crate) struct State {
   pub(crate) filters: Vec<Filter>,
   pub(crate) fit: bool,
   pub(crate) parameter: Parameter,
-  pub(crate) record: bool,
   pub(crate) repeat: bool,
   pub(crate) resolution: Option<u32>,
   pub(crate) spread: bool,
