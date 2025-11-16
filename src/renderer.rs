@@ -314,7 +314,7 @@ impl Renderer {
         trace: Trace::Off,
       })
       .await
-      .context(error::Device)?;
+      .context(error::RequestDevice)?;
 
     let (tx, error_channel) = mpsc::channel();
 

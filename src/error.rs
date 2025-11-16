@@ -67,11 +67,6 @@ pub(crate) enum Error {
   },
   #[snafu(display("failed to get default config"))]
   DefaultConfig { backtrace: Option<Backtrace> },
-  #[snafu(display("failed to get device"))]
-  Device {
-    backtrace: Option<Backtrace>,
-    source: wgpu::RequestDeviceError,
-  },
   #[snafu(display("failed to build event loop"))]
   EventLoopBuild {
     backtrace: Option<Backtrace>,
@@ -151,6 +146,11 @@ pub(crate) enum Error {
   RequestAdapter {
     backtrace: Option<Backtrace>,
     source: wgpu::RequestAdapterError,
+  },
+  #[snafu(display("failed to get device"))]
+  RequestDevice {
+    backtrace: Option<Backtrace>,
+    source: wgpu::RequestDeviceError,
   },
   #[snafu(display("failed to run app"))]
   RunApp {
