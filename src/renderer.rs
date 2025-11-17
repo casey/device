@@ -212,7 +212,6 @@ impl Renderer {
     let resolution = self.resolution;
     let format = self.format;
     capture.map_async(MapMode::Read, .., move |result| {
-      eprintln!("mapped buffer");
       if let Err(err) = result {
         eprintln!("failed to map capture buffer: {err}");
         return;
