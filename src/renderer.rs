@@ -284,7 +284,7 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
-  pub(crate) async fn new(window: Arc<Window>, resolution: u32) -> Result<Self> {
+  pub(crate) async fn new(window: Arc<Window>, resolution: Option<u32>) -> Result<Self> {
     let mut size = window.inner_size();
     size.width = size.width.max(1);
     size.height = size.height.max(1);
@@ -448,7 +448,7 @@ impl Renderer {
       overlay_scene: vello::Scene::new(),
       queue,
       render_pipeline,
-      resolution,
+      resolution: Self::resolution(size, resolution),
       sample_view,
       sampler,
       samples,
@@ -830,10 +830,10 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn resize(&mut self, size: PhysicalSize<u32>, resolution: u32) {
+  pub(crate) fn resize(&mut self, size: PhysicalSize<u32>, resolution: Option<u32>) {
     self.config.height = size.height.max(1);
     self.config.width = size.width.max(1);
-    self.resolution = resolution;
+    self.resolution = Self::resolution(size, resolution);
     self.size = Vec2u::new(size.width, size.height);
     self.surface.configure(&self.device, &self.config);
 
@@ -898,6 +898,10 @@ impl Renderer {
       tiling_bind_group,
       tiling_view,
     });
+  }
+
+  pub(crate) fn resolution(size: PhysicalSize<u32>, resolution: Option<u32>) -> u32 {
+    resolution.unwrap_or(size.height.max(size.width)).max(1)
   }
 
   fn target(&self, back: &TextureView) -> Target {
