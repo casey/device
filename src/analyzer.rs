@@ -70,8 +70,10 @@ impl Analyzer {
     let n = self.complex_frequencies.len();
     let half = n / 2;
     let spacing = stream.sample_rate() as f32 / n as f32;
-    let threshold = (20.0 / spacing).into_usize();
-    let cutoff = (15_000.0 / spacing).into_usize();
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    let threshold = (20.0 / spacing) as usize;
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    let cutoff = (15_000.0 / spacing) as usize;
 
     self.frequencies.clear();
     self.frequencies.extend(
