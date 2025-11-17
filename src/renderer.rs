@@ -606,18 +606,16 @@ impl Renderer {
       .get_current_texture()
       .context(error::CurrentTexture)?;
 
-    for target in &self.bindings().targets {
-      encoder.clear_texture(
-        &target.texture,
-        &ImageSubresourceRange {
-          aspect: TextureAspect::All,
-          base_mip_level: 0,
-          mip_level_count: None,
-          base_array_layer: 0,
-          array_layer_count: None,
-        },
-      );
-    }
+    encoder.clear_texture(
+      &self.bindings().targets[0].texture,
+      &ImageSubresourceRange {
+        aspect: TextureAspect::All,
+        base_mip_level: 0,
+        mip_level_count: None,
+        base_array_layer: 0,
+        array_layer_count: None,
+      },
+    );
 
     let mut source = 0;
     let mut destination = 1;
