@@ -613,15 +613,11 @@ impl Renderer {
       .device
       .create_command_encoder(&CommandEncoderDescriptor::default());
 
-    let frame = if let Some((surface, _config)) = &self.surface {
-      Some(
-        surface
-          .get_current_texture()
-          .context(error::CurrentTexture)?,
-      )
-    } else {
-      None
-    };
+    let frame = self
+      .surface
+      .as_ref()
+      .map(|(surface, _config)| surface.get_current_texture().context(error::CurrentTexture))
+      .transpose()?;
 
     encoder.clear_texture(
       &self.bindings().targets[0].texture,
