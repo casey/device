@@ -471,7 +471,7 @@ impl ApplicationHandler for App {
 
       self.window = Some(window.clone());
 
-      let renderer = match pollster::block_on(Renderer::new(window, self.state.resolution)) {
+      let renderer = match pollster::block_on(Renderer::new(Some(window), self.state.resolution)) {
         Ok(renderer) => renderer,
         Err(err) => {
           self.error = Some(err);
