@@ -52,7 +52,6 @@ use {
     SurfaceConfiguration, TexelCopyBufferInfo, TexelCopyBufferLayout, TexelCopyTextureInfo,
     Texture, TextureAspect, TextureDescriptor, TextureDimension, TextureFormat, TextureSampleType,
     TextureUsages, TextureView, TextureViewDescriptor, TextureViewDimension, Trace, VertexState,
-    util::TextureBlitter,
   },
   winit::{
     application::ApplicationHandler,

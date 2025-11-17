@@ -3,7 +3,6 @@ use super::*;
 pub(crate) struct Renderer {
   bind_group_layout: BindGroupLayout,
   bindings: Option<Bindings>,
-  blitter: TextureBlitter,
   config: SurfaceConfiguration,
   device: wgpu::Device,
   error_channel: std::sync::mpsc::Receiver<wgpu::Error>,
@@ -437,7 +436,6 @@ impl Renderer {
     let mut renderer = Renderer {
       bind_group_layout,
       bindings: None,
-      blitter: TextureBlitter::new(&device, format.into()),
       config,
       device,
       error_channel,
@@ -643,31 +641,23 @@ impl Renderer {
       &self.bindings().tiling_view,
     );
 
-    if state.status || state.text.is_some() {
-      self.render_overlay(state, fps)?;
+    self.render_overlay(state, fps)?;
 
-      self.draw(
-        &self.bindings().overlay_bind_group,
-        &mut encoder,
-        None,
-        filter_count + 1,
-        &self.bindings().targets[0].texture_view,
-      );
+    self.draw(
+      &self.bindings().overlay_bind_group,
+      &mut encoder,
+      None,
+      filter_count + 1,
+      &frame.texture.create_view(&TextureViewDescriptor::default()),
+    );
 
-      self.blitter.copy(
-        &self.device,
-        &mut encoder,
-        &self.bindings().targets[0].texture_view,
-        &frame.texture.create_view(&TextureViewDescriptor::default()),
-      );
-    } else {
-      self.blitter.copy(
-        &self.device,
-        &mut encoder,
-        &self.bindings().tiling_view,
-        &frame.texture.create_view(&TextureViewDescriptor::default()),
-      );
-    }
+    self.draw(
+      &self.bindings().overlay_bind_group,
+      &mut encoder,
+      None,
+      filter_count + 1,
+      &self.bindings().targets[0].texture_view,
+    );
 
     self.queue.submit([encoder.finish()]);
 
