@@ -469,9 +469,11 @@ impl ApplicationHandler for App {
         }
       };
 
+      let size = window.inner_size();
+
       self.window = Some(window.clone());
 
-      let renderer = match pollster::block_on(Renderer::new(&self.state, window)) {
+      let renderer = match pollster::block_on(Renderer::new(window, self.state.resolution(size))) {
         Ok(renderer) => renderer,
         Err(err) => {
           self.error = Some(err);
@@ -501,7 +503,11 @@ impl ApplicationHandler for App {
         self.redraw(event_loop);
       }
       WindowEvent::Resized(size) => {
-        self.renderer.as_mut().unwrap().resize(&self.state, size);
+        self
+          .renderer
+          .as_mut()
+          .unwrap()
+          .resize(size, self.state.resolution(size));
         self.window().request_redraw();
       }
       _ => {}

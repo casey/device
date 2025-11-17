@@ -284,7 +284,7 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
-  pub(crate) async fn new(state: &State, window: Arc<Window>) -> Result<Self> {
+  pub(crate) async fn new(window: Arc<Window>, resolution: u32) -> Result<Self> {
     let mut size = window.inner_size();
     size.width = size.width.max(1);
     size.height = size.height.max(1);
@@ -420,8 +420,6 @@ impl Renderer {
 
     let frequency_view = frequencies.create_view(&TextureViewDescriptor::default());
 
-    let resolution = state.resolution(size);
-
     let overlay_renderer = vello::Renderer::new(
       &device,
       vello::RendererOptions {
@@ -433,7 +431,7 @@ impl Renderer {
     )
     .context(error::CreateOverlayRenderer)?;
 
-    let mut renderer = Renderer {
+    let mut renderer = Self {
       bind_group_layout,
       bindings: None,
       config,
@@ -461,7 +459,7 @@ impl Renderer {
       uniform_buffer_stride,
     };
 
-    renderer.resize(state, size);
+    renderer.resize(size, resolution);
 
     Ok(renderer)
   }
@@ -832,10 +830,10 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn resize(&mut self, state: &State, size: PhysicalSize<u32>) {
+  pub(crate) fn resize(&mut self, size: PhysicalSize<u32>, resolution: u32) {
     self.config.height = size.height.max(1);
     self.config.width = size.width.max(1);
-    self.resolution = state.resolution(size);
+    self.resolution = resolution;
     self.size = Vec2u::new(size.width, size.height);
     self.surface.configure(&self.device, &self.config);
 
