@@ -963,7 +963,7 @@ impl Renderer {
       return;
     }
 
-    let size = u64::from(self.uniform_buffer_stride) * u64::try_from(uniforms.len()).unwrap();
+    let size = u64::from(self.uniform_buffer_stride) * uniforms.len().into_u64();
 
     let mut buffer = self
       .queue

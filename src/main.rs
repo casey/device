@@ -2,11 +2,11 @@ use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, controller::Controller,
     error::Error, event::Event, field::Field, filter::Filter, format::Format, frame::Frame,
-    hub::Hub, image::Image, input::Input, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
-    message::Message, options::Options, parameter::Parameter, program::Program, recorder::Recorder,
-    renderer::Renderer, shared::Shared, state::State, stream::Stream, subcommand::Subcommand,
-    tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
-    uniforms::Uniforms,
+    hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_usize::IntoUsize,
+    into_utf8_path::IntoUtf8Path, message::Message, options::Options, parameter::Parameter,
+    program::Program, recorder::Recorder, renderer::Renderer, shared::Shared, state::State,
+    stream::Stream, subcommand::Subcommand, tally::Tally, target::Target, templates::ShaderWgsl,
+    text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -83,6 +83,7 @@ mod frame;
 mod hub;
 mod image;
 mod input;
+mod into_u64;
 mod into_usize;
 mod into_utf8_path;
 mod message;
