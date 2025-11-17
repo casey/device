@@ -609,11 +609,11 @@ impl Renderer {
     encoder.clear_texture(
       &self.bindings().targets[0].texture,
       &ImageSubresourceRange {
+        array_layer_count: None,
         aspect: TextureAspect::All,
+        base_array_layer: 0,
         base_mip_level: 0,
         mip_level_count: None,
-        base_array_layer: 0,
-        array_layer_count: None,
       },
     );
 
