@@ -507,7 +507,7 @@ impl ApplicationHandler for App {
           .renderer
           .as_mut()
           .unwrap()
-          .resize(self.state.resolution(size), size);
+          .resize(size, self.state.resolution(size));
         self.window().request_redraw();
       }
       _ => {}

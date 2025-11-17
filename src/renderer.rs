@@ -459,7 +459,7 @@ impl Renderer {
       uniform_buffer_stride,
     };
 
-    renderer.resize(resolution, size);
+    renderer.resize(size, resolution);
 
     Ok(renderer)
   }
@@ -830,7 +830,7 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn resize(&mut self, resolution: u32, size: PhysicalSize<u32>) {
+  pub(crate) fn resize(&mut self, size: PhysicalSize<u32>, resolution: u32) {
     self.config.height = size.height.max(1);
     self.config.width = size.width.max(1);
     self.resolution = resolution;
