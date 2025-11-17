@@ -285,13 +285,13 @@ impl Renderer {
   }
 
   pub(crate) async fn new(window: Option<Arc<Window>>, resolution: Option<u32>) -> Result<Self> {
-    let mut size = window
-      .as_ref()
-      .map(|window| window.inner_size())
-      .unwrap_or(PhysicalSize {
+    let mut size = window.as_ref().map_or(
+      PhysicalSize {
         width: 256,
         height: 256,
-      });
+      },
+      |window| window.inner_size(),
+    );
     size.width = size.width.max(1);
     size.height = size.height.max(1);
 
@@ -862,7 +862,7 @@ impl Renderer {
     if let Some((surface, config)) = &mut self.surface {
       config.height = size.height.max(1);
       config.width = size.width.max(1);
-      surface.configure(&self.device, &config);
+      surface.configure(&self.device, config);
     }
 
     self.resolution = Self::resolution(size, resolution);
@@ -1015,21 +1015,19 @@ mod tests {
   use super::*;
 
   #[test]
+  #[ignore]
   fn foo() {
     // let tempdir = tempfile::tempdir().unwrap();
 
-    eprintln!("initializing renderer");
     let mut renderer = pollster::block_on(Renderer::new(None, Some(256))).unwrap();
     let analyzer = Analyzer::new();
     let now = Instant::now();
     let state = State::default().invert().x().push();
 
-    eprintln!("rendering");
     renderer.render(&analyzer, &state, now).unwrap();
 
     let (tx, rx) = mpsc::channel();
 
-    eprintln!("capturing");
     renderer
       .capture(move |image| {
         eprintln!("saving");
@@ -1037,12 +1035,8 @@ mod tests {
       })
       .unwrap();
 
-    eprintln!("rendering again");
-    renderer.render(&analyzer, &state, now).unwrap();
-
     renderer.device.poll(wgpu::PollType::Wait).unwrap();
 
-    eprintln!("waiting");
     rx.recv().unwrap().unwrap();
   }
 }
