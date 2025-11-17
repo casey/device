@@ -296,15 +296,13 @@ impl Renderer {
 
     let instance = Instance::default();
 
-    let surface = if let Some(window) = window {
-      Some(
+    let surface = window
+      .map(|window| {
         instance
           .create_surface(window)
-          .context(error::CreateSurface)?,
-      )
-    } else {
-      None
-    };
+          .context(error::CreateSurface)
+      })
+      .transpose()?;
 
     let adapter = instance
       .request_adapter(&RequestAdapterOptions {
