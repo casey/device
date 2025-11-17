@@ -469,11 +469,9 @@ impl ApplicationHandler for App {
         }
       };
 
-      let size = window.inner_size();
-
       self.window = Some(window.clone());
 
-      let renderer = match pollster::block_on(Renderer::new(window, self.state.resolution(size))) {
+      let renderer = match pollster::block_on(Renderer::new(window, self.state.resolution)) {
         Ok(renderer) => renderer,
         Err(err) => {
           self.error = Some(err);
@@ -507,7 +505,7 @@ impl ApplicationHandler for App {
           .renderer
           .as_mut()
           .unwrap()
-          .resize(size, self.state.resolution(size));
+          .resize(size, self.state.resolution);
         self.window().request_redraw();
       }
       _ => {}

@@ -57,13 +57,6 @@ impl State {
     self
   }
 
-  pub(crate) fn resolution(&self, size: PhysicalSize<u32>) -> u32 {
-    self
-      .resolution
-      .unwrap_or(size.height.max(size.width))
-      .max(1)
-  }
-
   pub(crate) fn samples(mut self) -> Self {
     self.filter.field = Field::Samples;
     self
