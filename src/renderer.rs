@@ -1036,9 +1036,10 @@ mod tests {
     let actual = rx.recv().unwrap();
 
     if expected.try_exists().unwrap() {
-      if actual != Image::load(&expected).unwrap() {
-        panic!("baseline image mismatch");
-      }
+      assert!(
+        actual == Image::load(&expected).unwrap(),
+        "baseline image mismatch",
+      );
     } else {
       panic!("no baseline image found for {name}");
     }
