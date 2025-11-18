@@ -92,11 +92,13 @@ impl App {
         .context(error::AudioSupportedStreamConfigs)?,
     )?;
 
-    let output_stream = rodio::OutputStreamBuilder::from_device(output_device)
+    let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
       .context(error::AudioBuildOutputStream)?
       .with_supported_config(&stream_config)
       .open_stream()
       .context(error::AudioBuildOutputStream)?;
+
+    output_stream.log_on_drop(false);
 
     let sink = Sink::connect_new(output_stream.mixer());
 

@@ -4,7 +4,7 @@ pub(crate) struct Renderer {
   bind_group_layout: BindGroupLayout,
   bindings: Option<Bindings>,
   device: wgpu::Device,
-  error_channel: std::sync::mpsc::Receiver<wgpu::Error>,
+  error_channel: mpsc::Receiver<wgpu::Error>,
   font_context: FontContext,
   format: Format,
   frame: u64,
@@ -1047,6 +1047,52 @@ mod tests {
 
   #[test]
   #[ignore]
+  fn circle() {
+    case("circle", 256, State::default().invert().circle().push());
+  }
+
+  #[test]
+  #[ignore]
+  fn circle_small_even() {
+    case(
+      "circle-small-even",
+      10,
+      State::default().invert().circle().push(),
+    );
+  }
+
+  #[test]
+  #[ignore]
+  fn circle_small_odd() {
+    case(
+      "circle-small-odd",
+      9,
+      State::default().invert().circle().push(),
+    );
+  }
+
+  #[test]
+  #[ignore]
+  fn circle_medium_even() {
+    case(
+      "circle-medium-even",
+      32,
+      State::default().invert().circle().push(),
+    );
+  }
+
+  #[test]
+  #[ignore]
+  fn circle_medium_odd() {
+    case(
+      "circle-medium-odd",
+      31,
+      State::default().invert().circle().push(),
+    );
+  }
+
+  #[test]
+  #[ignore]
   fn default() {
     case("default", 256, State::default());
   }
@@ -1061,6 +1107,30 @@ mod tests {
   #[ignore]
   fn x() {
     case("x", 256, State::default().invert().x().push());
+  }
+
+  #[test]
+  #[ignore]
+  fn x_small_even() {
+    case("x-small-even", 10, State::default().invert().x().push());
+  }
+
+  #[test]
+  #[ignore]
+  fn x_small_odd() {
+    case("x-small-odd", 9, State::default().invert().x().push());
+  }
+
+  #[test]
+  #[ignore]
+  fn x_medium_even() {
+    case("x-medium-even", 32, State::default().invert().x().push());
+  }
+
+  #[test]
+  #[ignore]
+  fn x_medium_odd() {
+    case("x-medium-odd", 31, State::default().invert().x().push());
   }
 
   #[test]
