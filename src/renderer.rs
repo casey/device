@@ -1009,7 +1009,7 @@ mod tests {
 
   #[test]
   #[ignore]
-  fn default() {
+  fn baseline() {
     let cases = [
       ("default", State::default()),
       ("x", State::default().invert().x().push()),
