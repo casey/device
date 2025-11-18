@@ -527,7 +527,9 @@ impl ApplicationHandler for App {
 
   fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
     if self.renderer.is_none() {
-      eprintln!("window event recieved without renderer");
+      self.errors.push(Error::internal(format!(
+        "window event recieved without renderer: {event:?}"
+      )));
       event_loop.exit();
       return;
     }
