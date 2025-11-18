@@ -33,8 +33,18 @@ impl App {
     })
   }
 
-  pub(crate) fn errors(self) -> Vec<Error> {
-    self.errors
+  pub(crate) fn errors(mut self) -> Result {
+    if self.errors.is_empty() {
+      Ok(())
+    } else {
+      let source = self.errors.remove(0);
+      Err(
+        error::AppExit {
+          additional: self.errors,
+        }
+        .into_error(Box::new(source)),
+      )
+    }
   }
 
   fn find_song(song: &str) -> Result<Utf8PathBuf> {
