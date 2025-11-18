@@ -3,7 +3,6 @@ use super::*;
 pub(crate) struct Renderer {
   bind_group_layout: BindGroupLayout,
   bindings: Option<Bindings>,
-  config: SurfaceConfiguration,
   device: wgpu::Device,
   error_channel: std::sync::mpsc::Receiver<wgpu::Error>,
   font_context: FontContext,
@@ -22,7 +21,7 @@ pub(crate) struct Renderer {
   sampler: Sampler,
   samples: Texture,
   size: Vec2u,
-  surface: Surface<'static>,
+  surface: Option<(Surface<'static>, SurfaceConfiguration)>,
   uniform_buffer: Buffer,
   uniform_buffer_size: u32,
   uniform_buffer_stride: u32,
@@ -284,22 +283,32 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
-  pub(crate) async fn new(window: Arc<Window>, resolution: Option<u32>) -> Result<Self> {
-    let mut size = window.inner_size();
+  pub(crate) async fn new(window: Option<Arc<Window>>, resolution: Option<u32>) -> Result<Self> {
+    let mut size = window.as_ref().map_or(
+      PhysicalSize {
+        width: 256,
+        height: 256,
+      },
+      |window| window.inner_size(),
+    );
     size.width = size.width.max(1);
     size.height = size.height.max(1);
 
     let instance = Instance::default();
 
-    let surface = instance
-      .create_surface(window)
-      .context(error::CreateSurface)?;
+    let surface = window
+      .map(|window| {
+        instance
+          .create_surface(window)
+          .context(error::CreateSurface)
+      })
+      .transpose()?;
 
     let adapter = instance
       .request_adapter(&RequestAdapterOptions {
         power_preference: PowerPreference::default(),
         force_fallback_adapter: false,
-        compatible_surface: Some(&surface),
+        compatible_surface: surface.as_ref(),
       })
       .await
       .context(error::RequestAdapter)?;
@@ -315,22 +324,28 @@ impl Renderer {
       .await
       .context(error::RequestDevice)?;
 
+    let (surface, format) = if let Some(surface) = surface {
+      let config = surface
+        .get_default_config(&adapter, size.width, size.height)
+        .context(error::DefaultConfig)?;
+
+      surface.configure(&device, &config);
+
+      let format = Format::try_from(surface.get_capabilities(&adapter).formats[0])?;
+
+      (Some((surface, config)), format)
+    } else {
+      (None, Format::default())
+    };
+
     let (tx, error_channel) = mpsc::channel();
 
     device.on_uncaptured_error(Box::new(move |error| tx.send(error).unwrap()));
-
-    let format = Format::try_from(surface.get_capabilities(&adapter).formats[0])?;
 
     let shader = device.create_shader_module(ShaderModuleDescriptor {
       label: label!(),
       source: ShaderSource::Wgsl(ShaderWgsl.to_string().into()),
     });
-
-    let config = surface
-      .get_default_config(&adapter, size.width, size.height)
-      .context(error::DefaultConfig)?;
-
-    surface.configure(&device, &config);
 
     let uniform_buffer_size = {
       let mut buffer = vec![0; MIB];
@@ -434,7 +449,6 @@ impl Renderer {
     let mut renderer = Self {
       bind_group_layout,
       bindings: None,
-      config,
       device,
       error_channel,
       font_context: FontContext::new(),
@@ -601,8 +615,9 @@ impl Renderer {
 
     let frame = self
       .surface
-      .get_current_texture()
-      .context(error::CurrentTexture)?;
+      .as_ref()
+      .map(|(surface, _config)| surface.get_current_texture().context(error::CurrentTexture))
+      .transpose()?;
 
     encoder.clear_texture(
       &self.bindings().targets[0].texture,
@@ -639,13 +654,15 @@ impl Renderer {
 
     self.render_overlay(state, fps)?;
 
-    self.draw(
-      &self.bindings().overlay_bind_group,
-      &mut encoder,
-      None,
-      filter_count + 1,
-      &frame.texture.create_view(&TextureViewDescriptor::default()),
-    );
+    if let Some(frame) = &frame {
+      self.draw(
+        &self.bindings().overlay_bind_group,
+        &mut encoder,
+        None,
+        filter_count + 1,
+        &frame.texture.create_view(&TextureViewDescriptor::default()),
+      );
+    }
 
     self.draw(
       &self.bindings().overlay_bind_group,
@@ -657,7 +674,9 @@ impl Renderer {
 
     self.queue.submit([encoder.finish()]);
 
-    frame.present();
+    if let Some(frame) = frame {
+      frame.present();
+    }
 
     log::info!(
       "{}",
@@ -688,7 +707,7 @@ impl Renderer {
 
     let text = if let Some(text) = state.text.clone() {
       text
-    } else {
+    } else if state.status {
       let mut items = Vec::new();
 
       if let Some(fps) = fps {
@@ -712,6 +731,8 @@ impl Renderer {
         x: 0.0,
         y: 0.0,
       }
+    } else {
+      return Ok(());
     };
 
     let bounds = if state.fit {
@@ -831,11 +852,14 @@ impl Renderer {
   }
 
   pub(crate) fn resize(&mut self, size: PhysicalSize<u32>, resolution: Option<u32>) {
-    self.config.height = size.height.max(1);
-    self.config.width = size.width.max(1);
+    if let Some((surface, config)) = &mut self.surface {
+      config.height = size.height.max(1);
+      config.width = size.width.max(1);
+      surface.configure(&self.device, config);
+    }
+
     self.resolution = Self::resolution(size, resolution);
     self.size = Vec2u::new(size.width, size.height);
-    self.surface.configure(&self.device, &self.config);
 
     let tiling_texture = self.device.create_texture(&TextureDescriptor {
       dimension: TextureDimension::D2,
@@ -975,6 +999,51 @@ impl Renderer {
       .zip(buffer.chunks_mut(self.uniform_buffer_stride.into_usize()))
     {
       uniforms.write(dst);
+    }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  #[ignore]
+  fn baseline() {
+    let cases = [
+      ("default", State::default()),
+      ("x", State::default().invert().x().push()),
+    ];
+
+    let mut renderer = pollster::block_on(Renderer::new(None, Some(256))).unwrap();
+    let analyzer = Analyzer::new();
+
+    for (name, state) in cases {
+      let now = Instant::now();
+
+      renderer.render(&analyzer, &state, now).unwrap();
+
+      let (tx, rx) = mpsc::channel();
+
+      let expected = Utf8PathBuf::from(format!("baseline/{name}.png"));
+      let actual = expected.with_extension("test.png");
+
+      renderer
+        .capture(move |image| {
+          image.save(&actual).unwrap();
+          tx.send(image).unwrap();
+        })
+        .unwrap();
+
+      renderer.device.poll(wgpu::PollType::Wait).unwrap();
+
+      let actual = rx.recv().unwrap();
+
+      if expected.exists() {
+        assert_eq!(actual, Image::load(&expected).unwrap());
+      } else {
+        panic!("no baseline image found for {name}");
+      }
     }
   }
 }

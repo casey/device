@@ -1,7 +1,8 @@
 use super::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub(crate) enum Format {
+  #[default]
   Bgra8UnormSrgb,
 }
 
