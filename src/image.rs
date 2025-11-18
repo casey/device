@@ -17,7 +17,8 @@ impl Image {
     &mut self.data
   }
 
-  fn load(path: &Utf8Path) -> Result<Self> {
+  #[allow(unused)]
+  pub(crate) fn load(path: &Utf8Path) -> Result<Self> {
     let decoder = Decoder::new(BufReader::new(
       File::open(path).context(error::FilesystemIo { path })?,
     ));
