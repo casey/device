@@ -38,7 +38,29 @@ impl Image {
     let bytes = &buffer[..info.buffer_size()];
 
     let data = match (info.color_type, info.bit_depth) {
-      (ColorType::Grayscale, BitDepth::One) => todo!(),
+      (ColorType::Grayscale, BitDepth::One) => {
+        let width = info.width.into_usize();
+        let height = info.height.into_usize();
+        let stride = width.div_ceil(8);
+
+        let mut data = Vec::with_capacity(width * height * 4);
+
+        for y in 0..height {
+          for x in 0..width {
+            let byte = y * stride + x / 8;
+            let bit = 7 - (x % 8);
+            let value = if bytes[byte] & (1 << bit) == 0 {
+              0
+            } else {
+              u8::MAX
+            };
+
+            data.extend([value, value, value, OPAQUE]);
+          }
+        }
+
+        data
+      }
       (ColorType::Grayscale, BitDepth::Eight) => bytes
         .iter()
         .copied()
