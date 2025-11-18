@@ -17,6 +17,9 @@ ci: forbid
 
 clippy: (watch 'lclippy --all-targets -- --deny warnings')
 
+clean:
+  rm baseline/*.test.png
+
 baseline:
   #!/usr/bin/env bash
   rm baseline/*.test.png
