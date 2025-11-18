@@ -18,10 +18,23 @@ impl Image {
   }
 
   fn load(path: &Utf8Path) -> Result<Self> {
-    let decoder = Decoder::new(BufReader::new(File::open(path).unwrap()));
-    let mut reader = decoder.read_info().unwrap();
-    let mut buffer = vec![0; reader.output_buffer_size().unwrap()];
-    let info = reader.next_frame(&mut buffer).unwrap();
+    let decoder = Decoder::new(BufReader::new(
+      File::open(path).context(error::FilesystemIo { path })?,
+    ));
+
+    let mut reader = decoder.read_info().context(error::PngDecode { path })?;
+
+    let mut buffer = vec![
+      0;
+      reader
+        .output_buffer_size()
+        .context(error::PngDecodeSize { path })?
+    ];
+
+    let info = reader
+      .next_frame(&mut buffer)
+      .context(error::PngDecode { path })?;
+
     let bytes = &buffer[..info.buffer_size()];
 
     let data = match (info.color_type, info.bit_depth) {
@@ -46,7 +59,16 @@ impl Image {
         })
         .collect(),
       (ColorType::Rgba, BitDepth::Eight) => bytes.into(),
-      _ => todo!(),
+      (color_type, bit_depth) => {
+        return Err(
+          error::PngDecodeFormat {
+            bit_depth,
+            color_type,
+            path,
+          }
+          .build(),
+        );
+      }
     };
 
     Ok(Self {

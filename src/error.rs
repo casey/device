@@ -116,6 +116,24 @@ pub(crate) enum Error {
     path: std::path::PathBuf,
     source: camino::FromPathError,
   },
+  #[snafu(display("failed to decode PNG at {path}"))]
+  PngDecode {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: png::DecodingError,
+  },
+  #[snafu(display("PNG at {path} too large to fit in memory"))]
+  PngDecodeSize {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+  },
+  #[snafu(display("PNG at {path} has unsupported format: {color_type:?} {bit_depth:?}"))]
+  PngDecodeFormat {
+    backtrace: Option<Backtrace>,
+    bit_depth: png::BitDepth,
+    color_type: png::ColorType,
+    path: Utf8PathBuf,
+  },
   #[snafu(display("failed to encode PNG at {path}"))]
   PngEncode {
     backtrace: Option<Backtrace>,
