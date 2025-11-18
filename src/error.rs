@@ -159,6 +159,15 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     status: ExitStatus,
   },
+  #[snafu(display(
+    "rendering failed: {error}{}",
+    Self::additional_error_message(additional.len(), ""),
+  ))]
+  Render {
+    backtrace: Option<Backtrace>,
+    error: wgpu::Error,
+    additional: Vec<wgpu::Error>,
+  },
   #[snafu(display("failed to render overlay"))]
   RenderOverlay {
     backtrace: Option<Backtrace>,
@@ -209,29 +218,20 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     texture_format: TextureFormat,
   },
-  #[snafu(display(
-    "rendering failed: {error}{}",
-    Self::additional_error_message(additional.len(), ""),
-  ))]
-  Render {
-    backtrace: Option<Backtrace>,
-    error: wgpu::Error,
-    additional: Vec<wgpu::Error>,
-  },
 }
 
 impl Error {
-  pub(crate) fn internal(message: impl Into<String>) -> Self {
-    Internal { message }.build()
-  }
-
   fn additional_error_message(additional: usize, prefix: &str) -> String {
     if additional == 0 {
-      return "".into();
+      return String::new();
     }
 
     let plural = if additional == 1 { "" } else { "s" };
 
     format!("{prefix}{additional} additional error{plural} suppressed")
+  }
+
+  pub(crate) fn internal(message: impl Into<String>) -> Self {
+    Internal { message }.build()
   }
 }
