@@ -9,7 +9,7 @@ pub(crate) fn run(options: Options) -> Result {
     .run_app(&mut app)
     .context(error::RunApp)?;
 
-  if let Some(err) = app.error() {
+  if let Some(err) = app.errors().into_iter().next() {
     return Err(err);
   }
 

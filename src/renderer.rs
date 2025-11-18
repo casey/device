@@ -473,10 +473,18 @@ impl Renderer {
   }
 
   pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {
-    match self.error_channel.try_recv() {
-      Ok(error) => return Err(error::Validation.into_error(error)),
-      Err(mpsc::TryRecvError::Empty) => {}
-      Err(mpsc::TryRecvError::Disconnected) => panic!("error channel disconnected"),
+    let mut errors = Vec::new();
+
+    loop {
+      match self.error_channel.try_recv() {
+        Ok(err) => errors.push(err),
+        Err(mpsc::TryRecvError::Empty) => break,
+        Err(mpsc::TryRecvError::Disconnected) => panic!("error channel disconnected"),
+      }
+    }
+
+    if let Some(err) = errors.into_iter().next() {
+      return Err(error::Validation.into_error(err));
     }
 
     if self.frame_times.len() == self.frame_times.capacity() {
