@@ -11,6 +11,7 @@ use {
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
+  nalgebra::Vector2,
   parley::{FontContext, LayoutContext},
   regex::{Regex, RegexBuilder},
   rodio::{
@@ -30,6 +31,7 @@ use {
     fmt::{self, Display, Formatter, Write},
     fs::{self, File},
     io::{self, BufReader, BufWriter},
+    num::NonZeroU32,
     ops::{Add, AddAssign, SubAssign},
     process::{self, Command, ExitStatus},
     sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
@@ -115,7 +117,6 @@ type Result<T = (), E = Error> = std::result::Result<T, E>;
 type Mat3f = nalgebra::Matrix3<f32>;
 type Mat4f = nalgebra::Matrix4<f32>;
 type Vec2f = nalgebra::Vector2<f32>;
-type Vec2u = nalgebra::Vector2<u32>;
 type Vec4f = nalgebra::Vector4<f32>;
 
 fn default<T: Default>() -> T {
