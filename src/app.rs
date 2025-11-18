@@ -407,6 +407,17 @@ impl App {
     self.window().request_redraw();
   }
 
+  fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
+    let size = Vector2::<NonZeroU32>::new(
+      size.width.max(1).try_into().unwrap(),
+      size.height.max(1).try_into().unwrap(),
+    );
+
+    let resolution = self.state.resolution.unwrap_or(size.x.max(size.y));
+
+    (size, resolution)
+  }
+
   fn stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
   ) -> Result<SupportedStreamConfig> {
@@ -469,9 +480,11 @@ impl ApplicationHandler for App {
         }
       };
 
+      let (size, resolution) = self.resolution(window.inner_size());
+
       self.window = Some(window.clone());
 
-      let renderer = match pollster::block_on(Renderer::new(Some(window), self.state.resolution)) {
+      let renderer = match pollster::block_on(Renderer::new(Some(window), size, resolution)) {
         Ok(renderer) => renderer,
         Err(err) => {
           self.error = Some(err);
@@ -501,11 +514,8 @@ impl ApplicationHandler for App {
         self.redraw(event_loop);
       }
       WindowEvent::Resized(size) => {
-        self
-          .renderer
-          .as_mut()
-          .unwrap()
-          .resize(size, self.state.resolution);
+        let (size, resolution) = self.resolution(size);
+        self.renderer.as_mut().unwrap().resize(size, resolution);
         self.window().request_redraw();
       }
       _ => {}

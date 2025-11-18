@@ -14,6 +14,7 @@ ci: forbid
   cargo lclippy --workspace --all-targets -- --deny warnings
   cargo fmt --all -- --check
   cargo ltest --workspace
+  cargo ltest --workspace -- --ignored
 
 clippy: (watch 'lclippy --all-targets -- --deny warnings')
 

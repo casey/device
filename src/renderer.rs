@@ -16,11 +16,11 @@ pub(crate) struct Renderer {
   overlay_scene: vello::Scene,
   queue: Queue,
   render_pipeline: RenderPipeline,
-  resolution: u32,
+  resolution: NonZeroU32,
   sample_view: TextureView,
   sampler: Sampler,
   samples: Texture,
-  size: Vec2u,
+  size: Vector2<NonZeroU32>,
   surface: Option<(Surface<'static>, SurfaceConfiguration)>,
   uniform_buffer: Buffer,
   uniform_buffer_size: u32,
@@ -163,7 +163,7 @@ impl Renderer {
 
   fn bytes_per_row_with_padding(&self) -> u32 {
     const MASK: u32 = COPY_BYTES_PER_ROW_ALIGNMENT - 1;
-    (self.resolution * CHANNELS + MASK) & !MASK
+    (self.resolution.get() * CHANNELS + MASK) & !MASK
   }
 
   pub(crate) fn capture(&self, callback: impl FnOnce(Image) + Send + 'static) -> Result {
@@ -179,7 +179,7 @@ impl Renderer {
       self.device.create_buffer(&BufferDescriptor {
         label: label!(),
         mapped_at_creation: false,
-        size: (self.bytes_per_row_with_padding() * self.resolution).into(),
+        size: (self.bytes_per_row_with_padding() * self.resolution.get()).into(),
         usage: BufferUsages::COPY_DST | BufferUsages::MAP_READ,
       })
     });
@@ -200,8 +200,8 @@ impl Renderer {
         },
       },
       Extent3d {
-        width: self.resolution,
-        height: self.resolution,
+        width: self.resolution.get(),
+        height: self.resolution.get(),
         depth_or_array_layers: 1,
       },
     );
@@ -221,10 +221,10 @@ impl Renderer {
         let view = buffer.get_mapped_range(..);
 
         let channels = CHANNELS.into_usize();
-        let bytes_per_row = resolution.into_usize() * channels;
+        let bytes_per_row = resolution.get().into_usize() * channels;
 
         let mut image = Image::default();
-        image.resize(resolution, resolution);
+        image.resize(resolution.get(), resolution.get());
         for (src, dst) in view
           .chunks(bytes_per_row_with_padding.into_usize())
           .map(|src| &src[..bytes_per_row])
@@ -283,17 +283,11 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
-  pub(crate) async fn new(window: Option<Arc<Window>>, resolution: Option<u32>) -> Result<Self> {
-    let mut size = window.as_ref().map_or(
-      PhysicalSize {
-        width: 256,
-        height: 256,
-      },
-      |window| window.inner_size(),
-    );
-    size.width = size.width.max(1);
-    size.height = size.height.max(1);
-
+  pub(crate) async fn new(
+    window: Option<Arc<Window>>,
+    size: Vector2<NonZeroU32>,
+    resolution: NonZeroU32,
+  ) -> Result<Self> {
     let instance = Instance::default();
 
     let surface = window
@@ -326,7 +320,7 @@ impl Renderer {
 
     let (surface, format) = if let Some(surface) = surface {
       let config = surface
-        .get_default_config(&adapter, size.width, size.height)
+        .get_default_config(&adapter, size.x.get(), size.y.get())
         .context(error::DefaultConfig)?;
 
       surface.configure(&device, &config);
@@ -462,11 +456,11 @@ impl Renderer {
       overlay_scene: vello::Scene::new(),
       queue,
       render_pipeline,
-      resolution: Self::resolution(size, resolution),
+      resolution,
       sample_view,
       sampler,
       samples,
-      size: Vec2u::new(size.width, size.height),
+      size,
       surface,
       uniform_buffer,
       uniform_buffer_size,
@@ -508,7 +502,7 @@ impl Renderer {
     };
 
     let tiling = Tiling {
-      resolution: self.resolution / tiling_size,
+      resolution: self.resolution.get() / tiling_size,
       size: tiling_size,
     };
 
@@ -578,7 +572,7 @@ impl Renderer {
       offset: Vec2f::default(),
       position: Mat3f::identity(),
       repeat: state.repeat,
-      resolution: Vec2f::new(self.resolution as f32, self.resolution as f32),
+      resolution: Vec2f::new(self.resolution.get() as f32, self.resolution.get() as f32),
       rms,
       sample_range,
       tiling: 1,
@@ -600,7 +594,7 @@ impl Renderer {
       offset: Vec2f::default(),
       position: Mat3f::identity(),
       repeat: state.repeat,
-      resolution: Vec2f::new(self.size.x as f32, self.size.y as f32),
+      resolution: Vec2f::new(self.size.x.get() as f32, self.size.y.get() as f32),
       rms,
       sample_range,
       tiling: 1,
@@ -739,29 +733,31 @@ impl Renderer {
       Rect {
         x0: 0.0,
         y0: 0.0,
-        x1: self.resolution as f64,
-        y1: self.resolution as f64,
+        x1: self.resolution.get() as f64,
+        y1: self.resolution.get() as f64,
       }
     } else {
       let dy = self
         .size
         .x
-        .checked_sub(self.size.y)
+        .get()
+        .checked_sub(self.size.y.get())
         .map(|dy| dy as f64 / 2.0)
         .unwrap_or_default();
 
       let dx = self
         .size
         .y
-        .checked_sub(self.size.x)
+        .get()
+        .checked_sub(self.size.x.get())
         .map(|dx| dx as f64 / 2.0)
         .unwrap_or_default();
 
       Rect {
         x0: dx,
         y0: dy,
-        x1: self.size.x as f64 + dx,
-        y1: self.size.y as f64 + dy,
+        x1: self.size.x.get() as f64 + dx,
+        y1: self.size.y.get() as f64 + dy,
       }
     };
 
@@ -842,8 +838,8 @@ impl Renderer {
         &RenderParams {
           antialiasing_method: AaConfig::Msaa16,
           base_color: Color::TRANSPARENT,
-          height: self.resolution,
-          width: self.resolution,
+          height: self.resolution.get(),
+          width: self.resolution.get(),
         },
       )
       .context(error::RenderOverlay)?;
@@ -851,15 +847,15 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn resize(&mut self, size: PhysicalSize<u32>, resolution: Option<u32>) {
+  pub(crate) fn resize(&mut self, size: Vector2<NonZeroU32>, resolution: NonZeroU32) {
     if let Some((surface, config)) = &mut self.surface {
-      config.height = size.height.max(1);
-      config.width = size.width.max(1);
+      config.height = size.y.get();
+      config.width = size.x.get();
       surface.configure(&self.device, config);
     }
 
-    self.resolution = Self::resolution(size, resolution);
-    self.size = Vec2u::new(size.width, size.height);
+    self.resolution = resolution;
+    self.size = size;
 
     let tiling_texture = self.device.create_texture(&TextureDescriptor {
       dimension: TextureDimension::D2,
@@ -869,8 +865,8 @@ impl Renderer {
       sample_count: 1,
       size: Extent3d {
         depth_or_array_layers: 1,
-        height: self.resolution,
-        width: self.resolution,
+        height: self.resolution.get(),
+        width: self.resolution.get(),
       },
       usage: TextureUsages::RENDER_ATTACHMENT
         | TextureUsages::TEXTURE_BINDING
@@ -899,8 +895,8 @@ impl Renderer {
         sample_count: 1,
         size: Extent3d {
           depth_or_array_layers: 1,
-          height: self.resolution,
-          width: self.resolution,
+          height: self.resolution.get(),
+          width: self.resolution.get(),
         },
         usage: TextureUsages::STORAGE_BINDING | TextureUsages::TEXTURE_BINDING,
         view_formats: &[TextureFormat::Rgba8Unorm],
@@ -924,10 +920,6 @@ impl Renderer {
     });
   }
 
-  pub(crate) fn resolution(size: PhysicalSize<u32>, resolution: Option<u32>) -> u32 {
-    resolution.unwrap_or(size.height.max(size.width)).max(1)
-  }
-
   fn target(&self, back: &TextureView) -> Target {
     let texture = self.device.create_texture(&TextureDescriptor {
       dimension: TextureDimension::D2,
@@ -937,8 +929,8 @@ impl Renderer {
       sample_count: 1,
       size: Extent3d {
         depth_or_array_layers: 1,
-        height: self.resolution,
-        width: self.resolution,
+        height: self.resolution.get(),
+        width: self.resolution.get(),
       },
       usage: TextureUsages::COPY_SRC
         | TextureUsages::RENDER_ATTACHMENT
@@ -1013,21 +1005,18 @@ mod tests {
     let cases = [
       ("default", 256, State::default()),
       ("x", 256, State::default().invert().x().push()),
-      ("zero", 0, State::default()),
     ];
 
-    let mut renderer = pollster::block_on(Renderer::new(None, Some(256))).unwrap();
+    let resolution = 256.try_into().unwrap();
+    let size = Vector2::new(resolution, resolution);
+
+    let mut renderer = pollster::block_on(Renderer::new(None, size, resolution)).unwrap();
     let analyzer = Analyzer::new();
     let now = Instant::now();
 
     for (name, resolution, state) in cases {
-      renderer.resize(
-        PhysicalSize {
-          height: 256,
-          width: 256,
-        },
-        Some(resolution),
-      );
+      let resolution = resolution.try_into().unwrap();
+      renderer.resize(Vector2::new(resolution, resolution), resolution);
       renderer.render(&analyzer, &state, now).unwrap();
 
       let (tx, rx) = mpsc::channel();
