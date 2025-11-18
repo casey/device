@@ -1007,40 +1007,43 @@ impl Renderer {
 mod tests {
   use super::*;
 
-  #[track_caller]
-  fn baseline_test(name: &str, state: State) {
-    let mut renderer = pollster::block_on(Renderer::new(None, Some(256))).unwrap();
-    let analyzer = Analyzer::new();
-    let now = Instant::now();
-
-    renderer.render(&analyzer, &state, now).unwrap();
-
-    let (tx, rx) = mpsc::channel();
-
-    let expected = Utf8PathBuf::from(format!("baseline/{name}.png"));
-    let actual = expected.with_extension("test.png");
-
-    renderer
-      .capture(move |image| {
-        image.save(&actual).unwrap();
-        tx.send(image).unwrap();
-      })
-      .unwrap();
-
-    renderer.device.poll(wgpu::PollType::Wait).unwrap();
-
-    let actual = rx.recv().unwrap();
-
-    if expected.exists() {
-      assert_eq!(actual, Image::load(&expected).unwrap());
-    } else {
-      panic!("no baseline image found for {name}");
-    }
-  }
-
   #[test]
   #[ignore]
   fn default() {
-    baseline_test("default", State::default());
+    let cases = [
+      ("default", State::default()),
+      ("x", State::default().invert().x().push()),
+    ];
+
+    let mut renderer = pollster::block_on(Renderer::new(None, Some(256))).unwrap();
+    let analyzer = Analyzer::new();
+
+    for (name, state) in cases {
+      let now = Instant::now();
+
+      renderer.render(&analyzer, &state, now).unwrap();
+
+      let (tx, rx) = mpsc::channel();
+
+      let expected = Utf8PathBuf::from(format!("baseline/{name}.png"));
+      let actual = expected.with_extension("test.png");
+
+      renderer
+        .capture(move |image| {
+          image.save(&actual).unwrap();
+          tx.send(image).unwrap();
+        })
+        .unwrap();
+
+      renderer.device.poll(wgpu::PollType::Wait).unwrap();
+
+      let actual = rx.recv().unwrap();
+
+      if expected.exists() {
+        assert_eq!(actual, Image::load(&expected).unwrap());
+      } else {
+        panic!("no baseline image found for {name}");
+      }
+    }
   }
 }
