@@ -557,6 +557,8 @@ impl Renderer {
       });
     }
 
+    let resolution = Vec2f::new(self.resolution.get() as f32, self.resolution.get() as f32);
+
     uniforms.push(Uniforms {
       back_read: tiling.back_read(filter_count),
       color: Mat4f::identity(),
@@ -572,7 +574,29 @@ impl Renderer {
       offset: Vec2f::default(),
       position: Mat3f::identity(),
       repeat: state.repeat,
-      resolution: Vec2f::new(self.resolution.get() as f32, self.resolution.get() as f32),
+      resolution,
+      rms,
+      sample_range,
+      tiling: 1,
+      wrap: false,
+    });
+
+    uniforms.push(Uniforms {
+      back_read: true,
+      color: Mat4f::identity(),
+      coordinates: false,
+      field: Field::None,
+      filters: filter_count,
+      fit: state.fit,
+      frequency_range,
+      front_offset: Vec2f::new(0.0, 0.0),
+      front_read: true,
+      gain,
+      index: filter_count,
+      offset: Vec2f::default(),
+      position: Mat3f::identity(),
+      repeat: state.repeat,
+      resolution,
       rms,
       sample_range,
       tiling: 1,
@@ -650,16 +674,6 @@ impl Renderer {
 
     self.render_overlay(state, fps)?;
 
-    if let Some(frame) = &frame {
-      self.draw(
-        &self.bindings().overlay_bind_group,
-        &mut encoder,
-        None,
-        filter_count + 1,
-        &frame.texture.create_view(&TextureViewDescriptor::default()),
-      );
-    }
-
     self.draw(
       &self.bindings().overlay_bind_group,
       &mut encoder,
@@ -667,6 +681,16 @@ impl Renderer {
       filter_count + 1,
       &self.bindings().targets[0].texture_view,
     );
+
+    if let Some(frame) = &frame {
+      self.draw(
+        &self.bindings().overlay_bind_group,
+        &mut encoder,
+        None,
+        filter_count + 2,
+        &frame.texture.create_view(&TextureViewDescriptor::default()),
+      );
+    }
 
     self.queue.submit([encoder.finish()]);
 
@@ -1008,11 +1032,12 @@ mod tests {
   });
 
   #[track_caller]
-  fn case(name: &str, resolution: u32, state: State) {
+  fn case(name: &str, width: u32, height: u32, state: State) {
     let mut renderer = RENDERER.lock().unwrap();
 
-    let resolution = resolution.try_into().unwrap();
-    renderer.resize(Vector2::new(resolution, resolution), resolution);
+    let width = width.try_into().unwrap();
+    let height = height.try_into().unwrap();
+    renderer.resize(Vector2::new(width, height), width.max(height));
     renderer
       .render(&Analyzer::new(), &state, Instant::now())
       .unwrap();
@@ -1048,7 +1073,12 @@ mod tests {
   #[test]
   #[ignore]
   fn circle() {
-    case("circle", 256, State::default().invert().circle().push());
+    case(
+      "circle",
+      256,
+      256,
+      State::default().invert().circle().push(),
+    );
   }
 
   #[test]
@@ -1056,6 +1086,7 @@ mod tests {
   fn circle_small_even() {
     case(
       "circle-small-even",
+      10,
       10,
       State::default().invert().circle().push(),
     );
@@ -1067,6 +1098,7 @@ mod tests {
     case(
       "circle-small-odd",
       9,
+      9,
       State::default().invert().circle().push(),
     );
   }
@@ -1076,6 +1108,7 @@ mod tests {
   fn circle_medium_even() {
     case(
       "circle-medium-even",
+      32,
       32,
       State::default().invert().circle().push(),
     );
@@ -1087,6 +1120,7 @@ mod tests {
     case(
       "circle-medium-odd",
       31,
+      31,
       State::default().invert().circle().push(),
     );
   }
@@ -1094,43 +1128,54 @@ mod tests {
   #[test]
   #[ignore]
   fn default() {
-    case("default", 256, State::default());
+    case("default", 256, 256, State::default());
   }
 
   #[test]
   #[ignore]
   fn left() {
-    case("left", 256, State::default().invert().left().push());
+    case("left", 256, 256, State::default().invert().left().push());
   }
 
   #[test]
   #[ignore]
   fn x() {
-    case("x", 256, State::default().invert().x().push());
+    case("x", 256, 256, State::default().invert().x().push());
+  }
+
+  #[test]
+  #[ignore]
+  fn x_oblong() {
+    case("x-oblong", 256, 128, State::default().invert().x().push());
   }
 
   #[test]
   #[ignore]
   fn x_small_even() {
-    case("x-small-even", 10, State::default().invert().x().push());
+    case("x-small-even", 10, 10, State::default().invert().x().push());
   }
 
   #[test]
   #[ignore]
   fn x_small_odd() {
-    case("x-small-odd", 9, State::default().invert().x().push());
+    case("x-small-odd", 9, 9, State::default().invert().x().push());
   }
 
   #[test]
   #[ignore]
   fn x_medium_even() {
-    case("x-medium-even", 32, State::default().invert().x().push());
+    case(
+      "x-medium-even",
+      32,
+      32,
+      State::default().invert().x().push(),
+    );
   }
 
   #[test]
   #[ignore]
   fn x_medium_odd() {
-    case("x-medium-odd", 31, State::default().invert().x().push());
+    case("x-medium-odd", 31, 31, State::default().invert().x().push());
   }
 
   #[test]
@@ -1138,6 +1183,7 @@ mod tests {
   fn tile() {
     case(
       "tile",
+      256,
       256,
       State::default()
         .invert()
