@@ -78,11 +78,6 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
-  #[snafu(display("could not retrieve glyph for character `{character}`"))]
-  FontGlyph {
-    backtrace: Option<Backtrace>,
-    character: char,
-  },
   #[snafu(display("could not get home directory"))]
   Home { backtrace: Option<Backtrace> },
   #[snafu(display("internal error: {message}"))]
@@ -116,34 +111,29 @@ pub(crate) enum Error {
     path: std::path::PathBuf,
     source: camino::FromPathError,
   },
-  #[snafu(display("failed to decode PNG at {path}"))]
+  #[snafu(display("failed to decode PNG at `{path}`"))]
   PngDecode {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
     source: png::DecodingError,
   },
-  #[snafu(display("PNG at {path} has unsupported format: {color_type:?} {bit_depth:?}"))]
+  #[snafu(display("PNG has unsupported format {color_type:?} {bit_depth:?}: `{path}`"))]
   PngDecodeFormat {
     backtrace: Option<Backtrace>,
     bit_depth: png::BitDepth,
     color_type: png::ColorType,
     path: Utf8PathBuf,
   },
-  #[snafu(display("PNG at {path} too large to fit in memory"))]
+  #[snafu(display("PNG too large to fit in memory: `{path}`"))]
   PngDecodeSize {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
   },
-  #[snafu(display("failed to encode PNG at {path}"))]
+  #[snafu(display("failed to encode PNG: `{path}`"))]
   PngEncode {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
     source: png::EncodingError,
-  },
-  #[snafu(display("PNG cannot fit in memory: {path}"))]
-  PngOutputBufferSize {
-    backtrace: Option<Backtrace>,
-    path: Utf8PathBuf,
   },
   #[snafu(display("failed to invoke recording command"))]
   RecordingInvoke {
