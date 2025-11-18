@@ -1011,16 +1011,23 @@ mod tests {
   #[ignore]
   fn baseline() {
     let cases = [
-      ("default", State::default()),
-      ("x", State::default().invert().x().push()),
+      ("default", 256, State::default()),
+      ("x", 256, State::default().invert().x().push()),
+      ("zero", 0, State::default()),
     ];
 
     let mut renderer = pollster::block_on(Renderer::new(None, Some(256))).unwrap();
     let analyzer = Analyzer::new();
+    let now = Instant::now();
 
-    for (name, state) in cases {
-      let now = Instant::now();
-
+    for (name, resolution, state) in cases {
+      renderer.resize(
+        PhysicalSize {
+          height: 256,
+          width: 256,
+        },
+        Some(resolution),
+      );
       renderer.render(&analyzer, &state, now).unwrap();
 
       let (tx, rx) = mpsc::channel();
@@ -1039,7 +1046,7 @@ mod tests {
 
       let actual = rx.recv().unwrap();
 
-      if expected.exists() {
+      if expected.try_exists().unwrap() {
         assert_eq!(actual, Image::load(&expected).unwrap());
       } else {
         panic!("no baseline image found for {name}");
