@@ -528,7 +528,7 @@ impl ApplicationHandler for App {
   fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
     if self.renderer.is_none() {
       self.errors.push(Error::internal(format!(
-        "window event recieved before renderer initialization: {event:?}"
+        "window event received before renderer initialization: {event:?}"
       )));
       event_loop.exit();
       return;
