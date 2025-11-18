@@ -1010,12 +1010,10 @@ mod tests {
   #[test]
   #[ignore]
   fn foo() {
-    // let tempdir = tempfile::tempdir().unwrap();
-
     let mut renderer = pollster::block_on(Renderer::new(None, Some(256))).unwrap();
     let analyzer = Analyzer::new();
     let now = Instant::now();
-    let state = State::default().invert().x().push();
+    let state = State::default();
 
     renderer.render(&analyzer, &state, now).unwrap();
 
@@ -1024,7 +1022,8 @@ mod tests {
     renderer
       .capture(move |image| {
         eprintln!("saving");
-        tx.send(image.save("test.png".as_ref())).unwrap();
+        tx.send(image.save("baseline/default.test.png".as_ref()))
+          .unwrap();
       })
       .unwrap();
 
