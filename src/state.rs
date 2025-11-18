@@ -52,6 +52,12 @@ impl State {
     self
   }
 
+  #[cfg(test)]
+  pub(crate) fn left(mut self) -> Self {
+    self.filter.field = Field::Left;
+    self
+  }
+
   pub(crate) fn push(mut self) -> Self {
     self.filters.push(self.filter.clone());
     self

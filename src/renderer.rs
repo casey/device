@@ -1005,6 +1005,8 @@ mod tests {
     let cases = [
       ("default", 256, State::default()),
       ("x", 256, State::default().invert().x().push()),
+      ("left", 256, State::default().invert().left().push()),
+      // ("x-medium-even", 10, State::default().invert().x().push()),
     ];
 
     let resolution = 256.try_into().unwrap();

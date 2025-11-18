@@ -83,8 +83,16 @@ fn field_frequencies(p: vec2f) -> bool {
   return level > (-p.y + 1) * 0.5;
 }
 
+fn field_left(p: vec2f) -> bool {
+  return p.x + 1 < coefficient();
+}
+
 fn field_none(p: vec2f) -> bool {
   return false;
+}
+
+fn field_right(p: vec2f) -> bool {
+  return field_left(-p);
 }
 
 fn field_samples(p: vec2f) -> bool {
@@ -121,6 +129,12 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
 
   // convert fragment coordinates to [-1, 1]
   let centered = tile / uniforms.resolution * 2 - 1;
+
+  // var centered = vec2(0.0, 0.0);
+  // let extent = uniforms.resolution - vec2(1.0, 1.0);
+  // if (all(extent > vec2(0.0, 0.0))) {
+  //   centered = ((tile - vec2(0.5, 0.5)) / extent) * 2 - 1;
+  // }
 
   // apply position transform
   var transformed = (uniforms.position * vec3(centered, 1)).xy;

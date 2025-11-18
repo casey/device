@@ -17,6 +17,9 @@ ci: forbid
 
 clippy: (watch 'lclippy --all-targets -- --deny warnings')
 
+clean:
+  rm baseline/*.test.png
+
 outdated:
   cargo outdated --root-deps-only --workspace
 

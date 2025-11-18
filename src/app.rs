@@ -168,6 +168,18 @@ impl App {
           match command.as_str() {
             "spread" => self.state.spread = !self.state.spread,
             "status" => self.state.status = !self.state.status,
+            "left" => self.state.filters.push(Filter {
+              color: invert_color(),
+              field: Field::Left,
+              wrap: self.wrap,
+              ..default()
+            }),
+            "right" => self.state.filters.push(Filter {
+              color: invert_color(),
+              field: Field::Right,
+              wrap: self.wrap,
+              ..default()
+            }),
             _ => eprintln!("unknown command: {command}"),
           }
           self.command = None;
