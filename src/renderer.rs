@@ -613,16 +613,18 @@ impl Renderer {
       .map(|(surface, _config)| surface.get_current_texture().context(error::CurrentTexture))
       .transpose()?;
 
-    encoder.clear_texture(
-      &self.bindings().targets[0].texture,
-      &ImageSubresourceRange {
-        array_layer_count: None,
-        aspect: TextureAspect::All,
-        base_array_layer: 0,
-        base_mip_level: 0,
-        mip_level_count: None,
-      },
-    );
+    for target in &self.bindings().targets {
+      encoder.clear_texture(
+        &target.texture,
+        &ImageSubresourceRange {
+          array_layer_count: None,
+          aspect: TextureAspect::All,
+          base_array_layer: 0,
+          base_mip_level: 0,
+          mip_level_count: None,
+        },
+      );
+    }
 
     let mut source = 0;
     let mut destination = 1;
@@ -997,49 +999,87 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use {super::*, std::sync::LazyLock};
+
+  static RENDERER: LazyLock<Mutex<Renderer>> = LazyLock::new(|| {
+    let resolution = 256.try_into().unwrap();
+    let size = Vector2::new(resolution, resolution);
+    Mutex::new(pollster::block_on(Renderer::new(None, size, resolution)).unwrap())
+  });
+
+  #[track_caller]
+  fn case(name: &str, resolution: u32, state: State) {
+    let mut renderer = RENDERER.lock().unwrap();
+
+    let resolution = resolution.try_into().unwrap();
+    renderer.resize(Vector2::new(resolution, resolution), resolution);
+    renderer
+      .render(&Analyzer::new(), &state, Instant::now())
+      .unwrap();
+
+    let (tx, rx) = mpsc::channel();
+
+    let expected = Utf8PathBuf::from(format!("baseline/{name}.png"));
+    let actual = expected.with_extension("test.png");
+
+    renderer
+      .capture(move |image| {
+        image.save(&actual).unwrap();
+        tx.send(image).unwrap();
+      })
+      .unwrap();
+
+    renderer.device.poll(wgpu::PollType::Wait).unwrap();
+
+    drop(renderer);
+
+    let actual = rx.recv().unwrap();
+
+    if expected.try_exists().unwrap() {
+      assert!(
+        actual == Image::load(&expected).unwrap(),
+        "baseline image mismatch",
+      );
+    } else {
+      panic!("no baseline image found for {name}");
+    }
+  }
 
   #[test]
   #[ignore]
-  fn baseline() {
-    let cases = [
-      ("default", 256, State::default()),
-      ("x", 256, State::default().invert().x().push()),
-    ];
+  fn default() {
+    case("default", 256, State::default());
+  }
 
-    let resolution = 256.try_into().unwrap();
-    let size = Vector2::new(resolution, resolution);
+  #[test]
+  #[ignore]
+  fn left() {
+    case("left", 256, State::default().invert().left().push());
+  }
 
-    let mut renderer = pollster::block_on(Renderer::new(None, size, resolution)).unwrap();
-    let analyzer = Analyzer::new();
-    let now = Instant::now();
+  #[test]
+  #[ignore]
+  fn x() {
+    case("x", 256, State::default().invert().x().push());
+  }
 
-    for (name, resolution, state) in cases {
-      let resolution = resolution.try_into().unwrap();
-      renderer.resize(Vector2::new(resolution, resolution), resolution);
-      renderer.render(&analyzer, &state, now).unwrap();
-
-      let (tx, rx) = mpsc::channel();
-
-      let expected = Utf8PathBuf::from(format!("baseline/{name}.png"));
-      let actual = expected.with_extension("test.png");
-
-      renderer
-        .capture(move |image| {
-          image.save(&actual).unwrap();
-          tx.send(image).unwrap();
-        })
-        .unwrap();
-
-      renderer.device.poll(wgpu::PollType::Wait).unwrap();
-
-      let actual = rx.recv().unwrap();
-
-      if expected.try_exists().unwrap() {
-        assert_eq!(actual, Image::load(&expected).unwrap());
-      } else {
-        panic!("no baseline image found for {name}");
-      }
-    }
+  #[test]
+  #[ignore]
+  fn tile() {
+    case(
+      "tile",
+      256,
+      State::default()
+        .invert()
+        .x()
+        .push()
+        .circle()
+        .push()
+        .x()
+        .push()
+        .circle()
+        .push()
+        .tile(true),
+    );
   }
 }

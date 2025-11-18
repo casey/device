@@ -2,7 +2,7 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
-  command: Option<String>,
+  command: Option<Vec<String>>,
   error: Option<Error>,
   horizontal: f32,
   hub: Hub,
@@ -21,7 +21,6 @@ pub(crate) struct App {
   translation: Vec2f,
   vertical: f32,
   window: Option<Arc<Window>>,
-  wrap: bool,
   zoom: f32,
 }
 
@@ -153,7 +152,6 @@ impl App {
       translation: Vec2f::zeros(),
       vertical: 0.0,
       window: None,
-      wrap: true,
       zoom: 0.0,
     })
   }
@@ -163,9 +161,27 @@ impl App {
 
     if let Some(command) = self.command.as_mut() {
       match &key {
-        Key::Character(c) => command.push_str(c.as_str()),
+        Key::Character(c) => command.push(c.as_str().into()),
+        Key::Named(NamedKey::Backspace) => {
+          if command.pop().is_none() {
+            self.command = None;
+          }
+        }
         Key::Named(NamedKey::Enter) => {
+          let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
           match command.as_str() {
+            "left" => self.state.filters.push(Filter {
+              color: invert_color(),
+              field: Field::Left,
+              wrap: self.state.wrap,
+              ..default()
+            }),
+            "right" => self.state.filters.push(Filter {
+              color: invert_color(),
+              field: Field::Right,
+              wrap: self.state.wrap,
+              ..default()
+            }),
             "spread" => self.state.spread = !self.state.spread,
             "status" => self.state.status = !self.state.status,
             _ => eprintln!("unknown command: {command}"),
@@ -184,7 +200,7 @@ impl App {
             self.state.db -= 1.0;
           }
           ":" => {
-            self.command = Some(String::new());
+            self.command = Some(Vec::new());
           }
           ">" => {
             if let Err(err) = self.capture() {
@@ -201,18 +217,18 @@ impl App {
           "a" => self.state.filters.push(Filter {
             color: invert_color(),
             field: Field::All,
-            wrap: self.wrap,
+            wrap: self.state.wrap,
             ..default()
           }),
           "c" => self.state.filters.push(Filter {
             color: invert_color(),
             field: Field::Circle,
-            wrap: self.wrap,
+            wrap: self.state.wrap,
             ..default()
           }),
           "d" => self.state.filters.push(Filter {
             coordinates: true,
-            wrap: self.wrap,
+            wrap: self.state.wrap,
             ..default()
           }),
           "f" => {
@@ -221,12 +237,12 @@ impl App {
           "l" => self.state.filters.push(Filter {
             color: invert_color(),
             field: Field::Frequencies,
-            wrap: self.wrap,
+            wrap: self.state.wrap,
             ..default()
           }),
           "n" => self.state.filters.push(Filter {
             field: Field::None,
-            wrap: self.wrap,
+            wrap: self.state.wrap,
             ..default()
           }),
           "q" => {
@@ -243,24 +259,24 @@ impl App {
           "s" => self.state.filters.push(Filter {
             color: invert_color(),
             field: Field::Samples,
-            wrap: self.wrap,
+            wrap: self.state.wrap,
             ..default()
           }),
           "t" => {
             self.state.tile = !self.state.tile;
           }
           "w" => {
-            self.wrap = !self.wrap;
+            self.state.wrap = !self.state.wrap;
           }
           "x" => self.state.filters.push(Filter {
             color: invert_color(),
             field: Field::X,
-            wrap: self.wrap,
+            wrap: self.state.wrap,
             ..default()
           }),
           "z" => self.state.filters.push(Filter {
             position: Mat3f::new_scaling(2.0),
-            wrap: self.wrap,
+            wrap: self.state.wrap,
             ..default()
           }),
           _ => {}
@@ -298,45 +314,45 @@ impl App {
         (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Top,
-          wrap: self.wrap,
+          wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 1, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Bottom,
-          wrap: self.wrap,
+          wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 2, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::X,
-          wrap: self.wrap,
+          wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
           field: Field::Circle,
-          wrap: self.wrap,
+          wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 4, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_scaling(2.0),
-          wrap: self.wrap,
+          wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 5, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_scaling(0.5),
-          wrap: self.wrap,
+          wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 6, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_translation(&Vec2f::new(-0.1, 0.0)),
-          wrap: self.wrap,
+          wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 7, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_translation(&Vec2f::new(0.1, 0.0)),
-          wrap: self.wrap,
+          wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 8, Event::Button(true)) => {
@@ -377,7 +393,7 @@ impl App {
 
     self.state.filters.push(Filter {
       position: Mat3f::new_translation(&self.translation).prepend_scaling(self.scaling),
-      wrap: self.wrap,
+      wrap: self.state.wrap,
       ..default()
     });
 

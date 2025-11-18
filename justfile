@@ -17,6 +17,22 @@ ci: forbid
 
 clippy: (watch 'lclippy --all-targets -- --deny warnings')
 
+baseline:
+  #!/usr/bin/env bash
+  rm baseline/*.test.png
+  cargo ltest -- --ignored
+  for image in baseline/*.png; do
+    if [[ $image == *.test.png ]]; then
+      continue
+    fi
+    if [[ ! -e ${image%.*}.test.png ]]; then
+      echo "stale image: $image"
+      exit 1
+    fi
+  done
+  status=$?
+  exit $status
+
 outdated:
   cargo outdated --root-deps-only --workspace
 

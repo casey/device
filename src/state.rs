@@ -1,6 +1,5 @@
 use super::*;
 
-#[derive(Default)]
 pub(crate) struct State {
   pub(crate) alpha: Parameter,
   pub(crate) db: f32,
@@ -14,6 +13,27 @@ pub(crate) struct State {
   pub(crate) status: bool,
   pub(crate) text: Option<Text>,
   pub(crate) tile: bool,
+  pub(crate) wrap: bool,
+}
+
+impl Default for State {
+  fn default() -> Self {
+    Self {
+      alpha: Parameter::default(),
+      db: 0.0,
+      filter: Filter::default(),
+      filters: Vec::new(),
+      fit: false,
+      parameter: Parameter::default(),
+      repeat: false,
+      resolution: None,
+      spread: false,
+      status: false,
+      text: None,
+      tile: false,
+      wrap: true,
+    }
+  }
 }
 
 impl State {
@@ -52,6 +72,12 @@ impl State {
     self
   }
 
+  #[cfg(test)]
+  pub(crate) fn left(mut self) -> Self {
+    self.filter.field = Field::Left;
+    self
+  }
+
   pub(crate) fn push(mut self) -> Self {
     self.filters.push(self.filter.clone());
     self
@@ -69,6 +95,12 @@ impl State {
 
   pub(crate) fn text(mut self, text: Option<Text>) -> Self {
     self.text = text;
+    self
+  }
+
+  #[cfg(test)]
+  pub(crate) fn tile(mut self, tile: bool) -> Self {
+    self.tile = tile;
     self
   }
 
