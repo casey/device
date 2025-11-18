@@ -170,8 +170,6 @@ impl App {
         Key::Named(NamedKey::Enter) => {
           let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
           match command.as_str() {
-            "spread" => self.state.spread = !self.state.spread,
-            "status" => self.state.status = !self.state.status,
             "left" => self.state.filters.push(Filter {
               color: invert_color(),
               field: Field::Left,
@@ -184,6 +182,8 @@ impl App {
               wrap: self.state.wrap,
               ..default()
             }),
+            "spread" => self.state.spread = !self.state.spread,
+            "status" => self.state.status = !self.state.status,
             _ => eprintln!("unknown command: {command}"),
           }
           self.command = None;
