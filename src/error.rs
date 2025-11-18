@@ -3,6 +3,20 @@ use super::*;
 #[derive(Debug, Snafu)]
 #[snafu(context(suffix(false)), visibility(pub(crate)))]
 pub(crate) enum Error {
+  #[snafu(display(
+    "app exited with errors{}",
+    Self::additional_error_message(additional.len(), " "),
+  ))]
+  AppExit {
+    backtrace: Option<Backtrace>,
+    source: Box<Error>,
+    additional: Vec<Error>,
+  },
+  #[snafu(display("failed to run app"))]
+  AppRun {
+    backtrace: Option<Backtrace>,
+    source: winit::error::EventLoopError,
+  },
   #[snafu(display("failed to build audio input stream"))]
   AudioBuildInputStream {
     backtrace: Option<Backtrace>,
@@ -145,6 +159,15 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     status: ExitStatus,
   },
+  #[snafu(display(
+    "rendering failed: {error}{}",
+    Self::additional_error_message(additional.len(), ""),
+  ))]
+  Render {
+    backtrace: Option<Backtrace>,
+    error: wgpu::Error,
+    additional: Vec<wgpu::Error>,
+  },
   #[snafu(display("failed to render overlay"))]
   RenderOverlay {
     backtrace: Option<Backtrace>,
@@ -159,11 +182,6 @@ pub(crate) enum Error {
   RequestDevice {
     backtrace: Option<Backtrace>,
     source: wgpu::RequestDeviceError,
-  },
-  #[snafu(display("failed to run app"))]
-  RunApp {
-    backtrace: Option<Backtrace>,
-    source: winit::error::EventLoopError,
   },
   #[snafu(
     display(
@@ -200,14 +218,19 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     texture_format: TextureFormat,
   },
-  #[snafu(display("validation failed"))]
-  Validation {
-    backtrace: Option<Backtrace>,
-    source: wgpu::Error,
-  },
 }
 
 impl Error {
+  fn additional_error_message(additional: usize, prefix: &str) -> String {
+    if additional == 0 {
+      return String::new();
+    }
+
+    let plural = if additional == 1 { "" } else { "s" };
+
+    format!("{prefix}{additional} additional error{plural} suppressed")
+  }
+
   pub(crate) fn internal(message: impl Into<String>) -> Self {
     Internal { message }.build()
   }

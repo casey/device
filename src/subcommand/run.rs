@@ -7,11 +7,9 @@ pub(crate) fn run(options: Options) -> Result {
     .build()
     .context(error::EventLoopBuild)?
     .run_app(&mut app)
-    .context(error::RunApp)?;
+    .context(error::AppRun)?;
 
-  if let Some(err) = app.error() {
-    return Err(err);
-  }
+  app.errors()?;
 
   Ok(())
 }

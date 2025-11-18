@@ -3,7 +3,7 @@ use super::*;
 pub(crate) struct App {
   analyzer: Analyzer,
   command: Option<Vec<String>>,
-  error: Option<Error>,
+  errors: Vec<Error>,
   horizontal: f32,
   hub: Hub,
   macro_recording: Option<Vec<Key>>,
@@ -33,8 +33,18 @@ impl App {
     })
   }
 
-  pub(crate) fn error(self) -> Option<Error> {
-    self.error
+  pub(crate) fn errors(mut self) -> Result {
+    if self.errors.is_empty() {
+      Ok(())
+    } else {
+      let source = self.errors.remove(0);
+      Err(
+        error::AppExit {
+          additional: self.errors,
+        }
+        .into_error(Box::new(source)),
+      )
+    }
   }
 
   fn find_song(song: &str) -> Result<Utf8PathBuf> {
@@ -135,7 +145,7 @@ impl App {
     Ok(Self {
       analyzer: Analyzer::new(),
       command: None,
-      error: None,
+      errors: Vec::new(),
       horizontal: 0.0,
       hub: Hub::new()?,
       macro_recording: None,
@@ -206,7 +216,7 @@ impl App {
           }
           ">" => {
             if let Err(err) = self.capture() {
-              self.error = Some(err);
+              self.errors.push(err);
               event_loop.exit();
             }
           }
@@ -402,7 +412,7 @@ impl App {
     let renderer = self.renderer.as_mut().unwrap();
 
     if let Err(err) = renderer.render(&self.analyzer, &self.state, now) {
-      self.error = Some(err);
+      self.errors.push(err);
       event_loop.exit();
       return;
     }
@@ -414,7 +424,7 @@ impl App {
           eprintln!("failed to save recorded frame: {err}");
         }
       }) {
-        self.error = Some(err);
+        self.errors.push(err);
         event_loop.exit();
         return;
       }
@@ -492,7 +502,7 @@ impl ApplicationHandler for App {
       {
         Ok(window) => Arc::new(window),
         Err(err) => {
-          self.error = Some(err);
+          self.errors.push(err);
           event_loop.exit();
           return;
         }
@@ -505,7 +515,7 @@ impl ApplicationHandler for App {
       let renderer = match pollster::block_on(Renderer::new(Some(window), size, resolution)) {
         Ok(renderer) => renderer,
         Err(err) => {
-          self.error = Some(err);
+          self.errors.push(err);
           event_loop.exit();
           return;
         }
@@ -517,6 +527,9 @@ impl ApplicationHandler for App {
 
   fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
     if self.renderer.is_none() {
+      self.errors.push(Error::internal(format!(
+        "window event received before renderer initialization: {event:?}",
+      )));
       event_loop.exit();
       return;
     }
