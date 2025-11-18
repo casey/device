@@ -483,8 +483,15 @@ impl Renderer {
       }
     }
 
-    if let Some(err) = errors.into_iter().next() {
-      return Err(error::Validation.into_error(err));
+    if !errors.is_empty() {
+      let error = errors.remove(0);
+      return Err(
+        error::Render {
+          additional: errors,
+          error,
+        }
+        .build(),
+      );
     }
 
     if self.frame_times.len() == self.frame_times.capacity() {

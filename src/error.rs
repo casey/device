@@ -200,10 +200,20 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     texture_format: TextureFormat,
   },
-  #[snafu(display("validation failed"))]
-  Validation {
+  #[snafu(display(
+    "rendering failed: {error}{}",
+    (!additional.is_empty()).then(||
+      format!(
+        "{} additional error{} suppressed",
+        additional.len(),
+        (additional.len() != 1).then_some("s").unwrap_or_default(),
+      )
+    ).unwrap_or_default()
+  ))]
+  Render {
     backtrace: Option<Backtrace>,
-    source: wgpu::Error,
+    error: wgpu::Error,
+    additional: Vec<wgpu::Error>,
   },
 }
 
