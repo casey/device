@@ -1008,7 +1008,6 @@ mod tests {
   use super::*;
 
   #[test]
-  #[ignore]
   fn baseline() {
     let cases = [
       ("default", 256, State::default()),
