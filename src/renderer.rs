@@ -601,6 +601,28 @@ impl Renderer {
       wrap: false,
     });
 
+    uniforms.push(Uniforms {
+      back_read: true,
+      color: Mat4f::identity(),
+      coordinates: false,
+      field: Field::None,
+      filters: filter_count,
+      fit: state.fit,
+      frequency_range,
+      front_offset: Vec2f::new(0.0, 0.0),
+      front_read: true,
+      gain,
+      index: filter_count,
+      offset: Vec2f::default(),
+      position: Mat3f::identity(),
+      repeat: state.repeat,
+      resolution: Vec2f::new(self.resolution.get() as f32, self.resolution.get() as f32),
+      rms,
+      sample_range,
+      tiling: 1,
+      wrap: false,
+    });
+
     self.write_uniform_buffer(&uniforms);
 
     let mut encoder = self
@@ -664,7 +686,7 @@ impl Renderer {
       &self.bindings().overlay_bind_group,
       &mut encoder,
       None,
-      filter_count + 1,
+      filter_count + 2,
       &self.bindings().targets[0].texture_view,
     );
 
