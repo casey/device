@@ -12,6 +12,7 @@ pub(crate) struct Renderer {
   frequencies: Texture,
   frequency_view: TextureView,
   layout_context: LayoutContext,
+  limits: Limits,
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
   queue: Queue,
@@ -318,6 +319,10 @@ impl Renderer {
       .await
       .context(error::RequestDevice)?;
 
+    let limits = device.limits();
+
+    let resolution = resolution.min(limits.max_texture_dimension_2d.try_into().unwrap());
+
     let (surface, format) = if let Some(surface) = surface {
       let config = surface
         .get_default_config(&adapter, size.x.get(), size.y.get())
@@ -353,8 +358,6 @@ impl Renderer {
       address_mode_v: AddressMode::Repeat,
       ..default()
     });
-
-    let limits = device.limits();
 
     let alignment = limits.min_uniform_buffer_offset_alignment;
     let padding = (alignment - uniform_buffer_size % alignment) % alignment;
@@ -452,6 +455,7 @@ impl Renderer {
       frequencies,
       frequency_view,
       layout_context: LayoutContext::new(),
+      limits,
       overlay_renderer,
       overlay_scene: vello::Scene::new(),
       queue,
@@ -895,7 +899,7 @@ impl Renderer {
       surface.configure(&self.device, config);
     }
 
-    self.resolution = resolution;
+    self.resolution = resolution.min(self.limits.max_texture_dimension_2d.try_into().unwrap());
     self.size = size;
 
     let tiling_texture = self.device.create_texture(&TextureDescriptor {
@@ -1042,8 +1046,14 @@ mod tests {
 
   static RENDERER: LazyLock<Mutex<Renderer>> = LazyLock::new(|| {
     let resolution = 256.try_into().unwrap();
-    let size = Vector2::new(resolution, resolution);
-    Mutex::new(pollster::block_on(Renderer::new(None, size, resolution)).unwrap())
+    Mutex::new(
+      pollster::block_on(Renderer::new(
+        None,
+        Vector2::new(resolution, resolution),
+        resolution,
+      ))
+      .unwrap(),
+    )
   });
 
   #[track_caller]
@@ -1212,5 +1222,14 @@ mod tests {
         .push()
         .tile(true),
     );
+  }
+
+  #[test]
+  #[ignore]
+  fn resolution_is_clamped_to_2d_texture_limit() {
+    let resolution = 65536.try_into().unwrap();
+    let size = Vector2::new(resolution, resolution);
+    let mut renderer = pollster::block_on(Renderer::new(None, size, resolution)).unwrap();
+    renderer.resize(size, resolution);
   }
 }
