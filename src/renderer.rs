@@ -187,7 +187,7 @@ impl Renderer {
 
     encoder.copy_texture_to_buffer(
       TexelCopyTextureInfo {
-        texture: &self.bindings().targets[0].texture_view.texture(),
+        texture: self.bindings().targets[0].texture_view.texture(),
         mip_level: 0,
         origin: Origin3d::ZERO,
         aspect: TextureAspect::All,
@@ -655,7 +655,7 @@ impl Renderer {
 
     for target in &self.bindings().targets {
       encoder.clear_texture(
-        &target.texture_view.texture(),
+        target.texture_view.texture(),
         &ImageSubresourceRange {
           array_layer_count: None,
           aspect: TextureAspect::All,
@@ -667,7 +667,7 @@ impl Renderer {
     }
 
     encoder.clear_texture(
-      &self.bindings().tiling_view.texture(),
+      self.bindings().tiling_view.texture(),
       &ImageSubresourceRange {
         array_layer_count: None,
         aspect: TextureAspect::All,

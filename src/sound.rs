@@ -2,9 +2,9 @@ use super::*;
 
 #[derive(Clone, Default)]
 pub(crate) struct Sound {
-  pub(crate) samples: Vec<f32>,
   pub(crate) channels: u16,
   pub(crate) sample_rate: u32,
+  pub(crate) samples: Vec<f32>,
 }
 
 impl Sound {

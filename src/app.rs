@@ -408,10 +408,10 @@ impl App {
     if let Some(stream) = self.stream.as_mut() {
       let mut samples = Vec::new();
       stream.drain(&mut samples);
-      let sound = Sound::new {
-        samples,
+      let sound = Sound {
         channels: stream.channels(),
         sample_rate: stream.sample_rate(),
+        samples,
       };
       let done = stream.done();
       self.analyzer.update(&sound, done, &self.state);
@@ -443,7 +443,6 @@ impl App {
     if let (Some(recorder), Some(sound)) = (&self.recorder, current_sound) {
       let recorder = recorder.clone();
       if let Err(err) = renderer.capture({
-        let sound = sound;
         move |frame| {
           if let Err(err) = recorder.lock().unwrap().frame(frame, sound) {
             eprintln!("failed to save recorded frame: {err}");
