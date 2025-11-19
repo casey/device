@@ -2,6 +2,7 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
+  captures: Vec<mpsc::Receiver<Result>>,
   command: Option<Vec<String>>,
   errors: Vec<Error>,
   horizontal: f32,
@@ -26,11 +27,17 @@ pub(crate) struct App {
 
 impl App {
   fn capture(&mut self) -> Result {
-    self.renderer.as_ref().unwrap().capture(|capture| {
-      if let Err(err) = capture.save("capture.png".as_ref()) {
-        eprintln!("failed to save capture: {err}");
+    let (tx, rx) = mpsc::channel();
+
+    self.renderer.as_ref().unwrap().capture(move |capture| {
+      if let Err(err) = tx.send(capture.save("capture.png".as_ref())) {
+        eprintln!("failed to send capture result: {err}");
       }
-    })
+    })?;
+
+    self.captures.push(rx);
+
+    Ok(())
   }
 
   pub(crate) fn errors(mut self) -> Result {
@@ -144,6 +151,7 @@ impl App {
 
     Ok(Self {
       analyzer: Analyzer::new(),
+      captures: Vec::new(),
       command: None,
       errors: Vec::new(),
       horizontal: 0.0,
@@ -474,6 +482,12 @@ impl App {
 
 impl ApplicationHandler for App {
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
+    for capture in &self.captures {
+      if let Err(err) = capture.recv() {
+        eprintln!("capture failed: {err}");
+      }
+    }
+
     if let Some(recorder) = &self.recorder
       && let Err(err) = recorder.lock().unwrap().save()
     {
