@@ -1,9 +1,6 @@
 use {
   super::*,
-  clap::{
-    ArgGroup,
-    builder::styling::{AnsiColor, Effects, Styles},
-  },
+  clap::builder::styling::{AnsiColor, Effects, Styles},
 };
 
 const AUDIO: &str = "audio";
