@@ -431,8 +431,9 @@ impl App {
 
     if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();
+      let sound = self.analyzer.sounds().last().cloned().unwrap_or_default();
       if let Err(err) = renderer.capture(move |frame| {
-        if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
+        if let Err(err) = recorder.lock().unwrap().frame(frame, sound, now) {
           eprintln!("failed to save recorded frame: {err}");
         }
       }) {

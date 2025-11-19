@@ -1,17 +1,18 @@
 use super::*;
 
 pub(crate) struct Recorder {
-  frames: Vec<Instant>,
+  frames: Vec<(Instant, Sound)>,
   tempdir: TempDir,
   tempdir_path: Utf8PathBuf,
 }
 
 impl Recorder {
-  pub(crate) fn frame(&mut self, frame: Image, time: Instant) -> Result {
-    let path = self.tempdir_path.join(format!("{}.png", self.frames.len()));
+  pub(crate) fn frame(&mut self, frame: Image, sound: Sound, time: Instant) -> Result {
+    let index = self.frames.len();
+    let path = self.tempdir_path.join(format!("{index}.png"));
     log::trace!("saving frame to {path}");
     frame.save(&path)?;
-    self.frames.push(time);
+    self.frames.push((time, sound));
     Ok(())
   }
 
@@ -27,6 +28,7 @@ impl Recorder {
 
   pub(crate) fn save(&self) -> Result {
     const FRAMES: &str = "frames.text";
+    const AUDIO: &str = "audio.wav";
     const RECORDING: &str = "recording.mp4";
 
     log::info!(
@@ -35,14 +37,14 @@ impl Recorder {
     );
 
     let mut concat = "ffconcat version 1.0\n".to_owned();
-    for (i, time) in self.frames.iter().enumerate() {
+    for (i, (time, _sound)) in self.frames.iter().enumerate() {
       writeln!(&mut concat, "file {i}.png").unwrap();
       writeln!(&mut concat, "option framerate 1000000").unwrap();
-      if let Some(next) = self.frames.get(i + 1) {
+      if let Some((next_time, _)) = self.frames.get(i + 1) {
         writeln!(
           &mut concat,
           "duration {}us",
-          next.duration_since(*time).as_micros()
+          next_time.duration_since(*time).as_micros()
         )
         .unwrap();
       }
@@ -50,6 +52,25 @@ impl Recorder {
 
     let path = self.tempdir_path.join(FRAMES);
     fs::write(&path, concat).context(error::FilesystemIo { path })?;
+
+    let first_sound = &self.frames.first().unwrap().1;
+    let audio_path = self.tempdir_path.join(AUDIO);
+    let mut writer = WavWriter::create(
+      &audio_path,
+      WavSpec {
+        channels: first_sound.channels,
+        sample_rate: first_sound.sample_rate,
+        bits_per_sample: 32,
+        sample_format: hound::SampleFormat::Float,
+      },
+    )
+    .unwrap();
+    for (_, sound) in &self.frames {
+      for sample in &sound.samples {
+        writer.write_sample(*sample).unwrap();
+      }
+    }
+    writer.finalize().unwrap();
 
     let output = Command::new("ffmpeg")
       .args(["-safe", "0"])

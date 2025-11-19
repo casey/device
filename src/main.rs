@@ -4,13 +4,15 @@ use {
     error::Error, event::Event, field::Field, filter::Filter, format::Format, frame::Frame,
     hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_usize::IntoUsize,
     into_utf8_path::IntoUtf8Path, message::Message, options::Options, parameter::Parameter,
-    program::Program, recorder::Recorder, renderer::Renderer, shared::Shared, state::State,
+    program::Program, recorder::Recorder, renderer::Renderer, shared::Shared, sound::Sound,
+    state::State,
     stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer, tally::Tally, target::Target,
     templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
+  hound::{WavSpec, WavWriter},
   nalgebra::Vector2,
   parley::{FontContext, LayoutContext},
   regex::{Regex, RegexBuilder},
@@ -96,6 +98,7 @@ mod program;
 mod recorder;
 mod renderer;
 mod shared;
+mod sound;
 mod state;
 mod stream;
 mod subcommand;

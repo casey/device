@@ -3,6 +3,7 @@ use super::*;
 pub(crate) struct Analyzer {
   complex_frequencies: Vec<Complex<f32>>,
   frequencies: Vec<f32>,
+  history: Vec<Sound>,
   planner: FftPlanner<f32>,
   rms: f32,
   samples: Vec<f32>,
@@ -18,6 +19,7 @@ impl Analyzer {
     Self {
       complex_frequencies: Vec::new(),
       frequencies: Vec::new(),
+      history: Vec::new(),
       planner: FftPlanner::new(),
       rms: 0.0,
       samples: Vec::new(),
@@ -29,18 +31,24 @@ impl Analyzer {
     self.rms
   }
 
+  pub(crate) fn sounds(&self) -> &[Sound] {
+    &self.history
+  }
+
   pub(crate) fn samples(&self) -> &[f32] {
     &self.samples
   }
 
   pub(crate) fn update(&mut self, stream: &mut dyn Stream, state: &State) {
+    let mut samples = Vec::new();
+    let channels = stream.channels();
+    let sample_rate = stream.sample_rate();
+
     if stream.done() {
       self.samples.clear();
     } else {
-      let mut samples = Vec::new();
       stream.drain(&mut samples);
       let old = self.samples.len();
-      let channels = stream.channels();
       self.samples.extend(
         samples
           .chunks(channels.into())
@@ -50,6 +58,10 @@ impl Analyzer {
         .samples
         .drain(..self.samples.len().saturating_sub(128).min(old));
     }
+
+    self
+      .history
+      .push(Sound::new(samples, channels, sample_rate));
 
     let samples = &self.samples[..self.samples.len() & !1];
 
