@@ -34,9 +34,6 @@ impl Analyzer {
   }
 
   pub(crate) fn update(&mut self, sound: &Sound, done: bool, state: &State) {
-    let channels = sound.channels;
-    let sample_rate = sound.sample_rate;
-
     if done {
       self.samples.clear();
     } else {
@@ -44,8 +41,8 @@ impl Analyzer {
       self.samples.extend(
         sound
           .samples
-          .chunks(channels.into())
-          .map(|chunk| chunk.iter().sum::<f32>() / channels as f32),
+          .chunks(sound.channels.into())
+          .map(|chunk| chunk.iter().sum::<f32>() / sound.channels as f32),
       );
       self
         .samples
@@ -70,7 +67,7 @@ impl Analyzer {
 
     let n = self.complex_frequencies.len();
     let half = n / 2;
-    let spacing = sample_rate as f32 / n as f32;
+    let spacing = sound.sample_rate as f32 / n as f32;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let threshold = (20.0 / spacing) as usize;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
