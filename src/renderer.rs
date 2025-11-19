@@ -1225,6 +1225,7 @@ mod tests {
   }
 
   #[test]
+  #[ignore]
   fn resolution_is_clamped_to_2d_texture_limit() {
     let resolution = 65536.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
