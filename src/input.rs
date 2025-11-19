@@ -62,7 +62,7 @@ impl Stream for Input {
     false
   }
 
-  fn drain(&mut self, samples: &mut Vec<f32>) {
+  fn drain_samples(&mut self, samples: &mut Vec<f32>) {
     samples.extend(self.queue.lock().unwrap().drain(..));
   }
 

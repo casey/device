@@ -58,7 +58,7 @@ impl Stream for Track {
     inner.done && inner.buffer.is_empty()
   }
 
-  fn drain(&mut self, samples: &mut Vec<f32>) {
+  fn drain_samples(&mut self, samples: &mut Vec<f32>) {
     samples.append(&mut self.write().buffer);
   }
 

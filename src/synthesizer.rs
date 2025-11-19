@@ -46,7 +46,7 @@ impl Stream for Synthesizer {
     false
   }
 
-  fn drain(&mut self, samples: &mut Vec<f32>) {
+  fn drain_samples(&mut self, samples: &mut Vec<f32>) {
     let mut inner = self.0.lock().unwrap();
     samples.extend(&inner.buffer[inner.drained..]);
     inner.drained = inner.buffer.len();

@@ -403,20 +403,13 @@ impl App {
       }
     }
 
-    let mut current_sound = None;
-
-    if let Some(stream) = self.stream.as_mut() {
-      let mut samples = Vec::new();
-      stream.drain(&mut samples);
-      let sound = Sound {
-        channels: stream.channels(),
-        sample_rate: stream.sample_rate(),
-        samples,
-      };
-      let done = stream.done();
-      self.analyzer.update(&sound, done, &self.state);
-      current_sound = Some(sound);
-    }
+    let sound = if let Some(stream) = self.stream.as_mut() {
+      let sound = stream.drain();
+      self.analyzer.update(&sound, stream.done(), &self.state);
+      Some(sound)
+    } else {
+      None
+    };
 
     let now = Instant::now();
     let elapsed = (now - self.start).as_secs_f32();
@@ -440,7 +433,7 @@ impl App {
       return;
     }
 
-    if let (Some(recorder), Some(sound)) = (&self.recorder, current_sound) {
+    if let (Some(recorder), Some(sound)) = (&self.recorder, sound) {
       let recorder = recorder.clone();
       if let Err(err) = renderer.capture({
         move |frame| {
