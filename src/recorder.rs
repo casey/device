@@ -37,6 +37,7 @@ impl Recorder {
     let mut concat = "ffconcat version 1.0\n".to_owned();
     for (i, time) in self.frames.iter().enumerate() {
       writeln!(&mut concat, "file {i}.png").unwrap();
+      writeln!(&mut concat, "option framerate 1000000").unwrap();
       if let Some(next) = self.frames.get(i + 1) {
         writeln!(
           &mut concat,
@@ -51,9 +52,13 @@ impl Recorder {
     fs::write(&path, concat).context(error::FilesystemIo { path })?;
 
     let output = Command::new("ffmpeg")
-      .args([
-        "-vsync", "vfr", "-i", FRAMES, "-c:v", "libx264", "-pix_fmt", "yuv420p", RECORDING,
-      ])
+      .args(["-safe", "0"])
+      .args(["-i", FRAMES])
+      .args(["-c:v", "libx264"])
+      .args(["-pix_fmt", "yuv420p"])
+      .args(["-fps_mode:v", "passthrough"])
+      .args(["-video_track_timescale", "1000000"])
+      .arg(RECORDING)
       .current_dir(&self.tempdir_path)
       .output()
       .context(error::RecordingInvoke)?;
