@@ -1,14 +1,12 @@
 use {
   super::*,
-  clap::{
-    ArgGroup,
-    builder::styling::{AnsiColor, Effects, Styles},
-  },
+  clap::builder::styling::{AnsiColor, Effects, Styles},
 };
+
+const AUDIO: &str = "audio";
 
 #[derive(Clone, Default, Parser)]
 #[command(
-  group(ArgGroup::new("audio").args(["input", "song", "track"])),
   version,
   styles = Styles::styled()
     .error(AnsiColor::Red.on_default() | Effects::BOLD)
@@ -20,15 +18,17 @@ use {
     .valid(AnsiColor::Green.on_default())
 )]
 pub(crate) struct Options {
-  #[arg(long)]
+  #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
   #[arg(long)]
   pub(crate) program: Option<Program>,
   #[arg(long)]
   pub(crate) record: bool,
-  #[arg(long)]
+  #[arg(group = AUDIO, long)]
   pub(crate) song: Option<String>,
-  #[arg(long)]
+  #[arg(group = AUDIO, long)]
+  pub(crate) synthesizer: bool,
+  #[arg(group = AUDIO, long)]
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
   pub(crate) volume: Option<f32>,
