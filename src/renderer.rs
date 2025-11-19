@@ -1232,4 +1232,24 @@ mod tests {
     let mut renderer = pollster::block_on(Renderer::new(None, size, resolution)).unwrap();
     renderer.resize(size, resolution);
   }
+
+  #[test]
+  fn vello_render_bug() {
+    let resolution = 5809.try_into().unwrap();
+    let size = Vector2::new(resolution, resolution);
+    let mut renderer = pollster::block_on(Renderer::new(None, size, resolution)).unwrap();
+    renderer.resize(size, resolution);
+    renderer
+      .render(
+        &Analyzer::new(),
+        &State::default().text(Some(Text {
+          string: "hi".into(),
+          size: 1.0,
+          x: 1.0,
+          y: 1.0,
+        })),
+        Instant::now(),
+      )
+      .unwrap();
+  }
 }
