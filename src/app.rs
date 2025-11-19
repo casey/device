@@ -123,15 +123,7 @@ impl App {
       sink.set_volume(volume);
     }
 
-    let stream: Option<Box<dyn Stream>> = if let Some(track) = &options.track {
-      let track = Track::new(track)?;
-      sink.append(track.clone());
-      Some(Box::new(track))
-    } else if let Some(song) = &options.song {
-      let track = Track::new(&Self::find_song(song)?)?;
-      sink.append(track.clone());
-      Some(Box::new(track))
-    } else if options.input {
+    let stream: Option<Box<dyn Stream>> = if options.input {
       let input_device = host
         .default_input_device()
         .context(error::AudioDefaultInputDevice)?;
@@ -143,6 +135,18 @@ impl App {
       )?;
 
       Some(Box::new(Input::new(input_device, stream_config)?))
+    } else if let Some(song) = &options.song {
+      let track = Track::new(&Self::find_song(song)?)?;
+      sink.append(track.clone());
+      Some(Box::new(track))
+    } else if options.synthesizer {
+      let synthesizer = Synthesizer::new();
+      sink.append(synthesizer.clone());
+      Some(Box::new(synthesizer))
+    } else if let Some(track) = &options.track {
+      let track = Track::new(track)?;
+      sink.append(track.clone());
+      Some(Box::new(track))
     } else {
       None
     };

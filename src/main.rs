@@ -5,8 +5,8 @@ use {
     hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_usize::IntoUsize,
     into_utf8_path::IntoUtf8Path, message::Message, options::Options, parameter::Parameter,
     program::Program, recorder::Recorder, renderer::Renderer, shared::Shared, state::State,
-    stream::Stream, subcommand::Subcommand, tally::Tally, target::Target, templates::ShaderWgsl,
-    text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
+    stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer, tally::Tally, target::Target,
+    templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -28,6 +28,7 @@ use {
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     collections::VecDeque,
+    f32,
     fmt::{self, Display, Formatter, Write},
     fs::{self, File},
     io::{self, BufReader, BufWriter},
@@ -98,6 +99,7 @@ mod shared;
 mod state;
 mod stream;
 mod subcommand;
+mod synthesizer;
 mod tally;
 mod target;
 mod templates;
