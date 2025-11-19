@@ -3,7 +3,6 @@ use super::*;
 pub(crate) struct Analyzer {
   complex_frequencies: Vec<Complex<f32>>,
   frequencies: Vec<f32>,
-  history: Vec<Sound>,
   planner: FftPlanner<f32>,
   rms: f32,
   samples: Vec<f32>,
@@ -19,7 +18,6 @@ impl Analyzer {
     Self {
       complex_frequencies: Vec::new(),
       frequencies: Vec::new(),
-      history: Vec::new(),
       planner: FftPlanner::new(),
       rms: 0.0,
       samples: Vec::new(),
@@ -31,26 +29,21 @@ impl Analyzer {
     self.rms
   }
 
-  pub(crate) fn sounds(&self) -> &[Sound] {
-    &self.history
-  }
-
   pub(crate) fn samples(&self) -> &[f32] {
     &self.samples
   }
 
-  pub(crate) fn update(&mut self, stream: &mut dyn Stream, state: &State) {
-    let mut samples = Vec::new();
-    let channels = stream.channels();
-    let sample_rate = stream.sample_rate();
+  pub(crate) fn update(&mut self, sound: &Sound, done: bool, state: &State) {
+    let channels = sound.channels;
+    let sample_rate = sound.sample_rate;
 
-    if stream.done() {
+    if done {
       self.samples.clear();
     } else {
-      stream.drain(&mut samples);
       let old = self.samples.len();
       self.samples.extend(
-        samples
+        sound
+          .samples
           .chunks(channels.into())
           .map(|chunk| chunk.iter().sum::<f32>() / channels as f32),
       );
@@ -58,12 +51,6 @@ impl Analyzer {
         .samples
         .drain(..self.samples.len().saturating_sub(128).min(old));
     }
-
-    self.history.push(Sound {
-      samples,
-      channels,
-      sample_rate,
-    });
 
     let samples = &self.samples[..self.samples.len() & !1];
 
@@ -83,7 +70,7 @@ impl Analyzer {
 
     let n = self.complex_frequencies.len();
     let half = n / 2;
-    let spacing = stream.sample_rate() as f32 / n as f32;
+    let spacing = sample_rate as f32 / n as f32;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let threshold = (20.0 / spacing) as usize;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]

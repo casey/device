@@ -403,8 +403,19 @@ impl App {
       }
     }
 
+    let mut current_sound = None;
+
     if let Some(stream) = self.stream.as_mut() {
-      self.analyzer.update(stream.as_mut(), &self.state);
+      let mut samples = Vec::new();
+      stream.drain(&mut samples);
+      let sound = Sound::new {
+        samples,
+        channels: stream.channels(),
+        sample_rate: stream.sample_rate(),
+      };
+      let done = stream.done();
+      self.analyzer.update(&sound, done, &self.state);
+      current_sound = Some(sound);
     }
 
     let now = Instant::now();
@@ -429,12 +440,14 @@ impl App {
       return;
     }
 
-    if let Some(recorder) = &self.recorder {
+    if let (Some(recorder), Some(sound)) = (&self.recorder, current_sound) {
       let recorder = recorder.clone();
-      let sound = self.analyzer.sounds().last().cloned().unwrap_or_default();
-      if let Err(err) = renderer.capture(move |frame| {
-        if let Err(err) = recorder.lock().unwrap().frame(frame, sound) {
-          eprintln!("failed to save recorded frame: {err}");
+      if let Err(err) = renderer.capture({
+        let sound = sound;
+        move |frame| {
+          if let Err(err) = recorder.lock().unwrap().frame(frame, sound) {
+            eprintln!("failed to save recorded frame: {err}");
+          }
         }
       }) {
         self.errors.push(err);
