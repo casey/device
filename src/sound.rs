@@ -8,23 +8,11 @@ pub(crate) struct Sound {
 }
 
 impl Sound {
-  pub(crate) fn new(samples: Vec<f32>, channels: u16, sample_rate: u32) -> Self {
-    Self {
-      samples,
-      channels,
-      sample_rate,
-    }
-  }
-
-  pub(crate) fn samples(&self) -> &[f32] {
-    &self.samples
-  }
-
   pub(crate) fn duration_micros(&self) -> u128 {
     if self.channels == 0 || self.sample_rate == 0 {
       return 0;
     }
-    let frames = self.samples.len() as u128 / u128::from(self.channels);
-    frames * 1_000_000 / u128::from(self.sample_rate)
+    self.samples.len().into_u128() / u128::from(self.channels) * 1_000_000
+      / u128::from(self.sample_rate)
   }
 }

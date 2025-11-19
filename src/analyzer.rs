@@ -59,9 +59,11 @@ impl Analyzer {
         .drain(..self.samples.len().saturating_sub(128).min(old));
     }
 
-    self
-      .history
-      .push(Sound::new(samples, channels, sample_rate));
+    self.history.push(Sound {
+      samples,
+      channels,
+      sample_rate,
+    });
 
     let samples = &self.samples[..self.samples.len() & !1];
 
