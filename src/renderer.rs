@@ -473,6 +473,14 @@ impl Renderer {
     Ok(renderer)
   }
 
+  pub(crate) fn poll(&self) -> Result {
+    self
+      .device
+      .poll(wgpu::PollType::Wait)
+      .map(|_poll_status| ())
+      .context(error::RenderPoll)
+  }
+
   pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {
     let mut errors = Vec::new();
 

@@ -493,6 +493,12 @@ impl App {
 
 impl ApplicationHandler for App {
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
+    if let Some(renderer) = &self.renderer {
+      if let Err(err) = renderer.poll() {
+        eprintln!("failed to poll renderer: {err}");
+      }
+    }
+
     for capture in &self.captures {
       if let Err(err) = capture.recv() {
         eprintln!("capture failed: {err}");

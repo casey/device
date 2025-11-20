@@ -173,6 +173,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: vello::Error,
   },
+  #[snafu(display("failed to poll renderer"))]
+  RenderPoll {
+    backtrace: Option<Backtrace>,
+    source: wgpu::PollError,
+  },
   #[snafu(display("failed to get adapter"))]
   RequestAdapter {
     backtrace: Option<Backtrace>,
