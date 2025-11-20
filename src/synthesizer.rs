@@ -63,14 +63,14 @@ impl Stream for Synthesizer {
     CHANNELS
   }
 
-  fn is_done(&self) -> bool {
-    false
-  }
-
   fn drain_samples(&mut self, samples: &mut Vec<f32>) {
     let mut inner = self.0.lock().unwrap();
     samples.extend(&inner.buffer[inner.drained..]);
     inner.drained = inner.buffer.len();
+  }
+
+  fn is_done(&self) -> bool {
+    false
   }
 
   fn sample_rate(&self) -> u32 {

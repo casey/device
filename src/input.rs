@@ -58,12 +58,12 @@ impl Stream for Input {
     self.stream_config.channels
   }
 
-  fn is_done(&self) -> bool {
-    false
-  }
-
   fn drain_samples(&mut self, samples: &mut Vec<f32>) {
     samples.extend(self.queue.lock().unwrap().drain(..));
+  }
+
+  fn is_done(&self) -> bool {
+    false
   }
 
   fn sample_rate(&self) -> u32 {

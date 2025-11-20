@@ -53,13 +53,13 @@ impl Stream for Track {
     self.read().decoder.channels()
   }
 
+  fn drain_samples(&mut self, samples: &mut Vec<f32>) {
+    samples.append(&mut self.write().buffer);
+  }
+
   fn is_done(&self) -> bool {
     let inner = self.read();
     inner.done && inner.buffer.is_empty()
-  }
-
-  fn drain_samples(&mut self, samples: &mut Vec<f32>) {
-    samples.append(&mut self.write().buffer);
   }
 
   fn sample_rate(&self) -> u32 {
