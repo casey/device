@@ -2,7 +2,9 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
-  captures: Vec<mpsc::Receiver<Result>>,
+  capture_rx: mpsc::Receiver<Result>,
+  capture_tx: mpsc::Sender<Result>,
+  captures_pending: u64,
   command: Option<Vec<String>>,
   errors: Vec<Error>,
   horizontal: f32,
@@ -27,15 +29,14 @@ pub(crate) struct App {
 
 impl App {
   fn capture(&mut self) -> Result {
-    let (tx, rx) = mpsc::channel();
-
+    let tx = self.capture_tx.clone();
     self.renderer.as_ref().unwrap().capture(move |capture| {
       if let Err(err) = tx.send(capture.save("capture.png".as_ref())) {
         eprintln!("failed to send capture result: {err}");
       }
     })?;
 
-    self.captures.push(rx);
+    self.captures_pending += 1;
 
     Ok(())
   }
@@ -162,9 +163,13 @@ impl App {
 
     let state = options.program.map(Program::state).unwrap_or_default();
 
+    let (capture_tx, capture_rx) = mpsc::channel();
+
     Ok(Self {
       analyzer: Analyzer::new(),
-      captures: Vec::new(),
+      capture_rx,
+      capture_tx,
+      captures_pending: 0,
       command: None,
       errors: Vec::new(),
       horizontal: 0.0,
@@ -339,7 +344,7 @@ impl App {
     }
   }
 
-  fn redraw(&mut self, event_loop: &ActiveEventLoop) {
+  fn redraw(&mut self, event_loop: &ActiveEventLoop) -> Result {
     for message in self.hub.messages().lock().unwrap().drain(..) {
       match message.tuple() {
         (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
@@ -433,36 +438,46 @@ impl App {
 
     let frame = renderer.frame();
 
-    if let Err(err) = renderer.render(&self.analyzer, &self.state, now) {
-      self.errors.push(err);
-      event_loop.exit();
-      return;
-    }
+    renderer.render(&self.analyzer, &self.state, now)?;
 
     if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();
-      let (tx, rx) = mpsc::channel();
-      if let Err(err) = renderer.capture({
+      let tx = self.capture_tx.clone();
+      renderer.capture({
         move |image| {
           if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, image, sound)) {
             eprintln!("failed to send captured frame: {err}");
           }
         }
-      }) {
-        self.errors.push(err);
-        event_loop.exit();
-        return;
-      }
-      self.captures.push(rx);
+      })?;
+      self.captures_pending += 1;
     }
 
     self.state.filters.pop();
+
+    if self.captures_pending > 0 {
+      loop {
+        match self.capture_rx.try_recv() {
+          Err(mpsc::TryRecvError::Empty) => {
+            break;
+          }
+          Err(mpsc::TryRecvError::Disconnected) => {
+            return Err(Error::internal("capture channel unexpectedly closed"));
+          }
+          Ok(result) => result?,
+        }
+
+        self.captures_pending -= 1;
+      }
+    }
 
     if self.recorder.is_some() && self.stream.is_done() {
       event_loop.exit();
     } else {
       self.window().request_redraw();
     }
+
+    Ok(())
   }
 
   fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
@@ -474,13 +489,6 @@ impl App {
     let resolution = self.state.resolution.unwrap_or(size.x.max(size.y));
 
     (size, resolution)
-  }
-
-  pub(crate) fn save_recording(&self) -> Result {
-    if let Some(recorder) = &self.recorder {
-      recorder.lock().unwrap().save(&self.options)?;
-    }
-    Ok(())
   }
 
   fn stream_config(
@@ -507,22 +515,34 @@ impl App {
   fn window(&self) -> &Window {
     self.window.as_ref().unwrap()
   }
+
+  fn exit(&mut self) -> Result {
+    self.sink.stop();
+
+    if let Some(renderer) = &self.renderer {
+      renderer.poll()?;
+    }
+
+    for _ in 0..self.captures_pending {
+      match self.capture_rx.recv() {
+        Ok(Ok(())) => {}
+        Ok(Err(err)) => return Err(err),
+        Err(mpsc::RecvError) => return Err(Error::internal("capture channel unexpectedly closed")),
+      }
+    }
+
+    if let Some(recorder) = &self.recorder {
+      recorder.lock().unwrap().save(&self.options)?;
+    }
+
+    Ok(())
+  }
 }
 
 impl ApplicationHandler for App {
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
-    self.sink.stop();
-
-    if let Some(renderer) = &self.renderer
-      && let Err(err) = renderer.poll()
-    {
-      eprintln!("failed to poll renderer: {err}");
-    }
-
-    for capture in &self.captures {
-      if let Err(err) = capture.recv() {
-        eprintln!("capture failed: {err}");
-      }
+    if let Err(err) = self.exit() {
+      self.errors.push(err);
     }
   }
 
@@ -585,11 +605,17 @@ impl ApplicationHandler for App {
       WindowEvent::CloseRequested => {
         event_loop.exit();
       }
+      WindowEvent::Destroyed => {
+        log::info!("window destroyed");
+      }
       WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
         self.press(event_loop, event.logical_key);
       }
       WindowEvent::RedrawRequested => {
-        self.redraw(event_loop);
+        if let Err(err) = self.redraw(event_loop) {
+          self.errors.push(err);
+          event_loop.exit();
+        }
       }
       WindowEvent::Resized(size) => {
         let (size, resolution) = self.resolution(size);
