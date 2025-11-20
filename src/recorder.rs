@@ -36,6 +36,10 @@ impl Recorder {
       self.sounds.len(),
     );
 
+    if self.sounds.is_empty() {
+      return Ok(());
+    }
+
     let mut concat = "ffconcat version 1.0\n".to_owned();
     for (i, sound) in self.sounds.iter().enumerate() {
       writeln!(&mut concat, "file {i}.png").unwrap();
