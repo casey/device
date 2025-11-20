@@ -11,11 +11,32 @@ struct Inner {
   buffer: Vec<f32>,
   drained: usize,
   sample: usize,
+  voices: Vec<Voice>,
 }
 
 impl Synthesizer {
-  pub(crate) fn new() -> Self {
-    Self(Arc::new(Mutex::new(Inner::default())))
+  pub(crate) fn busy_signal() -> Self {
+    Self::new(vec![
+      Voice::Sine {
+        frequency: 480.0,
+        duty: 0.5,
+      },
+      Voice::Sine {
+        frequency: 620.0,
+        duty: 0.5,
+      },
+    ])
+  }
+
+  pub(crate) fn new(voices: Vec<Voice>) -> Self {
+    Self(Arc::new(Mutex::new(Inner {
+      voices,
+      ..default()
+    })))
+  }
+
+  pub(crate) fn silence() -> Self {
+    Self::new(Vec::new())
   }
 }
 
@@ -42,14 +63,14 @@ impl Stream for Synthesizer {
     CHANNELS
   }
 
-  fn done(&self) -> bool {
-    false
-  }
-
-  fn drain(&mut self, samples: &mut Vec<f32>) {
+  fn drain_samples(&mut self, samples: &mut Vec<f32>) {
     let mut inner = self.0.lock().unwrap();
     samples.extend(&inner.buffer[inner.drained..]);
     inner.drained = inner.buffer.len();
+  }
+
+  fn is_done(&self) -> bool {
+    false
   }
 
   fn sample_rate(&self) -> u32 {
@@ -72,13 +93,7 @@ impl Iterator for Synthesizer {
 
     let t = i as f32 / SAMPLE_RATE as f32;
 
-    let sample = if t.fract() < 0.5 {
-      let a = (t * 480.0 * f32::consts::TAU).sin();
-      let b = (t * 620.0 * f32::consts::TAU).sin();
-      a + b
-    } else {
-      0.0
-    };
+    let sample = inner.voices.iter().map(|voice| voice.sample(t)).sum();
 
     for _ in 0..CHANNELS {
       inner.buffer.push(sample);

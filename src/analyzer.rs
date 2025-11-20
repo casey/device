@@ -33,18 +33,16 @@ impl Analyzer {
     &self.samples
   }
 
-  pub(crate) fn update(&mut self, stream: &mut dyn Stream, state: &State) {
-    if stream.done() {
+  pub(crate) fn update(&mut self, sound: &Sound, done: bool, state: &State) {
+    if done {
       self.samples.clear();
     } else {
-      let mut samples = Vec::new();
-      stream.drain(&mut samples);
       let old = self.samples.len();
-      let channels = stream.channels();
       self.samples.extend(
-        samples
-          .chunks(channels.into())
-          .map(|chunk| chunk.iter().sum::<f32>() / channels as f32),
+        sound
+          .samples
+          .chunks(sound.channels.into())
+          .map(|chunk| chunk.iter().sum::<f32>() / sound.channels as f32),
       );
       self
         .samples
@@ -69,7 +67,7 @@ impl Analyzer {
 
     let n = self.complex_frequencies.len();
     let half = n / 2;
-    let spacing = stream.sample_rate() as f32 / n as f32;
+    let spacing = sound.sample_rate as f32 / n as f32;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let threshold = (20.0 / spacing) as usize;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]

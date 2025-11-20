@@ -2,15 +2,17 @@ use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, controller::Controller,
     error::Error, event::Event, field::Field, filter::Filter, format::Format, frame::Frame,
-    hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_usize::IntoUsize,
-    into_utf8_path::IntoUtf8Path, message::Message, options::Options, parameter::Parameter,
-    program::Program, recorder::Recorder, renderer::Renderer, shared::Shared, state::State,
-    stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer, tally::Tally, target::Target,
-    templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
+    hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_u128::IntoU128,
+    into_usize::IntoUsize, into_utf8_path::IntoUtf8Path, message::Message, options::Options,
+    parameter::Parameter, program::Program, recorder::Recorder, renderer::Renderer, shared::Shared,
+    sound::Sound, state::State, stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer,
+    tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
+    uniforms::Uniforms, voice::Voice,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
+  hound::{WavSpec, WavWriter},
   nalgebra::Vector2,
   parley::{FontContext, LayoutContext},
   regex::{Regex, RegexBuilder},
@@ -29,7 +31,7 @@ use {
     borrow::Cow,
     collections::VecDeque,
     f32,
-    fmt::{self, Display, Formatter, Write},
+    fmt::{self, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter},
     num::NonZeroU32,
@@ -86,6 +88,7 @@ mod frame;
 mod hub;
 mod image;
 mod input;
+mod into_u128;
 mod into_u64;
 mod into_usize;
 mod into_utf8_path;
@@ -96,6 +99,7 @@ mod program;
 mod recorder;
 mod renderer;
 mod shared;
+mod sound;
 mod state;
 mod stream;
 mod subcommand;
@@ -107,6 +111,7 @@ mod text;
 mod tiling;
 mod track;
 mod uniforms;
+mod voice;
 
 const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;

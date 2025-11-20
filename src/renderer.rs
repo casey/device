@@ -187,7 +187,7 @@ impl Renderer {
 
     encoder.copy_texture_to_buffer(
       TexelCopyTextureInfo {
-        texture: &self.bindings().targets[0].texture,
+        texture: self.bindings().targets[0].texture_view.texture(),
         mip_level: 0,
         origin: Origin3d::ZERO,
         aspect: TextureAspect::All,
@@ -473,6 +473,14 @@ impl Renderer {
     Ok(renderer)
   }
 
+  pub(crate) fn poll(&self) -> Result {
+    self
+      .device
+      .poll(wgpu::PollType::Wait)
+      .map(|_poll_status| ())
+      .context(error::RenderPoll)
+  }
+
   pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {
     let mut errors = Vec::new();
 
@@ -655,7 +663,7 @@ impl Renderer {
 
     for target in &self.bindings().targets {
       encoder.clear_texture(
-        &target.texture,
+        target.texture_view.texture(),
         &ImageSubresourceRange {
           array_layer_count: None,
           aspect: TextureAspect::All,
@@ -665,6 +673,17 @@ impl Renderer {
         },
       );
     }
+
+    encoder.clear_texture(
+      self.bindings().tiling_view.texture(),
+      &ImageSubresourceRange {
+        array_layer_count: None,
+        aspect: TextureAspect::All,
+        base_array_layer: 0,
+        base_mip_level: 0,
+        mip_level_count: None,
+      },
+    );
 
     let mut source = 0;
     let mut destination = 1;
@@ -988,7 +1007,6 @@ impl Renderer {
 
     Target {
       bind_group,
-      texture,
       texture_view,
     }
   }

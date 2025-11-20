@@ -1,17 +1,18 @@
 use super::*;
 
 pub(crate) struct Recorder {
-  frames: Vec<Instant>,
+  sounds: Vec<Sound>,
   tempdir: TempDir,
   tempdir_path: Utf8PathBuf,
 }
 
 impl Recorder {
-  pub(crate) fn frame(&mut self, frame: Image, time: Instant) -> Result {
-    let path = self.tempdir_path.join(format!("{}.png", self.frames.len()));
+  pub(crate) fn frame(&mut self, frame: Image, sound: Sound) -> Result {
+    let index = self.sounds.len();
+    let path = self.tempdir_path.join(format!("{index}.png"));
     log::trace!("saving frame to {path}");
     frame.save(&path)?;
-    self.frames.push(time);
+    self.sounds.push(sound);
     Ok(())
   }
 
@@ -19,45 +20,72 @@ impl Recorder {
     let tempdir = TempDir::new().context(error::TempdirIo)?;
     let tempdir_path = tempdir.path().into_utf8_path()?.into();
     Ok(Self {
-      frames: Vec::new(),
+      sounds: Vec::new(),
       tempdir,
       tempdir_path,
     })
   }
 
   pub(crate) fn save(&self) -> Result {
+    const AUDIO: &str = "audio.wav";
     const FRAMES: &str = "frames.text";
     const RECORDING: &str = "recording.mp4";
 
     log::info!(
       "saving {} frame recording to {RECORDING}",
-      self.frames.len(),
+      self.sounds.len(),
     );
 
-    let mut concat = "ffconcat version 1.0\n".to_owned();
-    for (i, time) in self.frames.iter().enumerate() {
-      writeln!(&mut concat, "file {i}.png").unwrap();
-      writeln!(&mut concat, "option framerate 1000000").unwrap();
-      if let Some(next) = self.frames.get(i + 1) {
-        writeln!(
-          &mut concat,
-          "duration {}us",
-          next.duration_since(*time).as_micros()
-        )
-        .unwrap();
+    let Some(first) = self.sounds.first() else {
+      return Ok(());
+    };
+
+    {
+      let mut concat = "ffconcat version 1.0\n".to_owned();
+      for (i, sound) in self.sounds.iter().enumerate() {
+        concat.push_str(&format!(
+          "file {i}.png\noption framerate 1000000\nduration {}us\n",
+          sound.duration_micros(),
+        ));
       }
+
+      let path = self.tempdir_path.join(FRAMES);
+      fs::write(&path, concat).context(error::FilesystemIo { path })?;
     }
 
-    let path = self.tempdir_path.join(FRAMES);
-    fs::write(&path, concat).context(error::FilesystemIo { path })?;
+    {
+      let path = self.tempdir_path.join(AUDIO);
+      let mut writer = WavWriter::create(
+        &path,
+        WavSpec {
+          channels: first.channels,
+          sample_rate: first.sample_rate,
+          bits_per_sample: 32,
+          sample_format: hound::SampleFormat::Float,
+        },
+      )
+      .context(error::WavCreate { path: &path })?;
+
+      for sound in &self.sounds {
+        for sample in &sound.samples {
+          writer
+            .write_sample(*sample)
+            .context(error::WavWrite { path: &path })?;
+        }
+      }
+
+      writer.finalize().context(error::WavFinalize { path })?;
+    }
 
     let output = Command::new("ffmpeg")
       .args(["-safe", "0"])
       .args(["-i", FRAMES])
+      .args(["-i", AUDIO])
       .args(["-c:v", "libx264"])
       .args(["-pix_fmt", "yuv420p"])
       .args(["-fps_mode:v", "passthrough"])
       .args(["-video_track_timescale", "1000000"])
+      .args(["-c:a", "aac"])
       .arg(RECORDING)
       .current_dir(&self.tempdir_path)
       .output()

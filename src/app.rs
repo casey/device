@@ -14,11 +14,10 @@ pub(crate) struct App {
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
   scaling: f32,
-  #[allow(unused)]
   sink: Sink,
   start: Instant,
   state: State,
-  stream: Option<Box<dyn Stream>>,
+  stream: Box<dyn Stream>,
   translation: Vec2f,
   vertical: f32,
   window: Option<Arc<Window>>,
@@ -119,11 +118,13 @@ impl App {
 
     let sink = Sink::connect_new(output_stream.mixer());
 
+    sink.pause();
+
     if let Some(volume) = options.volume {
       sink.set_volume(volume);
     }
 
-    let stream: Option<Box<dyn Stream>> = if options.input {
+    let stream: Box<dyn Stream> = if options.input {
       let input_device = host
         .default_input_device()
         .context(error::AudioDefaultInputDevice)?;
@@ -134,21 +135,23 @@ impl App {
           .context(error::AudioSupportedStreamConfigs)?,
       )?;
 
-      Some(Box::new(Input::new(input_device, stream_config)?))
+      Box::new(Input::new(input_device, stream_config)?)
     } else if let Some(song) = &options.song {
       let track = Track::new(&Self::find_song(song)?)?;
       sink.append(track.clone());
-      Some(Box::new(track))
+      Box::new(track)
     } else if options.synthesizer {
-      let synthesizer = Synthesizer::new();
+      let synthesizer = Synthesizer::busy_signal();
       sink.append(synthesizer.clone());
-      Some(Box::new(synthesizer))
+      Box::new(synthesizer)
     } else if let Some(track) = &options.track {
       let track = Track::new(track)?;
       sink.append(track.clone());
-      Some(Box::new(track))
+      Box::new(track)
     } else {
-      None
+      let synthesizer = Synthesizer::silence();
+      sink.append(synthesizer.clone());
+      Box::new(synthesizer)
     };
 
     let state = options.program.map(Program::state).unwrap_or_default();
@@ -403,9 +406,10 @@ impl App {
       }
     }
 
-    if let Some(stream) = self.stream.as_mut() {
-      self.analyzer.update(stream.as_mut(), &self.state);
-    }
+    let sound = self.stream.drain();
+    self
+      .analyzer
+      .update(&sound, self.stream.is_done(), &self.state);
 
     let now = Instant::now();
     let elapsed = (now - self.start).as_secs_f32();
@@ -431,20 +435,28 @@ impl App {
 
     if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();
-      if let Err(err) = renderer.capture(move |frame| {
-        if let Err(err) = recorder.lock().unwrap().frame(frame, now) {
-          eprintln!("failed to save recorded frame: {err}");
+      let (tx, rx) = mpsc::channel();
+      if let Err(err) = renderer.capture({
+        move |frame| {
+          if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, sound)) {
+            eprintln!("failed to send captured frame: {err}");
+          }
         }
       }) {
         self.errors.push(err);
         event_loop.exit();
         return;
       }
+      self.captures.push(rx);
     }
 
     self.state.filters.pop();
 
-    self.window().request_redraw();
+    if self.recorder.is_some() && self.stream.is_done() {
+      event_loop.exit();
+    } else {
+      self.window().request_redraw();
+    }
   }
 
   fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
@@ -486,6 +498,14 @@ impl App {
 
 impl ApplicationHandler for App {
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
+    self.sink.stop();
+
+    if let Some(renderer) = &self.renderer
+      && let Err(err) = renderer.poll()
+    {
+      eprintln!("failed to poll renderer: {err}");
+    }
+
     for capture in &self.captures {
       if let Err(err) = capture.recv() {
         eprintln!("capture failed: {err}");
@@ -540,6 +560,8 @@ impl ApplicationHandler for App {
       };
 
       self.renderer = Some(renderer);
+
+      self.sink.play();
     }
   }
 

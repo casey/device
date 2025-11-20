@@ -173,6 +173,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: vello::Error,
   },
+  #[snafu(display("failed to poll renderer"))]
+  RenderPoll {
+    backtrace: Option<Backtrace>,
+    source: wgpu::PollError,
+  },
   #[snafu(display("failed to get adapter"))]
   RequestAdapter {
     backtrace: Option<Backtrace>,
@@ -217,6 +222,24 @@ pub(crate) enum Error {
   UnsupportedTextureFormat {
     backtrace: Option<Backtrace>,
     texture_format: TextureFormat,
+  },
+  #[snafu(display("failed to create wav writer"))]
+  WavCreate {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: hound::Error,
+  },
+  #[snafu(display("failed to finalize wav writer"))]
+  WavFinalize {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: hound::Error,
+  },
+  #[snafu(display("failed to write wav samples"))]
+  WavWrite {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: hound::Error,
   },
 }
 
