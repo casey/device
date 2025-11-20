@@ -26,7 +26,7 @@ impl Recorder {
     })
   }
 
-  pub(crate) fn save(&mut self) -> Result {
+  pub(crate) fn save(&mut self, options: &Options) -> Result {
     const AUDIO: &str = "audio.wav";
     const CONCAT: &str = "concat.txt";
     const RECORDING: &str = "recording.mp4";
@@ -90,12 +90,25 @@ impl Recorder {
       .args(["-c:a", "aac"])
       .arg(RECORDING)
       .current_dir(&self.tempdir_path)
+      .stderr(if options.verbose {
+        Stdio::inherit()
+      } else {
+        Stdio::piped()
+      })
+      .stdout(if options.verbose {
+        Stdio::inherit()
+      } else {
+        Stdio::piped()
+      })
       .output()
       .context(error::RecordingInvoke)?;
 
     if !output.status.success() {
-      eprintln!("{}", String::from_utf8_lossy(&output.stdout));
-      eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+      if !options.verbose {
+        eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+      }
+
       return Err(
         error::RecordingStatus {
           status: output.status,

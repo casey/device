@@ -9,6 +9,7 @@ pub(crate) struct App {
   hub: Hub,
   macro_recording: Option<Vec<Key>>,
   makro: Vec<Key>,
+  options: Options,
   #[allow(unused)]
   output_stream: OutputStream,
   recorder: Option<Arc<Mutex<Recorder>>>,
@@ -154,6 +155,11 @@ impl App {
       Box::new(synthesizer)
     };
 
+    let recorder = options
+      .record
+      .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
+      .transpose()?;
+
     let state = options.program.map(Program::state).unwrap_or_default();
 
     Ok(Self {
@@ -165,11 +171,9 @@ impl App {
       hub: Hub::new()?,
       macro_recording: None,
       makro: Vec::new(),
+      options,
       output_stream,
-      recorder: options
-        .record
-        .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
-        .transpose()?,
+      recorder,
       renderer: None,
       scaling: 1.0,
       sink,
@@ -515,7 +519,7 @@ impl ApplicationHandler for App {
     }
 
     if let Some(recorder) = &self.recorder
-      && let Err(err) = recorder.lock().unwrap().save()
+      && let Err(err) = recorder.lock().unwrap().save(&self.options)
     {
       eprintln!("failed to save recording: {err}");
     }
