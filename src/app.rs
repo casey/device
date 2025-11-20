@@ -476,6 +476,13 @@ impl App {
     (size, resolution)
   }
 
+  pub(crate) fn save_recording(&self) -> Result {
+    if let Some(recorder) = &self.recorder {
+      recorder.lock().unwrap().save(&self.options)?;
+    }
+    Ok(())
+  }
+
   fn stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
   ) -> Result<SupportedStreamConfig> {
@@ -516,12 +523,6 @@ impl ApplicationHandler for App {
       if let Err(err) = capture.recv() {
         eprintln!("capture failed: {err}");
       }
-    }
-
-    if let Some(recorder) = &self.recorder
-      && let Err(err) = recorder.lock().unwrap().save(&self.options)
-    {
-      eprintln!("failed to save recording: {err}");
     }
   }
 
