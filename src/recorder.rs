@@ -74,7 +74,6 @@ impl Recorder {
       .args(["-fps_mode:v", "passthrough"])
       .args(["-video_track_timescale", "1000000"])
       .args(["-c:a", "aac"])
-      .arg("-shortest")
       .arg(RECORDING)
       .current_dir(&self.tempdir_path)
       .output()
