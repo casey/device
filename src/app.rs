@@ -427,6 +427,8 @@ impl App {
 
     let renderer = self.renderer.as_mut().unwrap();
 
+    let frame = renderer.frame();
+
     if let Err(err) = renderer.render(&self.analyzer, &self.state, now) {
       self.errors.push(err);
       event_loop.exit();
@@ -437,8 +439,8 @@ impl App {
       let recorder = recorder.clone();
       let (tx, rx) = mpsc::channel();
       if let Err(err) = renderer.capture({
-        move |frame| {
-          if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, sound)) {
+        move |image| {
+          if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, image, sound)) {
             eprintln!("failed to send captured frame: {err}");
           }
         }

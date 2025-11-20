@@ -282,6 +282,10 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
+  pub(crate) fn frame(&self) -> u64 {
+    self.frame
+  }
+
   pub(crate) async fn new(
     window: Option<Arc<Window>>,
     size: Vector2<NonZeroU32>,
