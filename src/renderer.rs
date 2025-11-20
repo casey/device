@@ -9,8 +9,7 @@ pub(crate) struct Renderer {
   format: Format,
   frame: u64,
   frame_times: VecDeque<Instant>,
-  frequencies: Texture,
-  frequency_view: TextureView,
+  frequencies: TextureView,
   layout_context: LayoutContext,
   limits: Limits,
   overlay_renderer: vello::Renderer,
@@ -18,9 +17,8 @@ pub(crate) struct Renderer {
   queue: Queue,
   render_pipeline: RenderPipeline,
   resolution: NonZeroU32,
-  sample_view: TextureView,
   sampler: Sampler,
-  samples: Texture,
+  samples: TextureView,
   size: Vector2<NonZeroU32>,
   surface: Option<(Surface<'static>, SurfaceConfiguration)>,
   uniform_buffer: Buffer,
@@ -395,39 +393,39 @@ impl Renderer {
       },
     });
 
-    let samples = device.create_texture(&TextureDescriptor {
-      dimension: TextureDimension::D1,
-      format: TextureFormat::R32Float,
-      label: label!(),
-      mip_level_count: 1,
-      sample_count: 1,
-      size: Extent3d {
-        depth_or_array_layers: 1,
-        height: 1,
-        width: limits.max_texture_dimension_1d,
-      },
-      usage: TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING,
-      view_formats: &[TextureFormat::R32Float],
-    });
+    let samples = device
+      .create_texture(&TextureDescriptor {
+        dimension: TextureDimension::D1,
+        format: TextureFormat::R32Float,
+        label: label!(),
+        mip_level_count: 1,
+        sample_count: 1,
+        size: Extent3d {
+          depth_or_array_layers: 1,
+          height: 1,
+          width: limits.max_texture_dimension_1d,
+        },
+        usage: TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING,
+        view_formats: &[TextureFormat::R32Float],
+      })
+      .create_view(&TextureViewDescriptor::default());
 
-    let sample_view = samples.create_view(&TextureViewDescriptor::default());
-
-    let frequencies = device.create_texture(&TextureDescriptor {
-      dimension: TextureDimension::D1,
-      format: TextureFormat::R32Float,
-      label: label!(),
-      mip_level_count: 1,
-      sample_count: 1,
-      size: Extent3d {
-        depth_or_array_layers: 1,
-        height: 1,
-        width: limits.max_texture_dimension_1d,
-      },
-      usage: TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING,
-      view_formats: &[TextureFormat::R32Float],
-    });
-
-    let frequency_view = frequencies.create_view(&TextureViewDescriptor::default());
+    let frequencies = device
+      .create_texture(&TextureDescriptor {
+        dimension: TextureDimension::D1,
+        format: TextureFormat::R32Float,
+        label: label!(),
+        mip_level_count: 1,
+        sample_count: 1,
+        size: Extent3d {
+          depth_or_array_layers: 1,
+          height: 1,
+          width: limits.max_texture_dimension_1d,
+        },
+        usage: TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING,
+        view_formats: &[TextureFormat::R32Float],
+      })
+      .create_view(&TextureViewDescriptor::default());
 
     let overlay_renderer = vello::Renderer::new(
       &device,
@@ -450,7 +448,6 @@ impl Renderer {
       frame: 0,
       frame_times: VecDeque::with_capacity(100),
       frequencies,
-      frequency_view,
       layout_context: LayoutContext::new(),
       limits,
       overlay_renderer,
@@ -458,7 +455,6 @@ impl Renderer {
       queue,
       render_pipeline,
       resolution,
-      sample_view,
       sampler,
       samples,
       size,
@@ -533,18 +529,18 @@ impl Renderer {
     let sample_count = analyzer
       .samples()
       .len()
-      .min(self.samples.width().into_usize());
+      .min(self.samples.texture().width().into_usize());
     let samples = &analyzer.samples()[..sample_count];
-    let sample_range = sample_count as f32 / self.samples.width() as f32;
-    self.write_texture(samples, &self.samples);
+    let sample_range = sample_count as f32 / self.samples.texture().width() as f32;
+    self.write_texture(samples, self.samples.texture());
 
     let frequency_count = analyzer
       .frequencies()
       .len()
-      .min(self.frequencies.width().into_usize());
+      .min(self.frequencies.texture().width().into_usize());
     let frequencies = &analyzer.frequencies()[..frequency_count];
-    let frequency_range = frequency_count as f32 / self.frequencies.width() as f32;
-    self.write_texture(frequencies, &self.frequencies);
+    let frequency_range = frequency_count as f32 / self.frequencies.texture().width() as f32;
+    self.write_texture(frequencies, self.frequencies.texture());
 
     let filter_count = u32::try_from(state.filters.len()).unwrap();
 
@@ -920,32 +916,33 @@ impl Renderer {
       .min(5808.try_into().unwrap());
     self.size = size;
 
-    let tiling_texture = self.device.create_texture(&TextureDescriptor {
-      dimension: TextureDimension::D2,
-      format: self.format.into(),
-      label: label!(),
-      mip_level_count: 1,
-      sample_count: 1,
-      size: Extent3d {
-        depth_or_array_layers: 1,
-        height: self.resolution.get(),
-        width: self.resolution.get(),
-      },
-      usage: TextureUsages::RENDER_ATTACHMENT
-        | TextureUsages::TEXTURE_BINDING
-        | TextureUsages::COPY_SRC,
-      view_formats: &[self.format.into()],
-    });
-
-    let tiling_view = tiling_texture.create_view(&TextureViewDescriptor::default());
+    let tiling_view = self
+      .device
+      .create_texture(&TextureDescriptor {
+        dimension: TextureDimension::D2,
+        format: self.format.into(),
+        label: label!(),
+        mip_level_count: 1,
+        sample_count: 1,
+        size: Extent3d {
+          depth_or_array_layers: 1,
+          height: self.resolution.get(),
+          width: self.resolution.get(),
+        },
+        usage: TextureUsages::RENDER_ATTACHMENT
+          | TextureUsages::TEXTURE_BINDING
+          | TextureUsages::COPY_SRC,
+        view_formats: &[self.format.into()],
+      })
+      .create_view(&TextureViewDescriptor::default());
 
     let targets = [self.target(&tiling_view), self.target(&tiling_view)];
 
     let tiling_bind_group = self.bind_group(
       &targets[0].texture_view,
-      &self.frequency_view,
+      &self.frequencies,
       &targets[1].texture_view,
-      &self.sample_view,
+      &self.samples,
     );
 
     let overlay_view = self
@@ -968,9 +965,9 @@ impl Renderer {
 
     let overlay_bind_group = self.bind_group(
       &tiling_view,
-      &self.frequency_view,
+      &self.frequencies,
       &overlay_view,
-      &self.sample_view,
+      &self.samples,
     );
 
     self.bindings = Some(Bindings {
@@ -1003,7 +1000,7 @@ impl Renderer {
 
     let texture_view = texture.create_view(&TextureViewDescriptor::default());
 
-    let bind_group = self.bind_group(back, &self.frequency_view, &texture_view, &self.sample_view);
+    let bind_group = self.bind_group(back, &self.frequencies, &texture_view, &self.samples);
 
     Target {
       bind_group,
