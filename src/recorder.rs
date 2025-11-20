@@ -28,7 +28,7 @@ impl Recorder {
 
   pub(crate) fn save(&self) -> Result {
     const AUDIO: &str = "audio.wav";
-    const FRAMES: &str = "frames.text";
+    const CONCAT: &str = "concat.txt";
     const RECORDING: &str = "recording.mp4";
 
     log::info!(
@@ -49,7 +49,7 @@ impl Recorder {
         ));
       }
 
-      let path = self.tempdir_path.join(FRAMES);
+      let path = self.tempdir_path.join(CONCAT);
       fs::write(&path, concat).context(error::FilesystemIo { path })?;
     }
 
@@ -79,7 +79,7 @@ impl Recorder {
 
     let output = Command::new("ffmpeg")
       .args(["-safe", "0"])
-      .args(["-i", FRAMES])
+      .args(["-i", CONCAT])
       .args(["-i", AUDIO])
       .args(["-c:v", "libx264"])
       .args(["-pix_fmt", "yuv420p"])
@@ -102,7 +102,7 @@ impl Recorder {
       );
     }
 
-    fs::rename(self.tempdir.path().join(RECORDING), RECORDING)
+    fs::rename(self.tempdir_path.join(RECORDING), RECORDING)
       .context(error::FilesystemIo { path: RECORDING })?;
 
     Ok(())
