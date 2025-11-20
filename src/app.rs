@@ -434,10 +434,11 @@ impl App {
 
     if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();
+      let (tx, rx) = mpsc::channel();
       if let Err(err) = renderer.capture({
         move |frame| {
-          if let Err(err) = recorder.lock().unwrap().frame(frame, sound) {
-            eprintln!("failed to save recorded frame: {err}");
+          if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, sound)) {
+            eprintln!("failed to send captured frame: {err}");
           }
         }
       }) {
@@ -445,6 +446,7 @@ impl App {
         event_loop.exit();
         return;
       }
+      self.captures.push(rx);
     }
 
     self.state.filters.pop();
