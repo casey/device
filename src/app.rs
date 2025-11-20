@@ -18,7 +18,7 @@ pub(crate) struct App {
   sink: Sink,
   start: Instant,
   state: State,
-  stream: Option<Box<dyn Stream>>,
+  stream: Box<dyn Stream>,
   translation: Vec2f,
   vertical: f32,
   window: Option<Arc<Window>>,
@@ -123,7 +123,7 @@ impl App {
       sink.set_volume(volume);
     }
 
-    let stream: Option<Box<dyn Stream>> = if options.input {
+    let stream: Box<dyn Stream> = if options.input {
       let input_device = host
         .default_input_device()
         .context(error::AudioDefaultInputDevice)?;
@@ -134,21 +134,23 @@ impl App {
           .context(error::AudioSupportedStreamConfigs)?,
       )?;
 
-      Some(Box::new(Input::new(input_device, stream_config)?))
+      Box::new(Input::new(input_device, stream_config)?)
     } else if let Some(song) = &options.song {
       let track = Track::new(&Self::find_song(song)?)?;
       sink.append(track.clone());
-      Some(Box::new(track))
+      Box::new(track)
     } else if options.synthesizer {
-      let synthesizer = Synthesizer::new();
+      let synthesizer = Synthesizer::busy_signal();
       sink.append(synthesizer.clone());
-      Some(Box::new(synthesizer))
+      Box::new(synthesizer)
     } else if let Some(track) = &options.track {
       let track = Track::new(track)?;
       sink.append(track.clone());
-      Some(Box::new(track))
+      Box::new(track)
     } else {
-      None
+      let synthesizer = Synthesizer::silence();
+      sink.append(synthesizer.clone());
+      Box::new(synthesizer)
     };
 
     let state = options.program.map(Program::state).unwrap_or_default();
@@ -403,13 +405,10 @@ impl App {
       }
     }
 
-    let sound = if let Some(stream) = self.stream.as_mut() {
-      let sound = stream.drain();
-      self.analyzer.update(&sound, stream.done(), &self.state);
-      Some(sound)
-    } else {
-      None
-    };
+    let sound = self.stream.drain();
+    self
+      .analyzer
+      .update(&sound, self.stream.done(), &self.state);
 
     let now = Instant::now();
     let elapsed = (now - self.start).as_secs_f32();
@@ -433,7 +432,7 @@ impl App {
       return;
     }
 
-    if let (Some(recorder), Some(sound)) = (&self.recorder, sound) {
+    if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();
       if let Err(err) = renderer.capture({
         move |frame| {

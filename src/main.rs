@@ -7,7 +7,7 @@ use {
     parameter::Parameter, program::Program, recorder::Recorder, renderer::Renderer, shared::Shared,
     sound::Sound, state::State, stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer,
     tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
-    uniforms::Uniforms,
+    uniforms::Uniforms, voice::Voice,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -111,6 +111,7 @@ mod text;
 mod tiling;
 mod track;
 mod uniforms;
+mod voice;
 
 const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
