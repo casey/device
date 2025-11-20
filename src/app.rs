@@ -14,7 +14,6 @@ pub(crate) struct App {
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
   scaling: f32,
-  #[allow(unused)]
   sink: Sink,
   start: Instant,
   state: State,
@@ -118,6 +117,8 @@ impl App {
     output_stream.log_on_drop(false);
 
     let sink = Sink::connect_new(output_stream.mixer());
+
+    sink.pause();
 
     if let Some(volume) = options.volume {
       sink.set_volume(volume);
@@ -553,6 +554,8 @@ impl ApplicationHandler for App {
       };
 
       self.renderer = Some(renderer);
+
+      self.sink.play();
     }
   }
 
