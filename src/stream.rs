@@ -3,7 +3,7 @@ use super::*;
 pub(crate) trait Stream {
   fn channels(&self) -> u16;
 
-  fn done(&self) -> bool;
+  fn is_done(&self) -> bool;
 
   fn drain(&mut self) -> Sound {
     let mut samples = Vec::new();

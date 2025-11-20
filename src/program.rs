@@ -26,7 +26,7 @@ impl Program {
       Self::Hello => State::default()
         .db(-40)
         .text(Some(Text {
-          size: 0.05,
+          size: 0.075,
           string: "hello world".into(),
           x: 0.10,
           y: -0.10,

@@ -53,7 +53,7 @@ impl Stream for Track {
     self.read().decoder.channels()
   }
 
-  fn done(&self) -> bool {
+  fn is_done(&self) -> bool {
     let inner = self.read();
     inner.done && inner.buffer.is_empty()
   }

@@ -58,7 +58,7 @@ impl Stream for Input {
     self.stream_config.channels
   }
 
-  fn done(&self) -> bool {
+  fn is_done(&self) -> bool {
     false
   }
 

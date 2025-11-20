@@ -409,7 +409,7 @@ impl App {
     let sound = self.stream.drain();
     self
       .analyzer
-      .update(&sound, self.stream.done(), &self.state);
+      .update(&sound, self.stream.is_done(), &self.state);
 
     let now = Instant::now();
     let elapsed = (now - self.start).as_secs_f32();
@@ -452,7 +452,11 @@ impl App {
 
     self.state.filters.pop();
 
-    self.window().request_redraw();
+    if self.recorder.is_some() && self.stream.is_done() {
+      event_loop.exit();
+    } else {
+      self.window().request_redraw();
+    }
   }
 
   fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
@@ -494,6 +498,8 @@ impl App {
 
 impl ApplicationHandler for App {
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
+    self.sink.stop();
+
     if let Some(renderer) = &self.renderer
       && let Err(err) = renderer.poll()
     {

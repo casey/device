@@ -63,7 +63,7 @@ impl Stream for Synthesizer {
     CHANNELS
   }
 
-  fn done(&self) -> bool {
+  fn is_done(&self) -> bool {
     false
   }
 
