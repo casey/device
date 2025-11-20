@@ -42,14 +42,12 @@ impl Recorder {
 
     let mut concat = "ffconcat version 1.0\n".to_owned();
     for (i, sound) in self.sounds.iter().enumerate() {
-      writeln!(
-        &mut concat,
+      concat.push_str(&format!(
         "file {i}.png
         option framerate 1000000
-        duration {}us",
-        sound.duration_micros()
-      )
-      .unwrap();
+        duration {}us\n",
+        sound.duration_micros(),
+      ));
     }
 
     let path = self.tempdir_path.join(FRAMES);

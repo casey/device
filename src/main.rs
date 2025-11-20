@@ -31,7 +31,7 @@ use {
     borrow::Cow,
     collections::VecDeque,
     f32,
-    fmt::{self, Display, Formatter, Write},
+    fmt::{self, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter},
     num::NonZeroU32,

@@ -48,6 +48,7 @@ arbitrary-source-item-ordering = "deny"
 cast-lossless = "allow"
 cast-precision-loss = "allow"
 float-cmp = "allow"
+format-push-string = "allow"
 ignore-without-reason = "allow"
 needless-pass-by-value = "allow"
 pedantic = { level = "deny", priority = -1 }
