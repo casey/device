@@ -1,19 +1,19 @@
 use super::*;
 
 pub(crate) struct Recorder {
-  sounds: Vec<Sound>,
+  sounds: Vec<(u64, Sound)>,
   #[allow(unused)]
   tempdir: TempDir,
   tempdir_path: Utf8PathBuf,
 }
 
 impl Recorder {
-  pub(crate) fn frame(&mut self, frame: Image, sound: Sound) -> Result {
+  pub(crate) fn frame(&mut self, frame: u64, image: Image, sound: Sound) -> Result {
     let index = self.sounds.len();
     let path = self.tempdir_path.join(format!("{index}.png"));
     log::trace!("saving frame to {path}");
-    frame.save(&path)?;
-    self.sounds.push(sound);
+    image.save(&path)?;
+    self.sounds.push((frame, sound));
     Ok(())
   }
 
@@ -27,7 +27,7 @@ impl Recorder {
     })
   }
 
-  pub(crate) fn save(&self) -> Result {
+  pub(crate) fn save(&mut self) -> Result {
     const AUDIO: &str = "audio.wav";
     const CONCAT: &str = "concat.txt";
     const RECORDING: &str = "recording.mp4";
@@ -37,13 +37,15 @@ impl Recorder {
       self.sounds.len(),
     );
 
-    let Some(first) = self.sounds.first() else {
+    self.sounds.sort_by_key(|(frame, _sound)| *frame);
+
+    let Some((_frame, first)) = self.sounds.first() else {
       return Ok(());
     };
 
     {
       let mut concat = "ffconcat version 1.0\n".to_owned();
-      for (i, sound) in self.sounds.iter().enumerate() {
+      for (i, (_frame, sound)) in self.sounds.iter().enumerate() {
         concat.push_str(&format!(
           "file {i}.png\noption framerate 1000000\nduration {}us\n",
           sound.duration_micros(),
@@ -67,7 +69,7 @@ impl Recorder {
       )
       .context(error::WavCreate { path: &path })?;
 
-      for sound in &self.sounds {
+      for (_frame, sound) in &self.sounds {
         for sample in &sound.samples {
           writer
             .write_sample(*sample)
