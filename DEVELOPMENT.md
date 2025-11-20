@@ -37,7 +37,7 @@ let foo = if bar {
 };
 ```
 
-Passing primitives into functions creates opportunties for confusion:
+Passing primitives into functions creates opportunities for confusion:
 
 ```rust
 struct Config {
@@ -65,6 +65,7 @@ struct Config {
 }
 
 fn foo(config: &Config) {
+  // use config.a
 }
 
 let config = Config {
