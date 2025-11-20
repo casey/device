@@ -12,6 +12,7 @@ pub(crate) enum Program {
   None,
   RedX,
   Rip,
+  Samples,
   Top,
   X,
 }
@@ -40,6 +41,7 @@ impl Program {
       Self::RedX => State::default().invert_r().x().push(),
       Self::Rip => State::default().invert().top().push().samples().push(),
       Self::Top => State::default().invert().top().push(),
+      Self::Samples => State::default().invert().samples().push(),
       Self::X => State::default().invert().x().push(),
     }
   }

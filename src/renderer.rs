@@ -530,7 +530,11 @@ impl Renderer {
       .samples()
       .len()
       .min(self.samples.texture().width().into_usize());
-    let samples = &analyzer.samples()[..sample_count];
+    let samples = if sample_count == 0 {
+      &[0.0]
+    } else {
+      &analyzer.samples()[..sample_count]
+    };
     let sample_range = sample_count as f32 / self.samples.texture().width() as f32;
     self.write_texture(samples, self.samples.texture());
 
@@ -538,7 +542,11 @@ impl Renderer {
       .frequencies()
       .len()
       .min(self.frequencies.texture().width().into_usize());
-    let frequencies = &analyzer.frequencies()[..frequency_count];
+    let frequencies = if frequency_count == 0 {
+      &[0.0]
+    } else {
+      &analyzer.frequencies()[..frequency_count]
+    };
     let frequency_range = frequency_count as f32 / self.frequencies.texture().width() as f32;
     self.write_texture(frequencies, self.frequencies.texture());
 

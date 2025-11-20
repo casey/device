@@ -18,7 +18,9 @@ ci: forbid
 clippy: (watch 'lclippy --all-targets -- --deny warnings')
 
 clean:
-  rm baseline/*.test.png
+  rm -f baseline/*.test.png
+  rm -f capture.png
+  rm -f recording.mp4
 
 baseline:
   #!/usr/bin/env bash
