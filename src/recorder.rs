@@ -2,6 +2,7 @@ use super::*;
 
 pub(crate) struct Recorder {
   sounds: Vec<Sound>,
+  #[allow(unused)]
   tempdir: TempDir,
   tempdir_path: Utf8PathBuf,
 }
