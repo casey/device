@@ -9,8 +9,7 @@ pub(crate) struct Recorder {
 
 impl Recorder {
   pub(crate) fn frame(&mut self, frame: u64, image: Image, sound: Sound) -> Result {
-    let index = self.sounds.len();
-    let path = self.tempdir_path.join(format!("{index}.png"));
+    let path = self.tempdir_path.join(format!("{frame}.png"));
     log::trace!("saving frame to {path}");
     image.save(&path)?;
     self.sounds.push((frame, sound));
