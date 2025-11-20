@@ -27,8 +27,8 @@ impl Recorder {
   }
 
   pub(crate) fn save(&self) -> Result {
-    const FRAMES: &str = "frames.text";
     const AUDIO: &str = "audio.wav";
+    const FRAMES: &str = "frames.text";
     const RECORDING: &str = "recording.mp4";
 
     log::info!(
