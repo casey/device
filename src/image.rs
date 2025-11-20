@@ -145,8 +145,7 @@ impl Image {
     encoder.set_color(color_type);
     encoder.set_compression(Compression::High);
 
-    let data = if !continuous && !alpha {
-      assert!(!color);
+    let data = if !alpha && !color && !continuous {
       assert_eq!(color_type, ColorType::Grayscale);
 
       encoder.set_depth(BitDepth::One);
@@ -293,6 +292,14 @@ mod tests {
       ColorType::Rgba,
       BitDepth::Eight,
       &[0, 0, 0, 255, 0, 127, 255, 127],
+    );
+
+    case(
+      path,
+      &[0, 0, 0, 255, 255, 0, 0, 255],
+      ColorType::Rgb,
+      BitDepth::Eight,
+      &[0, 0, 0, 255, 0, 0],
     );
   }
 }
