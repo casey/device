@@ -44,9 +44,7 @@ impl Recorder {
       let mut concat = "ffconcat version 1.0\n".to_owned();
       for (i, sound) in self.sounds.iter().enumerate() {
         concat.push_str(&format!(
-          "file {i}.png
-        option framerate 1000000
-        duration {}us\n",
+          "file {i}.png\noption framerate 1000000\nduration {}us\n",
           sound.duration_micros(),
         ));
       }
