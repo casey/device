@@ -36,41 +36,48 @@ impl Recorder {
       self.sounds.len(),
     );
 
-    if self.sounds.is_empty() {
+    let Some(first) = self.sounds.first() else {
       return Ok(());
-    }
+    };
 
-    let mut concat = "ffconcat version 1.0\n".to_owned();
-    for (i, sound) in self.sounds.iter().enumerate() {
-      concat.push_str(&format!(
-        "file {i}.png
+    {
+      let mut concat = "ffconcat version 1.0\n".to_owned();
+      for (i, sound) in self.sounds.iter().enumerate() {
+        concat.push_str(&format!(
+          "file {i}.png
         option framerate 1000000
         duration {}us\n",
-        sound.duration_micros(),
-      ));
-    }
-
-    let path = self.tempdir_path.join(FRAMES);
-    fs::write(&path, concat).context(error::FilesystemIo { path })?;
-
-    let first_sound = self.sounds.first().unwrap();
-    let audio_path = self.tempdir_path.join(AUDIO);
-    let mut writer = WavWriter::create(
-      &audio_path,
-      WavSpec {
-        channels: first_sound.channels,
-        sample_rate: first_sound.sample_rate,
-        bits_per_sample: 32,
-        sample_format: hound::SampleFormat::Float,
-      },
-    )
-    .unwrap();
-    for sound in &self.sounds {
-      for sample in &sound.samples {
-        writer.write_sample(*sample).unwrap();
+          sound.duration_micros(),
+        ));
       }
+
+      let path = self.tempdir_path.join(FRAMES);
+      fs::write(&path, concat).context(error::FilesystemIo { path })?;
     }
-    writer.finalize().unwrap();
+
+    {
+      let path = self.tempdir_path.join(AUDIO);
+      let mut writer = WavWriter::create(
+        &path,
+        WavSpec {
+          channels: first.channels,
+          sample_rate: first.sample_rate,
+          bits_per_sample: 32,
+          sample_format: hound::SampleFormat::Float,
+        },
+      )
+      .context(error::WavCreate { path: &path })?;
+
+      for sound in &self.sounds {
+        for sample in &sound.samples {
+          writer
+            .write_sample(*sample)
+            .context(error::WavWrite { path: &path })?;
+        }
+      }
+
+      writer.finalize().context(error::WavFinalize { path })?;
+    }
 
     let output = Command::new("ffmpeg")
       .args(["-safe", "0"])

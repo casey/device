@@ -223,6 +223,24 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     texture_format: TextureFormat,
   },
+  #[snafu(display("failed to create wav writer"))]
+  WavCreate {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: hound::Error,
+  },
+  #[snafu(display("failed to finalize wav writer"))]
+  WavFinalize {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: hound::Error,
+  },
+  #[snafu(display("failed to write wav samples"))]
+  WavWrite {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: hound::Error,
+  },
 }
 
 impl Error {
