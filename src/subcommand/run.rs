@@ -9,8 +9,6 @@ pub(crate) fn run(options: Options) -> Result {
     .run_app(&mut app)
     .context(error::AppRun)?;
 
-  app.save_recording()?;
-
   app.errors()?;
 
   Ok(())
