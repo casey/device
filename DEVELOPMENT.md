@@ -36,3 +36,42 @@ let foo = if bar {
   None
 };
 ```
+
+Passing primitives into functions creates opportunities for confusion:
+
+```rust
+struct Config {
+  a: bool,
+  b: bool,
+}
+
+fn foo(a: bool) {
+}
+
+let config = Config {
+  a: true,
+  b: false,
+};
+
+foo(config.b);
+```
+
+Where possible, pass the object where the primitive originates:
+
+```rust
+struct Config {
+  a: bool,
+  b: bool,
+}
+
+fn foo(config: &Config) {
+  // use config.a
+}
+
+let config = Config {
+  a: true,
+  b: false,
+};
+
+foo(&config);
+```

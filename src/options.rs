@@ -31,5 +31,7 @@ pub(crate) struct Options {
   #[arg(group = AUDIO, long)]
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
+  pub(crate) verbose: bool,
+  #[arg(long)]
   pub(crate) volume: Option<f32>,
 }

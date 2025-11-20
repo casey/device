@@ -36,7 +36,7 @@ use {
     io::{self, BufReader, BufWriter},
     num::NonZeroU32,
     ops::{Add, AddAssign, SubAssign},
-    process::{self, Command, ExitStatus},
+    process::{self, Command, ExitStatus, Stdio},
     sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
     time::Instant,
   },
