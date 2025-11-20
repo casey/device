@@ -45,9 +45,12 @@ impl Recorder {
     {
       let mut concat = "ffconcat version 1.0\n".to_owned();
       for (frame, sound) in &self.sounds {
+        let duration = sound.duration_micros();
+        if duration == 0 {
+          log::warn!("frame {frame} has duration 0");
+        }
         concat.push_str(&format!(
-          "file {frame}.png\noption framerate 1000000\nduration {}us\n",
-          sound.duration_micros(),
+          "file {frame}.png\noption framerate 1000000\nduration {duration}us\n",
         ));
       }
 
