@@ -55,6 +55,28 @@ impl App {
     }
   }
 
+  fn exit(&mut self) -> Result {
+    self.sink.stop();
+
+    if let Some(renderer) = &self.renderer {
+      renderer.poll()?;
+    }
+
+    for _ in 0..self.captures_pending {
+      match self.capture_rx.recv() {
+        Ok(Ok(())) => {}
+        Ok(Err(err)) => return Err(err),
+        Err(mpsc::RecvError) => return Err(Error::internal("capture channel unexpectedly closed")),
+      }
+    }
+
+    if let Some(recorder) = &self.recorder {
+      recorder.lock().unwrap().save(&self.options)?;
+    }
+
+    Ok(())
+  }
+
   fn find_song(song: &str) -> Result<Utf8PathBuf> {
     let song = RegexBuilder::new(song)
       .case_insensitive(true)
@@ -514,28 +536,6 @@ impl App {
 
   fn window(&self) -> &Window {
     self.window.as_ref().unwrap()
-  }
-
-  fn exit(&mut self) -> Result {
-    self.sink.stop();
-
-    if let Some(renderer) = &self.renderer {
-      renderer.poll()?;
-    }
-
-    for _ in 0..self.captures_pending {
-      match self.capture_rx.recv() {
-        Ok(Ok(())) => {}
-        Ok(Err(err)) => return Err(err),
-        Err(mpsc::RecvError) => return Err(Error::internal("capture channel unexpectedly closed")),
-      }
-    }
-
-    if let Some(recorder) = &self.recorder {
-      recorder.lock().unwrap().save(&self.options)?;
-    }
-
-    Ok(())
   }
 }
 
