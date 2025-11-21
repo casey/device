@@ -1,9 +1,8 @@
 use super::*;
 
 // todo:
-// - progress bar
-// - allow configuring framerate
-// - default to 60fps
+// - allow configuring duration
+// - de-duplicate setting state from options
 
 pub(crate) fn run(options: Options) -> Result {
   let mut synthesizer = Synthesizer::busy_signal();
@@ -12,12 +11,9 @@ pub(crate) fn run(options: Options) -> Result {
 
   let mut analyzer = Analyzer::new();
 
-  let resolution = 1024.try_into().unwrap();
+  let state = options.state();
 
-  let state = options
-    .program
-    .map(|program| program.state())
-    .unwrap_or_default();
+  let resolution = state.resolution.unwrap_or(1024.try_into().unwrap());
 
   let mut renderer = pollster::block_on(Renderer::new(
     None,
@@ -25,12 +21,20 @@ pub(crate) fn run(options: Options) -> Result {
     resolution,
   ))?;
 
+  let fps = state.fps.unwrap_or(60.0.try_into().unwrap());
+
+  let spf = fps.spf(Synthesizer::SAMPLE_RATE)?;
+
   let (tx, rx) = mpsc::channel();
 
-  for i in 0..120 {
-    eprintln!("rendering frame {i}");
+  let frames = 600;
 
-    for _ in 0..800 * Synthesizer::CHANNELS {
+  let progress = ProgressBar::new(frames);
+
+  for frame in 0..frames {
+    progress.inc(1);
+
+    for _ in 0..spf * u32::from(Synthesizer::CHANNELS) {
       synthesizer.next();
     }
 
@@ -43,7 +47,7 @@ pub(crate) fn run(options: Options) -> Result {
     let tx = tx.clone();
 
     renderer.capture(move |image| {
-      if let Err(err) = tx.send(recorder.lock().unwrap().frame(i, image, sound)) {
+      if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, image, sound)) {
         eprintln!("failed to send captured frame: {err}");
       }
     })?;
@@ -52,6 +56,8 @@ pub(crate) fn run(options: Options) -> Result {
 
     rx.recv().unwrap()?;
   }
+
+  progress.finish();
 
   recorder.lock().unwrap().save(&options)?;
 

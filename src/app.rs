@@ -184,11 +184,7 @@ impl App {
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
       .transpose()?;
 
-    let mut state = options.program.map(Program::state).unwrap_or_default();
-
-    state.fps = options.fps.or(state.fps);
-
-    state.resolution = options.resolution.or(state.resolution);
+    let state = options.state();
 
     let (capture_tx, capture_rx) = mpsc::channel();
 
@@ -551,7 +547,7 @@ impl ApplicationHandler for App {
       let now = Instant::now();
 
       while self.deadline <= now {
-        self.deadline += fps.duration;
+        self.deadline += fps.duration();
         self.window.as_ref().unwrap().request_redraw();
       }
 

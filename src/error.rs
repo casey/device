@@ -188,6 +188,12 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: wgpu::RequestDeviceError,
   },
+  #[snafu(display("non-integer samples-per-frame: {sample_rate} / {fps} = {}"))]
+  SamplesPerFrame {
+    backtrace: Option<Backtrace>,
+    fps: Fps,
+    sample_rate: u32,
+  },
   #[snafu(
     display(
       "more than one match for song: {}",

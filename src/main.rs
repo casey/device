@@ -13,6 +13,7 @@ use {
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
   hound::{WavSpec, WavWriter},
+  indicatif::ProgressBar,
   nalgebra::Vector2,
   parley::{FontContext, LayoutContext},
   regex::{Regex, RegexBuilder},

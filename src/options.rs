@@ -18,6 +18,8 @@ const AUDIO: &str = "audio";
     .valid(AnsiColor::Green.on_default())
 )]
 pub(crate) struct Options {
+  #[arg(conflicts_with = "input", long)]
+  pub(crate) foo: bool,
   #[arg(long)]
   pub(crate) fps: Option<Fps>,
   #[arg(group = AUDIO, long)]
@@ -38,4 +40,13 @@ pub(crate) struct Options {
   pub(crate) verbose: bool,
   #[arg(long)]
   pub(crate) volume: Option<f32>,
+}
+
+impl Options {
+  pub(crate) fn state(&self) -> State {
+    let mut state = self.program.map(Program::state).unwrap_or_default();
+    state.fps = self.fps.or(state.fps);
+    state.resolution = self.resolution.or(state.resolution);
+    state
+  }
 }
