@@ -11,8 +11,6 @@ impl Input {
   pub(crate) fn new(device: rodio::Device, stream_config: SupportedStreamConfig) -> Result<Self> {
     let queue = Arc::new(Mutex::new(VecDeque::new()));
 
-    let clone = queue.clone();
-
     let buffer_size = match stream_config.buffer_size() {
       SupportedBufferSize::Range { min, .. } => {
         log::info!("input audio buffer size: {min}");
@@ -33,8 +31,11 @@ impl Input {
     let stream = device
       .build_input_stream(
         &stream_config,
-        move |data: &[f32], _: &cpal::InputCallbackInfo| {
-          clone.lock().unwrap().extend(data);
+        {
+          let queue = queue.clone();
+          move |data: &[f32], _: &cpal::InputCallbackInfo| {
+            queue.lock().unwrap().extend(data);
+          }
         },
         move |err| {
           eprintln!("audio input error: {err}");

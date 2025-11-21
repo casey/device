@@ -556,6 +556,8 @@ impl ApplicationHandler for App {
       }
 
       event_loop.set_control_flow(ControlFlow::WaitUntil(self.deadline));
+    } else {
+      self.window().request_redraw();
     }
   }
 
