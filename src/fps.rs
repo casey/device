@@ -23,6 +23,7 @@ impl Fps {
         error::SamplesPerFrame {
           fps: self,
           sample_rate,
+          spf,
         }
         .build(),
       );
