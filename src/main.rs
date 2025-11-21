@@ -62,7 +62,7 @@ use {
     application::ApplicationHandler,
     dpi::PhysicalSize,
     event::{ElementState, WindowEvent},
-    event_loop::{ActiveEventLoop, EventLoop},
+    event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
     keyboard::{Key, NamedKey},
     window::{Window, WindowAttributes, WindowId},
   },
