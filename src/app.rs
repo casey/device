@@ -6,6 +6,7 @@ pub(crate) struct App {
   capture_tx: mpsc::Sender<Result>,
   captures_pending: u64,
   command: Option<Vec<String>>,
+  deadline: Instant,
   errors: Vec<Error>,
   horizontal: f32,
   hub: Hub,
@@ -185,11 +186,13 @@ impl App {
 
     let mut state = options.program.map(Program::state).unwrap_or_default();
 
-    if let Some(resolution) = options.resolution {
-      state.resolution = Some(resolution);
-    }
+    state.fps = state.fps.or(options.fps);
+
+    state.resolution = state.resolution.or(options.resolution);
 
     let (capture_tx, capture_rx) = mpsc::channel();
+
+    let now = Instant::now();
 
     Ok(Self {
       analyzer: Analyzer::new(),
@@ -197,6 +200,7 @@ impl App {
       capture_tx,
       captures_pending: 0,
       command: None,
+      deadline: now,
       errors: Vec::new(),
       horizontal: 0.0,
       hub: Hub::new()?,
@@ -208,7 +212,7 @@ impl App {
       renderer: None,
       scaling: 1.0,
       sink,
-      start: Instant::now(),
+      start: now,
       state,
       stream,
       translation: Vec2f::zeros(),
@@ -499,8 +503,6 @@ impl App {
 
     if self.recorder.is_some() && self.stream.is_done() {
       event_loop.exit();
-    } else {
-      self.window().request_redraw();
     }
 
     Ok(())
@@ -544,6 +546,21 @@ impl App {
 }
 
 impl ApplicationHandler for App {
+  fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+    if let Some(fps) = self.state.fps {
+      let now = Instant::now();
+
+      let dt = Duration::from_secs_f32(1.0 / fps);
+
+      while self.deadline <= now {
+        self.deadline += dt;
+        self.window.as_ref().unwrap().request_redraw();
+      }
+
+      event_loop.set_control_flow(ControlFlow::WaitUntil(self.deadline));
+    }
+  }
+
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
     if let Err(err) = self.exit() {
       self.errors.push(err);

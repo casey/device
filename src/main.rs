@@ -38,7 +38,7 @@ use {
     ops::{Add, AddAssign, SubAssign},
     process::{self, Command, ExitStatus, Stdio},
     sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
-    time::Instant,
+    time::{Duration, Instant},
   },
   strum::{EnumIter, IntoEnumIterator, IntoStaticStr},
   tempfile::TempDir,

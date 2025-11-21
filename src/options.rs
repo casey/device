@@ -18,6 +18,8 @@ const AUDIO: &str = "audio";
     .valid(AnsiColor::Green.on_default())
 )]
 pub(crate) struct Options {
+  #[arg(long)]
+  pub(crate) fps: Option<f32>,
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
   #[arg(long)]
