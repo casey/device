@@ -11,6 +11,7 @@ pub(crate) struct App {
   hub: Hub,
   macro_recording: Option<Vec<Key>>,
   makro: Vec<Key>,
+  next_frame: Instant,
   options: Options,
   #[allow(unused)]
   output_stream: OutputStream,
@@ -185,11 +186,17 @@ impl App {
 
     let mut state = options.program.map(Program::state).unwrap_or_default();
 
+    if let Some(fps) = options.fps {
+      state.fps = Some(fps);
+    }
+
     if let Some(resolution) = options.resolution {
       state.resolution = Some(resolution);
     }
 
     let (capture_tx, capture_rx) = mpsc::channel();
+
+    let now = Instant::now();
 
     Ok(Self {
       analyzer: Analyzer::new(),
@@ -202,13 +209,14 @@ impl App {
       hub: Hub::new()?,
       macro_recording: None,
       makro: Vec::new(),
+      next_frame: now,
       options,
       output_stream,
       recorder,
       renderer: None,
       scaling: 1.0,
       sink,
-      start: Instant::now(),
+      start: now,
       state,
       stream,
       translation: Vec2f::zeros(),
@@ -499,8 +507,6 @@ impl App {
 
     if self.recorder.is_some() && self.stream.is_done() {
       event_loop.exit();
-    } else {
-      self.window().request_redraw();
     }
 
     Ok(())
@@ -544,6 +550,20 @@ impl App {
 }
 
 impl ApplicationHandler for App {
+  fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+    if let Some(fps) = self.state.fps {
+      let now = Instant::now();
+
+      if now >= self.next_frame {
+        let window = self.window.as_ref().unwrap();
+        window.request_redraw();
+        self.next_frame = now + Duration::from_secs_f32(1.0 / fps);
+      }
+
+      event_loop.set_control_flow(ControlFlow::WaitUntil(self.next_frame));
+    }
+  }
+
   fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
     if let Err(err) = self.exit() {
       self.errors.push(err);
