@@ -113,6 +113,7 @@ mod templates;
 mod text;
 mod tiling;
 mod track;
+mod try_into_u32;
 mod uniforms;
 mod voice;
 
