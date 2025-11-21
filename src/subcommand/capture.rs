@@ -1,10 +1,5 @@
 use super::*;
 
-// todo:
-// - allow configuring duration
-// - allow using song
-// - encode using fixed fps
-
 pub(crate) fn run(options: Options) -> Result {
   let mut synthesizer = Synthesizer::busy_signal();
 
@@ -14,7 +9,7 @@ pub(crate) fn run(options: Options) -> Result {
 
   let state = options.state();
 
-  let resolution = state.resolution.unwrap_or(1024.try_into().unwrap());
+  let resolution = state.resolution.unwrap_or(RESOLUTION);
 
   let mut renderer = pollster::block_on(Renderer::new(
     None,
@@ -22,7 +17,7 @@ pub(crate) fn run(options: Options) -> Result {
     resolution,
   ))?;
 
-  let fps = state.fps.unwrap_or(60.0.try_into().unwrap());
+  let fps = state.fps.unwrap_or(FPS.try_into().unwrap());
 
   let spf = fps.spf(Synthesizer::SAMPLE_RATE)?;
 

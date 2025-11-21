@@ -121,6 +121,8 @@ const MIB: usize = KIB << 10;
 
 const CHANNELS: u32 = 4;
 const FONT: &str = "Helvetica Neue";
+const FPS: f32 = 60.0;
+const RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 

@@ -29,7 +29,7 @@ impl Fps {
       );
     }
 
-    // todo: check for errors
+    // todo: check inexact conversion
     Ok(spf as u32)
   }
 }
