@@ -183,7 +183,11 @@ impl App {
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
       .transpose()?;
 
-    let state = options.program.map(Program::state).unwrap_or_default();
+    let mut state = options.program.map(Program::state).unwrap_or_default();
+
+    if let Some(resolution) = options.resolution {
+      state.resolution = Some(resolution);
+    }
 
     let (capture_tx, capture_rx) = mpsc::channel();
 
