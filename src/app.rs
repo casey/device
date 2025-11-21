@@ -550,10 +550,11 @@ impl ApplicationHandler for App {
     if let Some(fps) = self.state.fps {
       let now = Instant::now();
 
-      if now >= self.next_frame {
-        let window = self.window.as_ref().unwrap();
-        window.request_redraw();
-        self.next_frame = now + Duration::from_secs_f32(1.0 / fps);
+      let dt = Duration::from_secs_f32(1.0 / fps);
+
+      while self.next_frame <= now {
+        self.next_frame += dt;
+        self.window.as_ref().unwrap().request_redraw();
       }
 
       event_loop.set_control_flow(ControlFlow::WaitUntil(self.next_frame));
