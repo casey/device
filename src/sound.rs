@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub(crate) struct Sound {
   pub(crate) channels: u16,
   pub(crate) sample_rate: u32,
