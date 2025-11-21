@@ -186,13 +186,9 @@ impl App {
 
     let mut state = options.program.map(Program::state).unwrap_or_default();
 
-    if let Some(fps) = options.fps {
-      state.fps = Some(fps);
-    }
+    state.fps = state.fps.or(options.fps);
 
-    if let Some(resolution) = options.resolution {
-      state.resolution = Some(resolution);
-    }
+    state.resolution = state.resolution.or(options.resolution);
 
     let (capture_tx, capture_rx) = mpsc::channel();
 
