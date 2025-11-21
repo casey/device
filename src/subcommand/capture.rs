@@ -2,6 +2,8 @@ use super::*;
 
 // todo:
 // - progress bar
+// - allow configuring framerate
+// - default to 60fps
 
 pub(crate) fn run(options: Options) -> Result {
   let mut synthesizer = Synthesizer::busy_signal();
@@ -12,7 +14,10 @@ pub(crate) fn run(options: Options) -> Result {
 
   let resolution = 1024.try_into().unwrap();
 
-  let state = Program::Highwaystar.state().db(-10);
+  let state = options
+    .program
+    .map(|program| program.state())
+    .unwrap_or_default();
 
   let mut renderer = pollster::block_on(Renderer::new(
     None,
