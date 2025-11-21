@@ -6,12 +6,12 @@ pub(crate) struct App {
   capture_tx: mpsc::Sender<Result>,
   captures_pending: u64,
   command: Option<Vec<String>>,
+  deadline: Instant,
   errors: Vec<Error>,
   horizontal: f32,
   hub: Hub,
   macro_recording: Option<Vec<Key>>,
   makro: Vec<Key>,
-  next_frame: Instant,
   options: Options,
   #[allow(unused)]
   output_stream: OutputStream,
@@ -200,12 +200,12 @@ impl App {
       capture_tx,
       captures_pending: 0,
       command: None,
+      deadline: now,
       errors: Vec::new(),
       horizontal: 0.0,
       hub: Hub::new()?,
       macro_recording: None,
       makro: Vec::new(),
-      next_frame: now,
       options,
       output_stream,
       recorder,
@@ -552,12 +552,12 @@ impl ApplicationHandler for App {
 
       let dt = Duration::from_secs_f32(1.0 / fps);
 
-      while self.next_frame <= now {
-        self.next_frame += dt;
+      while self.deadline <= now {
+        self.deadline += dt;
         self.window.as_ref().unwrap().request_redraw();
       }
 
-      event_loop.set_control_flow(ControlFlow::WaitUntil(self.next_frame));
+      event_loop.set_control_flow(ControlFlow::WaitUntil(self.deadline));
     }
   }
 
