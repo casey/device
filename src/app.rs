@@ -186,9 +186,9 @@ impl App {
 
     let mut state = options.program.map(Program::state).unwrap_or_default();
 
-    state.fps = state.fps.or(options.fps);
+    state.fps = options.fps.or(state.fps);
 
-    state.resolution = state.resolution.or(options.resolution);
+    state.resolution = options.resolution.or(state.resolution);
 
     let (capture_tx, capture_rx) = mpsc::channel();
 
@@ -550,10 +550,8 @@ impl ApplicationHandler for App {
     if let Some(fps) = self.state.fps {
       let now = Instant::now();
 
-      let dt = Duration::from_secs_f32(1.0 / fps);
-
       while self.deadline <= now {
-        self.deadline += dt;
+        self.deadline += fps.duration;
         self.window.as_ref().unwrap().request_redraw();
       }
 

@@ -19,7 +19,7 @@ const AUDIO: &str = "audio";
 )]
 pub(crate) struct Options {
   #[arg(long)]
-  pub(crate) fps: Option<f32>,
+  pub(crate) fps: Option<Fps>,
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
   #[arg(long)]
