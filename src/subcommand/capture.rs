@@ -2,7 +2,8 @@ use super::*;
 
 // todo:
 // - allow configuring duration
-// - de-duplicate setting state from options
+// - allow using song
+// - encode using fixed fps
 
 pub(crate) fn run(options: Options) -> Result {
   let mut synthesizer = Synthesizer::busy_signal();
