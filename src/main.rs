@@ -1,8 +1,8 @@
 use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, controller::Controller,
-    error::Error, event::Event, field::Field, filter::Filter, format::Format, frame::Frame,
-    hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_u128::IntoU128,
+    error::Error, event::Event, field::Field, filter::Filter, format::Format, fps::Fps,
+    frame::Frame, hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_u128::IntoU128,
     into_usize::IntoUsize, into_utf8_path::IntoUtf8Path, message::Message, options::Options,
     parameter::Parameter, program::Program, recorder::Recorder, renderer::Renderer, shared::Shared,
     sound::Sound, state::State, stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer,
@@ -37,6 +37,7 @@ use {
     num::NonZeroU32,
     ops::{Add, AddAssign, SubAssign},
     process::{self, Command, ExitStatus, Stdio},
+    str::FromStr,
     sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
     time::{Duration, Instant},
   },
@@ -84,6 +85,7 @@ mod event;
 mod field;
 mod filter;
 mod format;
+mod fps;
 mod frame;
 mod hub;
 mod image;

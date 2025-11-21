@@ -6,7 +6,7 @@ pub(crate) struct State {
   pub(crate) filter: Filter,
   pub(crate) filters: Vec<Filter>,
   pub(crate) fit: bool,
-  pub(crate) fps: Option<f32>,
+  pub(crate) fps: Option<Fps>,
   pub(crate) parameter: Parameter,
   pub(crate) repeat: bool,
   pub(crate) resolution: Option<NonZeroU32>,
