@@ -24,6 +24,8 @@ pub(crate) struct Options {
   pub(crate) program: Option<Program>,
   #[arg(long)]
   pub(crate) record: bool,
+  #[arg(long)]
+  pub(crate) resolution: Option<NonZeroU32>,
   #[arg(group = AUDIO, long)]
   pub(crate) song: Option<String>,
   #[arg(group = AUDIO, long)]
