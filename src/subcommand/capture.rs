@@ -8,7 +8,7 @@ pub(crate) struct Capture {
 
 impl Capture {
   pub(crate) fn run(self, options: Options) -> Result {
-    let mut synthesizer = Synthesizer::busy_signal();
+    let mut stream = options.stream()?;
 
     let recorder = Arc::new(Mutex::new(Recorder::new()?));
 
@@ -38,10 +38,10 @@ impl Capture {
       progress.inc(1);
 
       for _ in 0..spf * u32::from(Synthesizer::CHANNELS) {
-        synthesizer.next();
+        stream.next();
       }
 
-      let sound = synthesizer.drain();
+      let sound = stream.drain();
       analyzer.update(&sound, false, &state);
       renderer.render(&analyzer, &state, Instant::now())?;
 

@@ -49,6 +49,10 @@ impl Source for Track {
 }
 
 impl Stream for Track {
+  fn append(&self, sink: &Sink) {
+    sink.append(self.clone());
+  }
+
   fn channels(&self) -> u16 {
     self.read().decoder.channels()
   }

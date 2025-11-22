@@ -78,49 +78,7 @@ impl App {
     Ok(())
   }
 
-  fn find_song(song: &str) -> Result<Utf8PathBuf> {
-    let song = RegexBuilder::new(song)
-      .case_insensitive(true)
-      .build()
-      .context(error::SongRegex)?;
-
-    let mut matches = Vec::<Utf8PathBuf>::new();
-
-    let home = dirs::home_dir().context(error::Home)?;
-
-    let music = home.join("Music/Music/Media.localized/Music");
-
-    for entry in WalkDir::new(&music) {
-      let entry = entry.context(error::SongWalk)?;
-
-      if entry.file_type().is_dir() {
-        continue;
-      }
-
-      let path = entry.path();
-
-      let haystack = path.strip_prefix(&music).unwrap().with_extension("");
-
-      let Some(haystack) = haystack.to_str() else {
-        continue;
-      };
-
-      if song.is_match(haystack) {
-        matches.push(path.into_utf8_path()?.into());
-      }
-    }
-
-    if matches.len() > 1 {
-      return Err(error::SongAmbiguous { matches }.build());
-    }
-
-    match matches.into_iter().next() {
-      Some(path) => Ok(path),
-      None => Err(error::SongMatch { song }.build()),
-    }
-  }
-
-  pub(crate) fn new(options: Options) -> Result<Self> {
+  pub(crate) fn new(options: Options, record: bool) -> Result<Self> {
     let host = cpal::default_host();
 
     let output_device = host
@@ -149,7 +107,7 @@ impl App {
       sink.set_volume(volume);
     }
 
-    let stream: Box<dyn Stream> = if options.input {
+    let stream = if options.input {
       let input_device = host
         .default_input_device()
         .context(error::AudioDefaultInputDevice)?;
@@ -161,26 +119,13 @@ impl App {
       )?;
 
       Box::new(Input::new(input_device, stream_config)?)
-    } else if let Some(song) = &options.song {
-      let track = Track::new(&Self::find_song(song)?)?;
-      sink.append(track.clone());
-      Box::new(track)
-    } else if options.synthesizer {
-      let synthesizer = Synthesizer::busy_signal();
-      sink.append(synthesizer.clone());
-      Box::new(synthesizer)
-    } else if let Some(track) = &options.track {
-      let track = Track::new(track)?;
-      sink.append(track.clone());
-      Box::new(track)
     } else {
-      let synthesizer = Synthesizer::silence();
-      sink.append(synthesizer.clone());
-      Box::new(synthesizer)
+      let stream = options.stream()?;
+      stream.append(&sink);
+      stream
     };
 
-    let recorder = options
-      .record
+    let recorder = record
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
       .transpose()?;
 

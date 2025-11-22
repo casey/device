@@ -55,6 +55,8 @@ impl Input {
 }
 
 impl Stream for Input {
+  fn append(&self, _sink: &Sink) {}
+
   fn channels(&self) -> u16 {
     self.stream_config.channels
   }
@@ -69,5 +71,13 @@ impl Stream for Input {
 
   fn sample_rate(&self) -> u32 {
     self.stream_config.sample_rate.0
+  }
+}
+
+impl Iterator for Input {
+  type Item = f32;
+
+  fn next(&mut self) -> Option<f32> {
+    Some(0.0)
   }
 }
