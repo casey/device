@@ -1,13 +1,13 @@
 [package]
-name = "x"
-version = "0.0.0"
+name = "device"
+version = "0.0.2"
 authors = ["Casey Rodarmor <casey@rodarmor.com>"]
-description = "A generative engine."
+description = "A generative engine"
 edition = "2024"
-homepage = "https://github.com/casey/x"
+homepage = "https://github.com/casey/device"
 include = ["/src", "/templates"]
 license = "CC0-1.0"
-repository = "https://github.com/casey/x"
+repository = "https://github.com/casey/device"
 
 [dependencies]
 boilerplate = "1.0.1"
@@ -29,7 +29,7 @@ rodio = { version = "0.21.1", features = ["playback", "symphonia-all"], default-
 rustfft = "6.2.0"
 snafu = "0.8.5"
 strum = { version = "0.27.1", features = ["derive"] }
-symphonia = { version = "*", features = [ "all-codecs", "all-formats" ] }
+symphonia = { version = "0.5.5", features = [ "all-codecs", "all-formats" ] }
 tabled = "0.20.0"
 tempfile = "3.17.1"
 vello = "0.6.0"
