@@ -39,3 +39,12 @@ pub(crate) struct Options {
   #[arg(long)]
   pub(crate) volume: Option<f32>,
 }
+
+impl Options {
+  pub(crate) fn state(&self) -> State {
+    let mut state = self.program.map(Program::state).unwrap_or_default();
+    state.fps = self.fps.or(state.fps);
+    state.resolution = self.resolution.or(state.resolution);
+    state
+  }
+}

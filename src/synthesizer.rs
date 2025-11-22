@@ -1,8 +1,5 @@
 use super::*;
 
-const CHANNELS: u16 = 2;
-const SAMPLE_RATE: u32 = 48_000;
-
 #[derive(Clone)]
 pub(crate) struct Synthesizer(Arc<Mutex<Inner>>);
 
@@ -15,6 +12,9 @@ struct Inner {
 }
 
 impl Synthesizer {
+  pub(crate) const CHANNELS: u16 = 2;
+  pub(crate) const SAMPLE_RATE: u32 = 48_000;
+
   pub(crate) fn busy_signal() -> Self {
     Self::new(vec![
       Voice::Sine {
@@ -42,7 +42,7 @@ impl Synthesizer {
 
 impl Source for Synthesizer {
   fn channels(&self) -> u16 {
-    CHANNELS
+    Self::CHANNELS
   }
 
   fn current_span_len(&self) -> Option<usize> {
@@ -50,7 +50,7 @@ impl Source for Synthesizer {
   }
 
   fn sample_rate(&self) -> u32 {
-    SAMPLE_RATE
+    Self::SAMPLE_RATE
   }
 
   fn total_duration(&self) -> Option<std::time::Duration> {
@@ -60,7 +60,7 @@ impl Source for Synthesizer {
 
 impl Stream for Synthesizer {
   fn channels(&self) -> u16 {
-    CHANNELS
+    Self::CHANNELS
   }
 
   fn drain_samples(&mut self, samples: &mut Vec<f32>) {
@@ -74,7 +74,7 @@ impl Stream for Synthesizer {
   }
 
   fn sample_rate(&self) -> u32 {
-    SAMPLE_RATE
+    Self::SAMPLE_RATE
   }
 }
 
@@ -91,7 +91,7 @@ impl Iterator for Synthesizer {
 
     let i = inner.buffer.len().into_u64() / u64::from(CHANNELS);
 
-    let t = i as f32 / SAMPLE_RATE as f32;
+    let t = i as f32 / Self::SAMPLE_RATE as f32;
 
     let sample = inner.voices.iter().map(|voice| voice.sample(t)).sum();
 
