@@ -1,6 +1,8 @@
 use super::*;
 
-pub(crate) trait Stream {
+pub(crate) trait Stream: Iterator<Item = f32> {
+  fn append(&self, sink: &Sink);
+
   fn channels(&self) -> u16;
 
   fn drain(&mut self) -> Sound {

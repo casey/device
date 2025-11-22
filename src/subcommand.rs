@@ -5,12 +5,11 @@ mod probe;
 mod run;
 mod shader;
 
-#[derive(Default, Parser)]
+#[derive(Parser)]
 pub(crate) enum Subcommand {
   Capture(capture::Capture),
   Probe,
-  #[default]
-  Run,
+  Run(run::Run),
   Shader,
 }
 
@@ -20,7 +19,7 @@ impl Subcommand {
       Self::Capture(capture) => capture.run(options),
       Self::Probe => probe::run(),
       Self::Shader => shader::run(),
-      Self::Run => run::run(options),
+      Self::Run(run) => run.run(options),
     }
   }
 }

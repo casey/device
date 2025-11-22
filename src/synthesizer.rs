@@ -59,6 +59,10 @@ impl Source for Synthesizer {
 }
 
 impl Stream for Synthesizer {
+  fn append(&self, sink: &Sink) {
+    sink.append(self.clone());
+  }
+
   fn channels(&self) -> u16 {
     Self::CHANNELS
   }

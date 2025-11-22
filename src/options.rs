@@ -25,8 +25,6 @@ pub(crate) struct Options {
   #[arg(long)]
   pub(crate) program: Option<Program>,
   #[arg(long)]
-  pub(crate) record: bool,
-  #[arg(long)]
   pub(crate) resolution: Option<NonZeroU32>,
   #[arg(group = AUDIO, long)]
   pub(crate) song: Option<String>,
@@ -41,10 +39,67 @@ pub(crate) struct Options {
 }
 
 impl Options {
+  fn find_song(song: &str) -> Result<Utf8PathBuf> {
+    let song = RegexBuilder::new(song)
+      .case_insensitive(true)
+      .build()
+      .context(error::SongRegex)?;
+
+    let mut matches = Vec::<Utf8PathBuf>::new();
+
+    let home = dirs::home_dir().context(error::Home)?;
+
+    let music = home.join("Music/Music/Media.localized/Music");
+
+    for entry in WalkDir::new(&music) {
+      let entry = entry.context(error::SongWalk)?;
+
+      if entry.file_type().is_dir() {
+        continue;
+      }
+
+      let path = entry.path();
+
+      let haystack = path.strip_prefix(&music).unwrap().with_extension("");
+
+      let Some(haystack) = haystack.to_str() else {
+        continue;
+      };
+
+      if song.is_match(haystack) {
+        matches.push(path.into_utf8_path()?.into());
+      }
+    }
+
+    if matches.len() > 1 {
+      return Err(error::SongAmbiguous { matches }.build());
+    }
+
+    match matches.into_iter().next() {
+      Some(path) => Ok(path),
+      None => Err(error::SongMatch { song }.build()),
+    }
+  }
   pub(crate) fn state(&self) -> State {
     let mut state = self.program.map(Program::state).unwrap_or_default();
     state.fps = self.fps.or(state.fps);
     state.resolution = self.resolution.or(state.resolution);
     state
+  }
+
+  pub(crate) fn stream(&self) -> Result<Box<dyn Stream>> {
+    if let Some(song) = &self.song {
+      let track = Track::new(&Self::find_song(song)?)?;
+      Ok(Box::new(track))
+    } else if self.synthesizer {
+      let synthesizer = Synthesizer::busy_signal();
+      Ok(Box::new(synthesizer))
+    } else if let Some(track) = &self.track {
+      let track = Track::new(track)?;
+      Ok(Box::new(track))
+    } else {
+      let synthesizer = Synthesizer::silence();
+      Ok(Box::new(synthesizer))
+    }
   }
 }
