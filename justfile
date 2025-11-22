@@ -51,3 +51,12 @@ maria:
 
 nobrain:
   cargo run --release -- --song 'no brain$'
+
+capture-hello:
+  cargo run --release -- \
+    --fps 60 \
+    --program hello \
+    --resolution 2048 \
+    --song 'old generic boss' \
+    --verbose \
+    capture

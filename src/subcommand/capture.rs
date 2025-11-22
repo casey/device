@@ -114,6 +114,7 @@ impl Capture {
       .args(["-pix_fmt", "yuv420p"])
       .args(["-preset", "slow"])
       .args(["-c:a", "aac"])
+      .args(["-b:a", "192k"])
       .arg(RECORDING)
       .current_dir(tempdir_path)
       .stdin(Stdio::piped())
