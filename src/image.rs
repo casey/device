@@ -13,6 +13,10 @@ pub(crate) struct Image {
 const OPAQUE: u8 = u8::MAX;
 
 impl Image {
+  pub(crate) fn data(&self) -> &[u8] {
+    &self.data
+  }
+
   pub(crate) fn data_mut(&mut self) -> &mut [u8] {
     &mut self.data
   }

@@ -15,4 +15,31 @@ impl Sound {
     self.samples.len().into_u128() / u128::from(self.channels) * 1_000_000
       / u128::from(self.sample_rate)
   }
+
+  pub(crate) fn save<'a>(path: &Utf8Path, mut sounds: impl Iterator<Item = &'a Sound>) -> Result {
+    let first = sounds.next();
+
+    let mut writer = WavWriter::create(
+      path,
+      WavSpec {
+        channels: first.map_or(2, |first| first.channels),
+        sample_rate: first.map_or(48_000, |first| first.sample_rate),
+        bits_per_sample: 32,
+        sample_format: hound::SampleFormat::Float,
+      },
+    )
+    .context(error::WavCreate { path })?;
+
+    for sound in first.into_iter().chain(sounds) {
+      for sample in &sound.samples {
+        writer
+          .write_sample(*sample)
+          .context(error::WavWrite { path })?;
+      }
+    }
+
+    writer.finalize().context(error::WavFinalize { path })?;
+
+    Ok(())
+  }
 }

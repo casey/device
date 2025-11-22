@@ -34,7 +34,7 @@ use {
     f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},
-    io::{self, BufReader, BufWriter},
+    io::{self, BufReader, BufWriter, Write},
     num::NonZeroU32,
     ops::{Add, AddAssign, SubAssign},
     process::{self, Command, ExitStatus, Stdio},
@@ -119,9 +119,11 @@ mod voice;
 const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
 
+const AUDIO: &str = "audio.wav";
 const CHANNELS: u32 = 4;
 const FONT: &str = "Helvetica Neue";
 const FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
+const RECORDING: &str = "recording.mp4";
 const RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
