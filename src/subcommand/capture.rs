@@ -51,11 +51,9 @@ impl Capture {
 
     let (tx, rx) = mpsc::channel();
 
-    let frames = if let Some(duration) = self.duration {
-      Some(u64::from(duration.get()) * u64::from(fps.fps().get()))
-    } else {
-      None
-    };
+    let frames = self
+      .duration
+      .map(|duration| u64::from(duration.get()) * u64::from(fps.fps().get()));
 
     let progress = if let Some(frames) = frames {
       ProgressBar::new(frames)
@@ -66,7 +64,7 @@ impl Capture {
 
     let mut done = false;
     for frame in 0.. {
-      if frames.map(|frames| frame == frames).unwrap_or(done) {
+      if frames.map_or(done, |frames| frame == frames) {
         break;
       }
 
