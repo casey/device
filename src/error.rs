@@ -53,6 +53,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: cpal::SupportedStreamConfigsError,
   },
+  #[snafu(display("failed to flush captured video"))]
+  CaptureFlush {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
   #[snafu(display("failed to invoke capture command"))]
   CaptureInvoke {
     backtrace: Option<Backtrace>,

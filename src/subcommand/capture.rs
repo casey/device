@@ -130,7 +130,7 @@ impl Capture {
       }
     }
 
-    stdin.flush().context(error::CaptureWrite)?;
+    stdin.flush().context(error::CaptureFlush)?;
 
     drop(stdin);
 
