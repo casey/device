@@ -80,6 +80,7 @@ impl Options {
       None => Err(error::SongMatch { song }.build()),
     }
   }
+
   pub(crate) fn state(&self) -> State {
     let mut state = self.program.map(Program::state).unwrap_or_default();
     state.fps = self.fps.or(state.fps);
