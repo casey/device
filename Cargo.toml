@@ -1,13 +1,13 @@
 [package]
 name = "device"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Casey Rodarmor <casey@rodarmor.com>"]
 description = "A generative engine"
 edition = "2024"
-homepage = "https://github.com/casey/x"
+homepage = "https://github.com/casey/device"
 include = ["/src", "/templates"]
 license = "CC0-1.0"
-repository = "https://github.com/casey/x"
+repository = "https://github.com/casey/device"
 
 [dependencies]
 boilerplate = "1.0.1"
