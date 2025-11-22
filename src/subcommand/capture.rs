@@ -97,7 +97,7 @@ impl Capture {
     let tempdir_path = tempdir.path().into_utf8_path()?;
 
     Sound::save(
-      &tempdir_path.join("audio.wav"),
+      &tempdir_path.join(AUDIO),
       media.iter().map(|(_image, sound)| sound),
     )?;
 
