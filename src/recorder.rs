@@ -75,16 +75,8 @@ impl Recorder {
       .args(["-c:a", "aac"])
       .arg(RECORDING)
       .current_dir(&self.tempdir_path)
-      .stderr(if options.verbose {
-        Stdio::inherit()
-      } else {
-        Stdio::piped()
-      })
-      .stdout(if options.verbose {
-        Stdio::inherit()
-      } else {
-        Stdio::piped()
-      })
+      .stderr(options.stdio())
+      .stdout(options.stdio())
       .output()
       .context(error::RecordingInvoke)?;
 

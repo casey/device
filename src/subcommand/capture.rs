@@ -102,7 +102,7 @@ impl Capture {
       media.iter().map(|(_image, sound)| sound),
     )?;
 
-    let mut child = Command::new("ffmpeg")
+    let child = Command::new("ffmpeg")
       .args(["-f", "rawvideo"])
       .args(["-pixel_format", "rgb24"])
       .args(["-video_size", &format!("{resolution}x{resolution}")])
@@ -116,41 +116,43 @@ impl Capture {
       .args(["-preset", "slow"])
       .args(["-c:a", "aac"])
       .arg(RECORDING)
-      .current_dir(&tempdir_path)
+      .current_dir(tempdir_path)
       .stdin(Stdio::piped())
-      .stderr(if options.verbose {
-        Stdio::inherit()
-      } else {
-        Stdio::piped()
-      })
-      .stdout(if options.verbose {
-        Stdio::inherit()
-      } else {
-        Stdio::piped()
-      })
+      .stderr(options.stdio())
+      .stdout(options.stdio())
       .spawn()
-      .context(error::RecordingInvoke)?;
+      .context(error::CaptureInvoke)?;
 
     let mut stdin = BufWriter::new(child.stdin.as_ref().unwrap());
 
     for (image, _sound) in media {
       for pixel in image.data().chunks(4) {
-        stdin.write_all(&pixel[0..3]).unwrap();
+        stdin.write_all(&pixel[0..3]).context(error::CaptureWrite)?;
       }
     }
 
-    stdin.flush().unwrap();
+    stdin.flush().context(error::CaptureWrite)?;
 
     drop(stdin);
 
-    child.wait().unwrap();
+    let output = child.wait_with_output().context(error::CaptureWait)?;
+
+    if !output.status.success() {
+      if !options.verbose {
+        eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+      }
+
+      return Err(
+        error::CaptureStatus {
+          status: output.status,
+        }
+        .build(),
+      );
+    }
 
     fs::rename(tempdir_path.join(RECORDING), RECORDING)
       .context(error::FilesystemIo { path: RECORDING })?;
-
-    // todo:
-    // - captureinvoke error
-    // - error handling
 
     Ok(())
   }

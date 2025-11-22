@@ -53,6 +53,26 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: cpal::SupportedStreamConfigsError,
   },
+  #[snafu(display("failed to invoke capture command"))]
+  CaptureInvoke {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
+  #[snafu(display("capture command failed"))]
+  CaptureStatus {
+    backtrace: Option<Backtrace>,
+    status: ExitStatus,
+  },
+  #[snafu(display("failed to wait for capture command"))]
+  CaptureWait {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
+  #[snafu(display("failed to write captured video"))]
+  CaptureWrite {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
   #[snafu(display("failed to create overlay renderer"))]
   CreateOverlayRenderer {
     backtrace: Option<Backtrace>,
@@ -154,7 +174,7 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
-  #[snafu(display("failed to invoke recording command"))]
+  #[snafu(display("recording command failed"))]
   RecordingStatus {
     backtrace: Option<Backtrace>,
     status: ExitStatus,

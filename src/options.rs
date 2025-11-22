@@ -88,6 +88,14 @@ impl Options {
     state
   }
 
+  pub(crate) fn stdio(&self) -> Stdio {
+    if self.verbose {
+      Stdio::inherit()
+    } else {
+      Stdio::piped()
+    }
+  }
+
   pub(crate) fn stream(&self) -> Result<Box<dyn Stream>> {
     if let Some(song) = &self.song {
       Ok(Box::new(Track::new(&Self::find_song(song)?)?))
