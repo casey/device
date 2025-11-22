@@ -88,7 +88,6 @@ impl Capture {
       renderer.poll()?;
 
       let image = rx.recv().unwrap();
-
       media.push((image, sound));
     }
 
