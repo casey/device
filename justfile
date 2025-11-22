@@ -47,10 +47,10 @@ hello:
   cargo run --release -- --song 'old generic boss' --program hello run
 
 maria:
-  cargo run --release -- --song 'total 4/13 maria'
+  cargo run --release -- --song 'total 4/13 maria' run
 
 nobrain:
-  cargo run --release -- --song 'no brain$'
+  cargo run --release -- --song 'no brain$' run
 
 capture-hello:
   cargo run --release -- \
