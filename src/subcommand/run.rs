@@ -3,7 +3,7 @@ use super::*;
 #[derive(Parser)]
 pub(crate) struct Run {
   #[arg(long)]
-  pub(crate) record: bool,
+  record: bool,
 }
 
 impl Run {

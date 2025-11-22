@@ -24,7 +24,7 @@ const TICK_CHARS: &str = concat!(
 #[derive(Parser)]
 pub(crate) struct Capture {
   #[arg(long)]
-  pub(crate) duration: Option<NonZeroU32>,
+  duration: Option<NonZeroU32>,
 }
 
 impl Capture {
