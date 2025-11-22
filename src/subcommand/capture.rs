@@ -75,7 +75,7 @@ impl Capture {
       }
 
       let sound = stream.drain();
-      analyzer.update(&sound, false, &state);
+      analyzer.update(&sound, done, &state);
       renderer.render(&analyzer, &state, Instant::now())?;
 
       let recorder = recorder.clone();
