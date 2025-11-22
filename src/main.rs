@@ -113,7 +113,6 @@ mod templates;
 mod text;
 mod tiling;
 mod track;
-mod try_into_u32;
 mod uniforms;
 mod voice;
 
@@ -122,7 +121,7 @@ const MIB: usize = KIB << 10;
 
 const CHANNELS: u32 = 4;
 const FONT: &str = "Helvetica Neue";
-const FPS: f32 = 60.0;
+const FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;

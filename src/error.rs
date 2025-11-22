@@ -188,12 +188,13 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: wgpu::RequestDeviceError,
   },
-  #[snafu(display("non-integer samples-per-frame: {sample_rate} / {fps} = {spf}"))]
+  #[snafu(display(
+    "sample rate {sample_rate} is not divisible by fps {fps}: {sample_rate} / {fps}"
+  ))]
   SamplesPerFrame {
     backtrace: Option<Backtrace>,
     fps: Fps,
     sample_rate: u32,
-    spf: f32,
   },
   #[snafu(
     display(

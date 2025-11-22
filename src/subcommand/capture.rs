@@ -1,61 +1,69 @@
 use super::*;
 
-pub(crate) fn run(options: Options) -> Result {
-  let mut synthesizer = Synthesizer::busy_signal();
+#[derive(Parser)]
+pub(crate) struct Capture {
+  #[arg(long)]
+  pub(crate) duration: NonZeroU32,
+}
 
-  let recorder = Arc::new(Mutex::new(Recorder::new()?));
+impl Capture {
+  pub(crate) fn run(self, options: Options) -> Result {
+    let mut synthesizer = Synthesizer::busy_signal();
 
-  let mut analyzer = Analyzer::new();
+    let recorder = Arc::new(Mutex::new(Recorder::new()?));
 
-  let state = options.state();
+    let mut analyzer = Analyzer::new();
 
-  let resolution = state.resolution.unwrap_or(RESOLUTION);
+    let state = options.state();
 
-  let mut renderer = pollster::block_on(Renderer::new(
-    None,
-    Vector2::new(resolution, resolution),
-    resolution,
-  ))?;
+    let resolution = state.resolution.unwrap_or(RESOLUTION);
 
-  let fps = state.fps.unwrap_or(FPS.try_into().unwrap());
+    let mut renderer = pollster::block_on(Renderer::new(
+      None,
+      Vector2::new(resolution, resolution),
+      resolution,
+    ))?;
 
-  let spf = fps.spf(Synthesizer::SAMPLE_RATE)?;
+    let fps = state.fps.unwrap_or(FPS.try_into().unwrap());
 
-  let (tx, rx) = mpsc::channel();
+    let spf = fps.spf(Synthesizer::SAMPLE_RATE)?;
 
-  let frames = 600;
+    let (tx, rx) = mpsc::channel();
 
-  let progress = ProgressBar::new(frames);
+    let frames = u64::from(self.duration.get()) * u64::from(fps.fps().get());
 
-  for frame in 0..frames {
-    progress.inc(1);
+    let progress = ProgressBar::new(frames);
 
-    for _ in 0..spf * u32::from(Synthesizer::CHANNELS) {
-      synthesizer.next();
+    for frame in 0..frames {
+      progress.inc(1);
+
+      for _ in 0..spf * u32::from(Synthesizer::CHANNELS) {
+        synthesizer.next();
+      }
+
+      let sound = synthesizer.drain();
+      analyzer.update(&sound, false, &state);
+
+      renderer.render(&analyzer, &state, Instant::now())?;
+
+      let recorder = recorder.clone();
+      let tx = tx.clone();
+
+      renderer.capture(move |image| {
+        if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, image, sound)) {
+          eprintln!("failed to send captured frame: {err}");
+        }
+      })?;
+
+      renderer.poll()?;
+
+      rx.recv().unwrap()?;
     }
 
-    let sound = synthesizer.drain();
-    analyzer.update(&sound, false, &state);
+    progress.finish();
 
-    renderer.render(&analyzer, &state, Instant::now())?;
+    recorder.lock().unwrap().save(&options)?;
 
-    let recorder = recorder.clone();
-    let tx = tx.clone();
-
-    renderer.capture(move |image| {
-      if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, image, sound)) {
-        eprintln!("failed to send captured frame: {err}");
-      }
-    })?;
-
-    renderer.poll()?;
-
-    rx.recv().unwrap()?;
+    Ok(())
   }
-
-  progress.finish();
-
-  recorder.lock().unwrap().save(&options)?;
-
-  Ok(())
 }
