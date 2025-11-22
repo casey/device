@@ -12,8 +12,8 @@ struct Inner {
 }
 
 impl Synthesizer {
-  pub(crate) const CHANNELS: u16 = 2;
-  pub(crate) const SAMPLE_RATE: u32 = 48_000;
+  const CHANNELS: u16 = 2;
+  const SAMPLE_RATE: u32 = 48_000;
 
   pub(crate) fn busy_signal() -> Self {
     Self::new(vec![
