@@ -27,20 +27,18 @@ impl Recorder {
   }
 
   pub(crate) fn save(&mut self, options: &Options) -> Result {
-    const AUDIO: &str = "audio.wav";
     const CONCAT: &str = "concat.txt";
-    const RECORDING: &str = "recording.mp4";
 
     log::info!(
       "saving {} frame recording to {RECORDING}",
       self.sounds.len(),
     );
 
-    self.sounds.sort_by_key(|(frame, _sound)| *frame);
-
-    let Some((_frame, first)) = self.sounds.first() else {
+    if self.sounds.is_empty() {
       return Ok(());
-    };
+    }
+
+    self.sounds.sort_by_key(|(frame, _sound)| *frame);
 
     {
       let mut concat = "ffconcat version 1.0\n".to_owned();
@@ -58,29 +56,10 @@ impl Recorder {
       fs::write(&path, concat).context(error::FilesystemIo { path })?;
     }
 
-    {
-      let path = self.tempdir_path.join(AUDIO);
-      let mut writer = WavWriter::create(
-        &path,
-        WavSpec {
-          channels: first.channels,
-          sample_rate: first.sample_rate,
-          bits_per_sample: 32,
-          sample_format: hound::SampleFormat::Float,
-        },
-      )
-      .context(error::WavCreate { path: &path })?;
-
-      for (_frame, sound) in &self.sounds {
-        for sample in &sound.samples {
-          writer
-            .write_sample(*sample)
-            .context(error::WavWrite { path: &path })?;
-        }
-      }
-
-      writer.finalize().context(error::WavFinalize { path })?;
-    }
+    Sound::save(
+      &self.tempdir_path.join(AUDIO),
+      self.sounds.iter().map(|(_frame, sound)| sound),
+    )?;
 
     let output = Command::new("ffmpeg")
       .args(["-safe", "0"])

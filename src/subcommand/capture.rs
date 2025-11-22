@@ -31,8 +31,6 @@ impl Capture {
   pub(crate) fn run(self, options: Options) -> Result {
     let mut stream = options.stream()?;
 
-    let recorder = Arc::new(Mutex::new(Recorder::new()?));
-
     let mut analyzer = Analyzer::new();
 
     let state = options.state();
@@ -62,6 +60,8 @@ impl Capture {
       ProgressBar::new_spinner().with_style(ProgressStyle::default_spinner().tick_chars(TICK_CHARS))
     };
 
+    let mut media = Vec::new();
+
     let mut done = false;
     for frame in 0.. {
       if frames.map_or(done, |frames| frame == frames) {
@@ -78,22 +78,79 @@ impl Capture {
       analyzer.update(&sound, done, &state);
       renderer.render(&analyzer, &state, Instant::now())?;
 
-      let recorder = recorder.clone();
       let tx = tx.clone();
       renderer.capture(move |image| {
-        if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, image, sound)) {
+        if let Err(err) = tx.send(image) {
           eprintln!("failed to send captured frame: {err}");
         }
       })?;
 
       renderer.poll()?;
 
-      rx.recv().unwrap()?;
+      let image = rx.recv().unwrap();
+
+      media.push((image, sound));
     }
 
     progress.finish();
 
-    recorder.lock().unwrap().save(&options)?;
+    let tempdir = TempDir::new().context(error::TempdirIo)?;
+    let tempdir_path = tempdir.path().into_utf8_path()?;
+
+    Sound::save(
+      &tempdir_path.join("audio.wav"),
+      media.iter().map(|(_image, sound)| sound),
+    )?;
+
+    let mut child = Command::new("ffmpeg")
+      .args(["-f", "rawvideo"])
+      .args(["-pixel_format", "rgb24"])
+      .args(["-video_size", &format!("{resolution}x{resolution}")])
+      .args(["-framerate", &fps.to_string()])
+      .args(["-i", "-"])
+      .args(["-i", AUDIO])
+      .args(["-c:v", "libx264"])
+      .args(["-crf", "18"])
+      .args(["-movflags", "+faststart"])
+      .args(["-pix_fmt", "yuv420p"])
+      .args(["-preset", "slow"])
+      .args(["-c:a", "aac"])
+      .arg(RECORDING)
+      .current_dir(&tempdir_path)
+      .stdin(Stdio::piped())
+      .stderr(if options.verbose {
+        Stdio::inherit()
+      } else {
+        Stdio::piped()
+      })
+      .stdout(if options.verbose {
+        Stdio::inherit()
+      } else {
+        Stdio::piped()
+      })
+      .spawn()
+      .context(error::RecordingInvoke)?;
+
+    let mut stdin = BufWriter::new(child.stdin.as_ref().unwrap());
+
+    for (image, _sound) in media {
+      for pixel in image.data().chunks(4) {
+        stdin.write_all(&pixel[0..3]).unwrap();
+      }
+    }
+
+    stdin.flush().unwrap();
+
+    drop(stdin);
+
+    child.wait().unwrap();
+
+    fs::rename(tempdir_path.join(RECORDING), RECORDING)
+      .context(error::FilesystemIo { path: RECORDING })?;
+
+    // todo:
+    // - captureinvoke error
+    // - error handling
 
     Ok(())
   }
