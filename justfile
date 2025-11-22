@@ -3,10 +3,6 @@ set positional-arguments
 watch +args='lcheck':
   cargo watch --clear --exec '{{args}}'
 
-run *args:
-  cargo build --release
-  ./target/release/x "$@"
-
 forbid:
   ./bin/forbid
 
@@ -48,7 +44,7 @@ doc:
   cargo doc --workspace --open
 
 hello:
-  cargo run --release -- --song 'old generic boss' --program hello
+  cargo run --release -- --song 'old generic boss' --program hello run
 
 maria:
   cargo run --release -- --song 'total 4/13 maria'
