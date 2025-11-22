@@ -43,12 +43,10 @@ impl Capture {
 
       let sound = synthesizer.drain();
       analyzer.update(&sound, false, &state);
-
       renderer.render(&analyzer, &state, Instant::now())?;
 
       let recorder = recorder.clone();
       let tx = tx.clone();
-
       renderer.capture(move |image| {
         if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, image, sound)) {
           eprintln!("failed to send captured frame: {err}");
