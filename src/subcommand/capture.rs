@@ -47,7 +47,7 @@ impl Capture {
 
     let fps = state.fps.unwrap_or(FPS.try_into().unwrap());
 
-    let spf = fps.spf(Synthesizer::SAMPLE_RATE)?;
+    let spf = fps.spf(stream.sample_rate())?;
 
     let (tx, rx) = mpsc::channel();
 
@@ -70,7 +70,7 @@ impl Capture {
 
       progress.inc(1);
 
-      for _ in 0..spf * u32::from(Synthesizer::CHANNELS) {
+      for _ in 0..spf * u32::from(stream.channels()) {
         done |= stream.next().is_none();
       }
 
