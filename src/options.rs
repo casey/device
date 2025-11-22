@@ -89,17 +89,13 @@ impl Options {
 
   pub(crate) fn stream(&self) -> Result<Box<dyn Stream>> {
     if let Some(song) = &self.song {
-      let track = Track::new(&Self::find_song(song)?)?;
-      Ok(Box::new(track))
+      Ok(Box::new(Track::new(&Self::find_song(song)?)?))
     } else if self.synthesizer {
-      let synthesizer = Synthesizer::busy_signal();
-      Ok(Box::new(synthesizer))
+      Ok(Box::new(Synthesizer::busy_signal()))
     } else if let Some(track) = &self.track {
-      let track = Track::new(track)?;
-      Ok(Box::new(track))
+      Ok(Box::new(Track::new(track)?))
     } else {
-      let synthesizer = Synthesizer::silence();
-      Ok(Box::new(synthesizer))
+      Ok(Box::new(Synthesizer::silence()))
     }
   }
 }
