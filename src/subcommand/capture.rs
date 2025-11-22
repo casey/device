@@ -1,9 +1,30 @@
 use super::*;
 
+const PROGRESS_CHARS: &str = "█▉▊▋▌▍▎▏ ";
+
+const TICK_CHARS: &str = concat!(
+  "⠀⠁⠂⠃⠄⠅⠆⠇⡀⡁⡂⡃⡄⡅⡆⡇",
+  "⠈⠉⠊⠋⠌⠍⠎⠏⡈⡉⡊⡋⡌⡍⡎⡏",
+  "⠐⠑⠒⠓⠔⠕⠖⠗⡐⡑⡒⡓⡔⡕⡖⡗",
+  "⠘⠙⠚⠛⠜⠝⠞⠟⡘⡙⡚⡛⡜⡝⡞⡟",
+  "⠠⠡⠢⠣⠤⠥⠦⠧⡠⡡⡢⡣⡤⡥⡦⡧",
+  "⠨⠩⠪⠫⠬⠭⠮⠯⡨⡩⡪⡫⡬⡭⡮⡯",
+  "⠰⠱⠲⠳⠴⠵⠶⠷⡰⡱⡲⡳⡴⡵⡶⡷",
+  "⠸⠹⠺⠻⠼⠽⠾⠿⡸⡹⡺⡻⡼⡽⡾⡿",
+  "⢀⢁⢂⢃⢄⢅⢆⢇⣀⣁⣂⣃⣄⣅⣆⣇",
+  "⢈⢉⢊⢋⢌⢍⢎⢏⣈⣉⣊⣋⣌⣍⣎⣏",
+  "⢐⢑⢒⢓⢔⢕⢖⢗⣐⣑⣒⣓⣔⣕⣖⣗",
+  "⢘⢙⢚⢛⢜⢝⢞⢟⣘⣙⣚⣛⣜⣝⣞⣟",
+  "⢠⢡⢢⢣⢤⢥⢦⢧⣠⣡⣢⣣⣤⣥⣦⣧",
+  "⢨⢩⢪⢫⢬⢭⢮⢯⣨⣩⣪⣫⣬⣭⣮⣯",
+  "⢰⢱⢲⢳⢴⢵⢶⢷⣰⣱⣲⣳⣴⣵⣶⣷",
+  "⢸⢹⢺⢻⢼⢽⢾⢿⣸⣹⣺⣻⣼⣽⣾⣿",
+);
+
 #[derive(Parser)]
 pub(crate) struct Capture {
   #[arg(long)]
-  pub(crate) duration: NonZeroU32,
+  pub(crate) duration: Option<NonZeroU32>,
 }
 
 impl Capture {
@@ -30,15 +51,29 @@ impl Capture {
 
     let (tx, rx) = mpsc::channel();
 
-    let frames = u64::from(self.duration.get()) * u64::from(fps.fps().get());
+    let frames = if let Some(duration) = self.duration {
+      Some(u64::from(duration.get()) * u64::from(fps.fps().get()))
+    } else {
+      None
+    };
 
-    let progress = ProgressBar::new(frames);
+    let progress = if let Some(frames) = frames {
+      ProgressBar::new(frames)
+        .with_style(ProgressStyle::default_bar().progress_chars(PROGRESS_CHARS))
+    } else {
+      ProgressBar::new_spinner().with_style(ProgressStyle::default_spinner().tick_chars(TICK_CHARS))
+    };
 
-    for frame in 0..frames {
+    let mut done = false;
+    for frame in 0.. {
+      if frames.map(|frames| frame == frames).unwrap_or(done) {
+        break;
+      }
+
       progress.inc(1);
 
       for _ in 0..spf * u32::from(Synthesizer::CHANNELS) {
-        stream.next();
+        done |= stream.next().is_none();
       }
 
       let sound = stream.drain();
