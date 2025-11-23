@@ -80,7 +80,7 @@ impl Iterator for Synthesizer {
 
     let t = i as f32 / Self::SAMPLE_RATE as f32;
 
-    let sample = inner.voices.iter().map(|voice| voice.sample(t)).sum();
+    let sample = inner.voices.iter_mut().map(|voice| voice.sample(t)).sum();
 
     for _ in 0..Self::CHANNELS {
       inner.buffer.push(sample);

@@ -16,6 +16,7 @@ use {
   indicatif::{ProgressBar, ProgressStyle},
   nalgebra::Vector2,
   parley::{FontContext, LayoutContext},
+  rand::{Rng, SeedableRng, distr::Uniform, rngs::SmallRng},
   regex::{Regex, RegexBuilder},
   rodio::{
     Decoder, OutputStream, Sink, Source,

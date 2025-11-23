@@ -4,6 +4,7 @@ use super::*;
 pub(crate) enum Score {
   BusySignal,
   Silence,
+  WhiteNoise,
 }
 
 impl Score {
@@ -20,6 +21,10 @@ impl Score {
         },
       ]),
       Self::Silence => Synthesizer::new(Vec::new()),
+      Self::WhiteNoise => Synthesizer::new(vec![Voice::WhiteNoise {
+        distribution: Uniform::new_inclusive((-1.0f32).next_up(), 1.0f32.next_down()).unwrap(),
+        rng: SmallRng::seed_from_u64(0),
+      }]),
     }
   }
 }
