@@ -18,6 +18,8 @@ const AUDIO: &str = "audio";
     .valid(AnsiColor::Green.on_default())
 )]
 pub(crate) struct Options {
+  #[arg(allow_hyphen_values = true, long)]
+  pub(crate) db: Option<f32>,
   #[arg(long)]
   pub(crate) fps: Option<Fps>,
   #[arg(group = AUDIO, long)]
@@ -83,6 +85,9 @@ impl Options {
 
   pub(crate) fn state(&self) -> State {
     let mut state = self.program.map(Program::state).unwrap_or_default();
+    if let Some(db) = self.db {
+      state.db = db;
+    }
     state.fps = self.fps.or(state.fps);
     state.resolution = self.resolution.or(state.resolution);
     state
