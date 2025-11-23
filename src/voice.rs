@@ -1,11 +1,18 @@
 use super::*;
 
 pub(crate) enum Voice {
-  Sine { duty: f32, frequency: f32 },
+  Sine {
+    duty: f32,
+    frequency: f32,
+  },
+  WhiteNoise {
+    distribution: Uniform<f32>,
+    rng: SmallRng,
+  },
 }
 
 impl Voice {
-  pub(crate) fn sample(&self, t: f32) -> f32 {
+  pub(crate) fn sample(&mut self, t: f32) -> f32 {
     match self {
       Self::Sine { duty, frequency } => {
         if t.fract() < *duty {
@@ -14,6 +21,7 @@ impl Voice {
           0.0
         }
       }
+      Self::WhiteNoise { distribution, rng } => rng.sample(*distribution),
     }
   }
 }
