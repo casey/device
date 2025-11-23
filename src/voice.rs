@@ -10,8 +10,6 @@ pub(crate) use {
 //
 // - better envelope tests:
 //   try different lengths of phases
-//
-// - seed different rngs differently
 
 mod brown_noise;
 mod cycle;
