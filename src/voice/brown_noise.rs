@@ -13,7 +13,7 @@ impl BrownNoise {
       rng: SmallRng::from_rng(&mut rand::rng()),
       state: 0.0,
       distribution: distribution(),
-      gain: 0.02,
+      gain: 0.015,
     }
   }
 }

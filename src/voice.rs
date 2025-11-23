@@ -5,12 +5,6 @@ pub(crate) use {
   pink_noise::PinkNoise, silence::Silence, sine::Sine, sum::Sum, white_noise::WhiteNoise,
 };
 
-// todo:
-// - experiment with brown noise gain
-//
-// - better envelope tests:
-//   try different lengths of phases
-
 mod brown_noise;
 mod cycle;
 mod envelope;
