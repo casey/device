@@ -14,13 +14,19 @@ impl Synthesizer {
   const CHANNELS: u16 = 2;
   const SAMPLE_RATE: u32 = 48_000;
 
-  pub(crate) fn new<T: Voice + Sized + 'static>(voice: T) -> Self {
+  pub(crate) fn new(voice: Box<dyn Voice>) -> Self {
     Self(Arc::new(Mutex::new(Inner {
       buffer: Vec::new(),
       drained: 0,
       sample: 0,
-      voice: Box::new(voice),
+      voice,
     })))
+  }
+}
+
+impl<T: Voice + Sized + 'static> From<T> for Synthesizer {
+  fn from(voice: T) -> Self {
+    Self::new(Box::new(voice))
   }
 }
 
