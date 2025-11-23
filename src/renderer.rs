@@ -5,6 +5,7 @@ pub(crate) struct Renderer {
   bindings: Option<Bindings>,
   device: wgpu::Device,
   error_channel: mpsc::Receiver<wgpu::Error>,
+  filtering_sampler: Sampler,
   font_context: FontContext,
   format: Format,
   frame: u64,
@@ -12,12 +13,12 @@ pub(crate) struct Renderer {
   frequencies: TextureView,
   layout_context: LayoutContext,
   limits: Limits,
+  non_filtering_sampler: Sampler,
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
   queue: Queue,
   render_pipeline: RenderPipeline,
   resolution: NonZeroU32,
-  sampler: Sampler,
   samples: TextureView,
   size: Vector2<NonZeroU32>,
   surface: Option<(Surface<'static>, SurfaceConfiguration)>,
@@ -49,7 +50,7 @@ impl Renderer {
         },
         BindGroupEntry {
           binding: binding(),
-          resource: BindingResource::Sampler(&self.sampler),
+          resource: BindingResource::Sampler(&self.filtering_sampler),
         },
         BindGroupEntry {
           binding: binding(),
@@ -61,7 +62,7 @@ impl Renderer {
         },
         BindGroupEntry {
           binding: binding(),
-          resource: BindingResource::Sampler(&self.sampler),
+          resource: BindingResource::Sampler(&self.non_filtering_sampler),
         },
         BindGroupEntry {
           binding: binding(),
@@ -351,9 +352,19 @@ impl Renderer {
 
     let bind_group_layout = Self::bind_group_layout(&device, uniform_buffer_size);
 
-    let sampler = device.create_sampler(&SamplerDescriptor {
+    let filtering_sampler = device.create_sampler(&SamplerDescriptor {
       address_mode_u: AddressMode::Repeat,
       address_mode_v: AddressMode::Repeat,
+      mag_filter: FilterMode::Linear,
+      min_filter: FilterMode::Linear,
+      ..default()
+    });
+
+    let non_filtering_sampler = device.create_sampler(&SamplerDescriptor {
+      address_mode_u: AddressMode::Repeat,
+      address_mode_v: AddressMode::Repeat,
+      mag_filter: FilterMode::Nearest,
+      min_filter: FilterMode::Nearest,
       ..default()
     });
 
@@ -447,6 +458,7 @@ impl Renderer {
       bindings: None,
       device,
       error_channel,
+      filtering_sampler,
       font_context: FontContext::new(),
       format,
       frame: 0,
@@ -454,12 +466,12 @@ impl Renderer {
       frequencies,
       layout_context: LayoutContext::new(),
       limits,
+      non_filtering_sampler,
       overlay_renderer,
       overlay_scene: vello::Scene::new(),
       queue,
       render_pipeline,
       resolution,
-      sampler,
       samples,
       size,
       surface,
