@@ -13,6 +13,7 @@ pub(crate) enum Score {
 impl Score {
   pub(crate) fn synthesizer(self) -> Synthesizer {
     match self {
+      Self::BrownNoise => Synthesizer::new(voice::BrownNoise::new().gain(0.125)),
       Self::BusySignal => Synthesizer::new(
         voice::Cycle {
           inner: voice::Gate {
@@ -35,10 +36,9 @@ impl Score {
           inner: voice::BrownNoise::new(),
         },
       }),
+      Self::PinkNoise => Synthesizer::new(voice::PinkNoise::new().gain(0.125)),
       Self::Silence => Synthesizer::new(voice::Silence),
       Self::WhiteNoise => Synthesizer::new(voice::WhiteNoise::new().gain(0.125)),
-      Self::PinkNoise => Synthesizer::new(voice::PinkNoise::new().gain(0.125)),
-      Self::BrownNoise => Synthesizer::new(voice::BrownNoise::new().gain(0.125)),
     }
   }
 }
