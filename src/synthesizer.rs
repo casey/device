@@ -3,22 +3,23 @@ use super::*;
 #[derive(Clone)]
 pub(crate) struct Synthesizer(Arc<Mutex<Inner>>);
 
-#[derive(Default)]
 struct Inner {
   buffer: Vec<f32>,
   drained: usize,
   sample: usize,
-  voices: Vec<Voice>,
+  voice: Box<dyn Voice>,
 }
 
 impl Synthesizer {
   const CHANNELS: u16 = 2;
   const SAMPLE_RATE: u32 = 48_000;
 
-  pub(crate) fn new(voices: Vec<Voice>) -> Self {
+  pub(crate) fn new<T: Voice + Sized + 'static>(voice: T) -> Self {
     Self(Arc::new(Mutex::new(Inner {
-      voices,
-      ..default()
+      buffer: Vec::new(),
+      drained: 0,
+      sample: 0,
+      voice: Box::new(voice),
     })))
   }
 }
@@ -80,7 +81,7 @@ impl Iterator for Synthesizer {
 
     let t = i as f32 / Self::SAMPLE_RATE as f32;
 
-    let sample = inner.voices.iter_mut().map(|voice| voice.sample(t)).sum();
+    let sample = inner.voice.sample(t);
 
     for _ in 0..Self::CHANNELS {
       inner.buffer.push(sample);
