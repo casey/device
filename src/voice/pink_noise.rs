@@ -15,10 +15,10 @@ impl PinkNoise {
     let mut rng = SmallRng::from_rng(&mut rand::rng());
     let rows = array::from_fn(|_| rng.sample(distribution));
     PinkNoise {
+      counter: 0,
       distribution,
       rng,
       rows,
-      counter: 0,
     }
   }
 }
