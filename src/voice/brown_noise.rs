@@ -10,10 +10,10 @@ pub(crate) struct BrownNoise {
 impl BrownNoise {
   pub(crate) fn new() -> Self {
     Self {
-      rng: SmallRng::from_rng(&mut rand::rng()),
-      state: 0.0,
       distribution: distribution(),
       gain: 0.015,
+      rng: SmallRng::from_rng(&mut rand::rng()),
+      state: 0.0,
     }
   }
 }
