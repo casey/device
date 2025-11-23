@@ -44,7 +44,7 @@ doc:
   cargo doc --workspace --open
 
 hello:
-  cargo run --release -- --song 'old generic boss' --program hello run
+  cargo run --release -- --song 'old generic boss' --program hello --db -40 run
 
 maria:
   cargo run --release -- --song 'total 4/13 maria' run
@@ -54,6 +54,7 @@ nobrain:
 
 capture-hello:
   cargo run --release -- \
+    --db -40 \
     --fps 60 \
     --program hello \
     --resolution 2048 \

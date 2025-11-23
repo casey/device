@@ -54,11 +54,6 @@ impl State {
     self
   }
 
-  pub(crate) fn db(mut self, db: i8) -> Self {
-    self.db = db as f32;
-    self
-  }
-
   pub(crate) fn frequencies(mut self) -> Self {
     self.filter.field = Field::Frequencies;
     self

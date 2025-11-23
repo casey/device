@@ -25,7 +25,6 @@ impl Program {
       Self::Circle => State::default().invert().circle().push(),
       Self::Frequencies => State::default().invert().frequencies().push(),
       Self::Hello => State::default()
-        .db(-40)
         .text(Some(Text {
           size: 0.075,
           string: "hello world".into(),
