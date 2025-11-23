@@ -18,7 +18,7 @@ impl<T: Voice> Voice for Envelope<T> {
     let scale = if t < a {
       t / a
     } else if t < a + d {
-      (-((t - a) / d - 1.0) + 1.0) / 2.0
+      f32::midpoint(-((t - a) / d - 1.0), 1.0)
     } else if t < a + d + s {
       0.5
     } else if t < a + d + s + r {
@@ -34,6 +34,16 @@ impl<T: Voice> Voice for Envelope<T> {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  struct Constant {
+    value: f32,
+  }
+
+  impl Voice for Constant {
+    fn sample(&mut self, _t: f32) -> f32 {
+      self.value
+    }
+  }
 
   #[test]
   fn envelope() {

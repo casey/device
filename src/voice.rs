@@ -1,18 +1,17 @@
 use super::*;
 
 pub(crate) use {
-  brown_noise::BrownNoise, constant::Constant, cycle::Cycle, envelope::Envelope, gain::Gain,
-  gate::Gate, pink_noise::PinkNoise, silence::Silence, sine::Sine, sum::Sum,
-  white_noise::WhiteNoise,
+  brown_noise::BrownNoise, cycle::Cycle, envelope::Envelope, gain::Gain, gate::Gate,
+  pink_noise::PinkNoise, silence::Silence, sine::Sine, sum::Sum, white_noise::WhiteNoise,
 };
 
 // todo:
 // - experiment with brown noise gain
 // - better envelope tests:
 //   try different lengths of phases
+// - seed different rngs differently
 
 mod brown_noise;
-mod constant;
 mod cycle;
 mod envelope;
 mod gain;
