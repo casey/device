@@ -15,28 +15,11 @@ impl Synthesizer {
   const CHANNELS: u16 = 2;
   const SAMPLE_RATE: u32 = 48_000;
 
-  pub(crate) fn busy_signal() -> Self {
-    Self::new(vec![
-      Voice::Sine {
-        frequency: 480.0,
-        duty: 0.5,
-      },
-      Voice::Sine {
-        frequency: 620.0,
-        duty: 0.5,
-      },
-    ])
-  }
-
   pub(crate) fn new(voices: Vec<Voice>) -> Self {
     Self(Arc::new(Mutex::new(Inner {
       voices,
       ..default()
     })))
-  }
-
-  pub(crate) fn silence() -> Self {
-    Self::new(Vec::new())
   }
 }
 
