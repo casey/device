@@ -127,8 +127,8 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // subtract offset get tile coordinates
   let tile = position.xy - uniforms.offset;
 
-  // convert tile coordinates to [-1, 1] with the origin between the two central pixels
-  let centered = (tile * 2 - uniforms.resolution) / (uniforms.resolution - 1);
+  // convert tile coordinates to [-1, 1]
+  let centered = tile / uniforms.resolution * 2 - 1;
 
   // apply position transform
   var transformed = (uniforms.position * vec3(centered, 1)).xy;
