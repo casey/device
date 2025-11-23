@@ -35,7 +35,7 @@ impl Capture {
 
     let state = options.state();
 
-    let resolution = state.resolution.unwrap_or(RESOLUTION);
+    let resolution = state.resolution.unwrap_or(DEFAULT_RESOLUTION);
 
     let mut renderer = pollster::block_on(Renderer::new(
       None,
@@ -43,7 +43,7 @@ impl Capture {
       resolution,
     ))?;
 
-    let fps = state.fps.unwrap_or(FPS.try_into().unwrap());
+    let fps = state.fps.unwrap_or(DEFAULT_FPS.try_into().unwrap());
 
     let spf = fps.spf(stream.sample_rate())?;
 

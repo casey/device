@@ -516,8 +516,8 @@ impl ApplicationHandler for App {
         .create_window(
           WindowAttributes::default()
             .with_inner_size(PhysicalSize {
-              width: RESOLUTION.get(),
-              height: RESOLUTION.get(),
+              width: DEFAULT_RESOLUTION.get(),
+              height: DEFAULT_RESOLUTION.get(),
             })
             .with_min_inner_size(PhysicalSize {
               width: 256,
