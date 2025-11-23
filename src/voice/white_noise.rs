@@ -9,7 +9,7 @@ impl WhiteNoise {
   pub(crate) fn new() -> Self {
     Self {
       distribution: distribution(),
-      rng: SmallRng::seed_from_u64(0),
+      rng: SmallRng::from_rng(&mut rand::rng()),
     }
   }
 }

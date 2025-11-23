@@ -12,7 +12,7 @@ pub(crate) struct PinkNoise {
 impl PinkNoise {
   pub(crate) fn new() -> Self {
     let distribution = distribution();
-    let mut rng = SmallRng::seed_from_u64(0);
+    let mut rng = SmallRng::from_rng(&mut rand::rng());
     let rows = array::from_fn(|_| rng.sample(distribution));
     PinkNoise {
       distribution,

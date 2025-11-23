@@ -7,8 +7,10 @@ pub(crate) use {
 
 // todo:
 // - experiment with brown noise gain
+//
 // - better envelope tests:
 //   try different lengths of phases
+//
 // - seed different rngs differently
 
 mod brown_noise;
