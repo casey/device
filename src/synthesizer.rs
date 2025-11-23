@@ -76,13 +76,13 @@ impl Iterator for Synthesizer {
       return Some(sample);
     }
 
-    let i = inner.buffer.len().into_u64() / u64::from(CHANNELS);
+    let i = inner.buffer.len().into_u64() / u64::from(Self::CHANNELS);
 
     let t = i as f32 / Self::SAMPLE_RATE as f32;
 
     let sample = inner.voices.iter().map(|voice| voice.sample(t)).sum();
 
-    for _ in 0..CHANNELS {
+    for _ in 0..Self::CHANNELS {
       inner.buffer.push(sample);
     }
 

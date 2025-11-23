@@ -27,9 +27,9 @@ pub(crate) struct Options {
   #[arg(long)]
   pub(crate) resolution: Option<NonZeroU32>,
   #[arg(group = AUDIO, long)]
-  pub(crate) song: Option<String>,
-  #[arg(group = AUDIO, long)]
   pub(crate) score: Option<Score>,
+  #[arg(group = AUDIO, long)]
+  pub(crate) song: Option<String>,
   #[arg(group = AUDIO, long)]
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]

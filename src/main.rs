@@ -121,7 +121,7 @@ const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
 
 const AUDIO: &str = "audio.wav";
-const CHANNELS: u32 = 4;
+const COLOR_CHANNELS: u32 = 4;
 const FONT: &str = "Helvetica Neue";
 const FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const RECORDING: &str = "recording.mp4";
