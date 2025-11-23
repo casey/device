@@ -28,10 +28,10 @@ impl Score {
       Self::ClickTrack => Synthesizer::new(voice::Cycle {
         period: 2.0 / 3.0,
         inner: voice::Envelope {
-          attack: 0.001,  // 0-1ms
-          decay: 0.010,   // 2-10ms
-          sustain: 0.000, // 0ms
-          release: 0.005, // 0-5ms
+          attack: 0.001,
+          decay: 0.02,
+          sustain: 0.000,
+          release: 0.002,
           inner: voice::BrownNoise::new(),
         },
       }),
