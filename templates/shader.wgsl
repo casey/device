@@ -106,8 +106,7 @@ fn field_top(p: vec2f) -> bool {
 }
 
 fn field_x(p: vec2f) -> bool {
-  let pixel = 2.0 / min(uniforms.resolution.x, uniforms.resolution.y);
-  return abs(abs(p.x) - abs(p.y)) < 0.2 * coefficient() - 0.5 * pixel;
+  return abs(abs(p.x) - abs(p.y)) < 0.2 * coefficient();
 }
 
 fn invert(color: vec4f) -> vec4f {
@@ -128,8 +127,8 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // subtract offset get tile coordinates
   let tile = position.xy - uniforms.offset;
 
-  // convert tile coordinates to [-1, 1]
-  let centered = tile / uniforms.resolution * 2 - 1;
+  // convert tile coordinates to [-1, 1] with the origin between the two central pixels
+  let centered = (tile * 2 - uniforms.resolution) / (uniforms.resolution - 1);
 
   // apply position transform
   var transformed = (uniforms.position * vec3(centered, 1)).xy;
