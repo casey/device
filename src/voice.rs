@@ -1,27 +1,32 @@
 use super::*;
 
-pub(crate) enum Voice {
-  Sine {
-    duty: f32,
-    frequency: f32,
-  },
-  WhiteNoise {
-    distribution: Uniform<f32>,
-    rng: SmallRng,
-  },
+pub(crate) use {
+  brown_noise::BrownNoise, cycle::Cycle, envelope::Envelope, gain::Gain, gate::Gate,
+  pink_noise::PinkNoise, silence::Silence, sine::Sine, sum::Sum, white_noise::WhiteNoise,
+};
+
+mod brown_noise;
+mod cycle;
+mod envelope;
+mod gain;
+mod gate;
+mod pink_noise;
+mod silence;
+mod sine;
+mod sum;
+mod white_noise;
+
+pub(crate) trait Voice: Send {
+  fn gain(self, gain: f32) -> Gain<Self>
+  where
+    Self: Sized,
+  {
+    Gain { inner: self, gain }
+  }
+
+  fn sample(&mut self, t: f32) -> f32;
 }
 
-impl Voice {
-  pub(crate) fn sample(&mut self, t: f32) -> f32 {
-    match self {
-      Self::Sine { duty, frequency } => {
-        if t.fract() < *duty {
-          (t * *frequency * f32::consts::TAU).sin()
-        } else {
-          0.0
-        }
-      }
-      Self::WhiteNoise { distribution, rng } => rng.sample(*distribution),
-    }
-  }
+fn distribution() -> Uniform<f32> {
+  Uniform::new_inclusive(-1.0, 1.0).unwrap()
 }

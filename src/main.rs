@@ -29,6 +29,7 @@ use {
   rustfft::{FftPlanner, num_complex::Complex},
   snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu},
   std::{
+    array,
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     collections::VecDeque,

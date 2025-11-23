@@ -52,6 +52,7 @@ cast-precision-loss = "allow"
 float-cmp = "allow"
 format-push-string = "allow"
 ignore-without-reason = "allow"
+many-single-char-names = "allow"
 needless-pass-by-value = "allow"
 pedantic = { level = "deny", priority = -1 }
 similar-names = "allow"
