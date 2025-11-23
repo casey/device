@@ -27,9 +27,9 @@ pub(crate) struct Options {
   #[arg(long)]
   pub(crate) resolution: Option<NonZeroU32>,
   #[arg(group = AUDIO, long)]
-  pub(crate) song: Option<String>,
+  pub(crate) score: Option<Score>,
   #[arg(group = AUDIO, long)]
-  pub(crate) synthesizer: bool,
+  pub(crate) song: Option<String>,
   #[arg(group = AUDIO, long)]
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
@@ -99,12 +99,12 @@ impl Options {
   pub(crate) fn stream(&self) -> Result<Box<dyn Stream>> {
     if let Some(song) = &self.song {
       Ok(Box::new(Track::new(&Self::find_song(song)?)?))
-    } else if self.synthesizer {
-      Ok(Box::new(Synthesizer::busy_signal()))
+    } else if let Some(score) = self.score {
+      Ok(Box::new(score.synthesizer()))
     } else if let Some(track) = &self.track {
       Ok(Box::new(Track::new(track)?))
     } else {
-      Ok(Box::new(Synthesizer::silence()))
+      Ok(Box::new(Score::Silence.synthesizer()))
     }
   }
 }

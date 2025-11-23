@@ -162,7 +162,7 @@ impl Renderer {
 
   fn bytes_per_row_with_padding(&self) -> u32 {
     const MASK: u32 = COPY_BYTES_PER_ROW_ALIGNMENT - 1;
-    (self.resolution.get() * CHANNELS + MASK) & !MASK
+    (self.resolution.get() * COLOR_CHANNELS + MASK) & !MASK
   }
 
   pub(crate) fn capture(&self, callback: impl FnOnce(Image) + Send + 'static) -> Result {
@@ -219,7 +219,7 @@ impl Renderer {
       std::thread::spawn(move || {
         let view = buffer.get_mapped_range(..);
 
-        let channels = CHANNELS.into_usize();
+        let channels = COLOR_CHANNELS.into_usize();
         let bytes_per_row = resolution.get().into_usize() * channels;
 
         let mut image = Image::default();

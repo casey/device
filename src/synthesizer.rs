@@ -15,28 +15,11 @@ impl Synthesizer {
   const CHANNELS: u16 = 2;
   const SAMPLE_RATE: u32 = 48_000;
 
-  pub(crate) fn busy_signal() -> Self {
-    Self::new(vec![
-      Voice::Sine {
-        frequency: 480.0,
-        duty: 0.5,
-      },
-      Voice::Sine {
-        frequency: 620.0,
-        duty: 0.5,
-      },
-    ])
-  }
-
   pub(crate) fn new(voices: Vec<Voice>) -> Self {
     Self(Arc::new(Mutex::new(Inner {
       voices,
       ..default()
     })))
-  }
-
-  pub(crate) fn silence() -> Self {
-    Self::new(Vec::new())
   }
 }
 
@@ -93,13 +76,13 @@ impl Iterator for Synthesizer {
       return Some(sample);
     }
 
-    let i = inner.buffer.len().into_u64() / u64::from(CHANNELS);
+    let i = inner.buffer.len().into_u64() / u64::from(Self::CHANNELS);
 
     let t = i as f32 / Self::SAMPLE_RATE as f32;
 
     let sample = inner.voices.iter().map(|voice| voice.sample(t)).sum();
 
-    for _ in 0..CHANNELS {
+    for _ in 0..Self::CHANNELS {
       inner.buffer.push(sample);
     }
 

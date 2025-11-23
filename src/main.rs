@@ -4,10 +4,10 @@ use {
     error::Error, event::Event, field::Field, filter::Filter, format::Format, fps::Fps,
     frame::Frame, hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_u128::IntoU128,
     into_usize::IntoUsize, into_utf8_path::IntoUtf8Path, message::Message, options::Options,
-    parameter::Parameter, program::Program, recorder::Recorder, renderer::Renderer, shared::Shared,
-    sound::Sound, state::State, stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer,
-    tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
-    uniforms::Uniforms, voice::Voice,
+    parameter::Parameter, program::Program, recorder::Recorder, renderer::Renderer, score::Score,
+    shared::Shared, sound::Sound, state::State, stream::Stream, subcommand::Subcommand,
+    synthesizer::Synthesizer, tally::Tally, target::Target, templates::ShaderWgsl, text::Text,
+    tiling::Tiling, track::Track, uniforms::Uniforms, voice::Voice,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -101,6 +101,7 @@ mod parameter;
 mod program;
 mod recorder;
 mod renderer;
+mod score;
 mod shared;
 mod sound;
 mod state;
@@ -120,7 +121,7 @@ const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
 
 const AUDIO: &str = "audio.wav";
-const CHANNELS: u32 = 4;
+const COLOR_CHANNELS: u32 = 4;
 const FONT: &str = "Helvetica Neue";
 const FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const RECORDING: &str = "recording.mp4";
