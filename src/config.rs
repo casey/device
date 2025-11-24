@@ -7,15 +7,6 @@ pub(crate) struct Config {
 }
 
 impl Config {
-  fn home() -> Result<Utf8PathBuf> {
-    Ok(
-      env::home_dir()
-        .context(error::Home)?
-        .into_utf8_path()?
-        .to_owned(),
-    )
-  }
-
   pub(crate) fn capture(&self, extension: &str) -> Utf8PathBuf {
     let filename = format!(
       "{}.{extension}",
@@ -30,6 +21,15 @@ impl Config {
     } else {
       filename.into()
     }
+  }
+
+  fn home() -> Result<Utf8PathBuf> {
+    Ok(
+      env::home_dir()
+        .context(error::Home)?
+        .into_utf8_path()?
+        .to_owned(),
+    )
   }
 
   pub(crate) fn load() -> Result<Self> {
