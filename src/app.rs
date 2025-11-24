@@ -549,6 +549,8 @@ impl ApplicationHandler for App {
 
       self.renderer = Some(renderer);
 
+      self.start = Instant::now();
+
       self.sink.play();
     }
   }

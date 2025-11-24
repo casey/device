@@ -23,6 +23,46 @@ impl Config {
     }
   }
 
+  pub(crate) fn find_song(&self, song: &str) -> Result<Utf8PathBuf> {
+    let song = RegexBuilder::new(song)
+      .case_insensitive(true)
+      .build()
+      .context(error::SongRegex)?;
+
+    let mut matches = Vec::<Utf8PathBuf>::new();
+
+    let music = self.music()?;
+
+    for entry in WalkDir::new(music) {
+      let entry = entry.context(error::SongWalk)?;
+
+      if entry.file_type().is_dir() {
+        continue;
+      }
+
+      let path = entry.path();
+
+      let haystack = path.strip_prefix(music).unwrap().with_extension("");
+
+      let Some(haystack) = haystack.to_str() else {
+        continue;
+      };
+
+      if song.is_match(haystack) {
+        matches.push(path.into_utf8_path()?.into());
+      }
+    }
+
+    if matches.len() > 1 {
+      return Err(error::SongAmbiguous { matches }.build());
+    }
+
+    match matches.into_iter().next() {
+      Some(path) => Ok(path),
+      None => Err(error::SongMatch { song }.build()),
+    }
+  }
+
   fn home() -> Result<Utf8PathBuf> {
     Ok(
       env::home_dir()
