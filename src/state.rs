@@ -61,6 +61,12 @@ impl State {
     self
   }
 
+  #[cfg(test)]
+  pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
+    self.interpolate = interpolate;
+    self
+  }
+
   pub(crate) fn invert(mut self) -> Self {
     self.filter.color = invert_color();
     self
@@ -68,11 +74,6 @@ impl State {
 
   pub(crate) fn invert_r(mut self) -> Self {
     self.filter.color = Mat4f::from_diagonal(&Vec4f::new(-1.0, 1.0, 1.0, 1.0));
-    self
-  }
-
-  pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
-    self.interpolate = interpolate;
     self
   }
 
