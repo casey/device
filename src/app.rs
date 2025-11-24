@@ -10,6 +10,7 @@ pub(crate) struct App {
   deadline: Instant,
   errors: Vec<Error>,
   hub: Hub,
+  last: Instant,
   macro_recording: Option<Vec<Key>>,
   makro: Vec<Key>,
   options: Options,
@@ -17,12 +18,9 @@ pub(crate) struct App {
   output_stream: OutputStream,
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
-  scaling: f32,
   sink: Sink,
-  start: Instant,
   state: State,
   stream: Box<dyn Stream>,
-  translation: Vec2f,
   window: Option<Arc<Window>>,
 }
 
@@ -144,18 +142,16 @@ impl App {
       deadline: now,
       errors: Vec::new(),
       hub: Hub::new()?,
+      last: now,
       macro_recording: None,
       makro: Vec::new(),
       options,
       output_stream,
       recorder,
       renderer: None,
-      scaling: 1.0,
       sink,
-      start: now,
       state,
       stream,
-      translation: Vec2f::zeros(),
       window: None,
     })
   }
@@ -366,9 +362,9 @@ impl App {
           self.state.filters.pop();
         }
         (Controller::Twister, control, Event::Button(true)) => match control {
-          4 => self.translation.x = 0.0,
-          5 => self.translation.y = 0.0,
-          6 => self.scaling = 1.0,
+          4 => self.state.position.x = 0.0,
+          5 => self.state.position.y = 0.0,
+          6 => self.state.position.z = 0.0,
           _ => {}
         },
         (Controller::Twister, control, Event::Encoder(parameter)) => {
@@ -392,19 +388,10 @@ impl App {
       .update(&sound, self.stream.is_done(), &self.state);
 
     let now = Instant::now();
-    let elapsed = (now - self.start).as_secs_f32();
-    self.start = now;
+    let elapsed = now - self.last;
+    self.last = now;
 
-    // todo:
-    // - move into state
-    self.scaling -= self.state.velocity.z * elapsed;
-    self.translation -= self.state.velocity.xy() * 4.0 * elapsed;
-
-    self.state.filters.push(Filter {
-      position: Mat3f::new_translation(&self.translation).prepend_scaling(self.scaling),
-      wrap: self.state.wrap,
-      ..default()
-    });
+    self.state.tick(elapsed);
 
     let renderer = self.renderer.as_mut().unwrap();
 
@@ -424,8 +411,6 @@ impl App {
       })?;
       self.captures_pending += 1;
     }
-
-    self.state.filters.pop();
 
     if self.captures_pending > 0 {
       loop {
@@ -551,7 +536,7 @@ impl ApplicationHandler for App {
 
       self.renderer = Some(renderer);
 
-      self.start = Instant::now();
+      self.last = Instant::now();
 
       self.sink.play();
     }

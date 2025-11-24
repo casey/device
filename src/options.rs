@@ -43,6 +43,8 @@ pub(crate) struct Options {
   #[arg(long)]
   pub(crate) volume: Option<f32>,
   #[arg(allow_hyphen_values = true, long)]
+  pub(crate) vw: Option<f32>,
+  #[arg(allow_hyphen_values = true, long)]
   pub(crate) vx: Option<f32>,
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) vy: Option<f32>,
@@ -78,6 +80,10 @@ impl Options {
 
     if let Some(vz) = self.vz {
       state.velocity.z = vz;
+    }
+
+    if let Some(vw) = self.vw {
+      state.velocity.w = vw;
     }
 
     state.fps = self.fps.or(state.fps);

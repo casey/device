@@ -49,7 +49,7 @@ impl Scene {
         .push()
         .samples()
         .push()
-        .vz(-0.1)
+        .vz(-0.05)
         .interpolate(true)
         .position(Mat3f::new_rotation(-0.01))
         .none()

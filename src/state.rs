@@ -9,13 +9,14 @@ pub(crate) struct State {
   pub(crate) fps: Option<Fps>,
   pub(crate) interpolate: bool,
   pub(crate) parameter: Parameter,
+  pub(crate) position: Vec4f,
   pub(crate) repeat: bool,
   pub(crate) resolution: Option<NonZeroU32>,
   pub(crate) spread: bool,
   pub(crate) status: bool,
   pub(crate) text: Option<Text>,
   pub(crate) tile: bool,
-  pub(crate) velocity: Vec3f,
+  pub(crate) velocity: Vec4f,
   pub(crate) wrap: bool,
 }
 
@@ -30,13 +31,14 @@ impl Default for State {
       fps: None,
       interpolate: false,
       parameter: Parameter::default(),
+      position: Vec4f::zeros(),
       repeat: false,
       resolution: None,
       spread: false,
       status: false,
       text: None,
       tile: false,
-      velocity: Vec3f::zeros(),
+      velocity: Vec4f::zeros(),
       wrap: true,
     }
   }
@@ -63,18 +65,8 @@ impl State {
     self
   }
 
-  pub(crate) fn position(mut self, position: Mat3f) -> Self {
-    self.filter.position = position;
-    self
-  }
-
   pub(crate) fn frequencies(mut self) -> Self {
     self.filter.field = Field::Frequencies;
-    self
-  }
-
-  pub(crate) fn none(mut self) -> Self {
-    self.filter.field = Field::None;
     self
   }
 
@@ -99,6 +91,16 @@ impl State {
     self
   }
 
+  pub(crate) fn none(mut self) -> Self {
+    self.filter.field = Field::None;
+    self
+  }
+
+  pub(crate) fn position(mut self, position: Mat3f) -> Self {
+    self.filter.position = position;
+    self
+  }
+
   pub(crate) fn push(mut self) -> Self {
     self.filters.push(self.filter.clone());
     self
@@ -119,6 +121,14 @@ impl State {
     self
   }
 
+  pub(crate) fn tick(&mut self, elapsed: Duration) {
+    let elapsed = elapsed.as_secs_f32();
+    self.position.x -= self.velocity.x * 4.0 * elapsed;
+    self.position.y -= self.velocity.x * 4.0 * elapsed;
+    self.position.z -= self.velocity.z * elapsed;
+    self.position.w -= self.velocity.w * elapsed;
+  }
+
   #[cfg(test)]
   pub(crate) fn tile(mut self, tile: bool) -> Self {
     self.tile = tile;
@@ -135,6 +145,15 @@ impl State {
   pub(crate) fn top(mut self) -> Self {
     self.filter.field = Field::Top;
     self
+  }
+
+  pub(crate) fn transient(&self) -> Filter {
+    Filter {
+      position: Mat3f::new_rotation(self.position.w)
+        * Mat3f::new_translation(&self.position.xy()).prepend_scaling(1.0 + self.position.z),
+      wrap: self.wrap,
+      ..default()
+    }
   }
 
   pub(crate) fn vz(mut self, vz: f32) -> Self {
