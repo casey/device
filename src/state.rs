@@ -7,6 +7,7 @@ pub(crate) struct State {
   pub(crate) filters: Vec<Filter>,
   pub(crate) fit: bool,
   pub(crate) fps: Option<Fps>,
+  pub(crate) interpolate: bool,
   pub(crate) parameter: Parameter,
   pub(crate) repeat: bool,
   pub(crate) resolution: Option<NonZeroU32>,
@@ -26,6 +27,7 @@ impl Default for State {
       filters: Vec::new(),
       fit: false,
       fps: None,
+      interpolate: false,
       parameter: Parameter::default(),
       repeat: false,
       resolution: None,
@@ -56,6 +58,12 @@ impl State {
 
   pub(crate) fn frequencies(mut self) -> Self {
     self.filter.field = Field::Frequencies;
+    self
+  }
+
+  #[cfg(test)]
+  pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
+    self.interpolate = interpolate;
     self
   }
 

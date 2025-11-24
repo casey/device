@@ -51,6 +51,7 @@ struct Uniforms {
   front_read: u32,
   gain: f32,
   index: u32,
+  interpolate: u32,
   offset: vec2f,
   position: mat3x3f,
   repeat: u32,
@@ -118,6 +119,14 @@ fn read(uv: vec2f) -> bool {
   return bool(uniforms.repeat) || all(uv >= vec2(0.0, 0.0)) && all(uv <= vec2(1.0, 1.0));
 }
 
+fn sample(texture: texture_2d<f32>, uv: vec2f) -> vec4f {
+  if bool(uniforms.interpolate) {
+    return textureSample(texture, filtering_sampler, uv);
+  } else {
+    return textureSample(texture, non_filtering_sampler, uv);
+  }
+}
+
 @vertex
 fn vertex(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f {
   return vec4(VERTICES[i], 0, 1);
@@ -177,15 +186,16 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
         tile_uv *= scale;
       }
 
-      // read the input color
-      front_color = textureSample(front, filtering_sampler, tile_uv);
+      // read front color
+      front_color = sample(front, tile_uv);
     }
   }
 
   var back_color = TRANSPARENT;
 
   if bool(uniforms.back_read) && read(uv) {
-    back_color = textureSample(back, filtering_sampler, uv);
+    // read back color
+    back_color = sample(back, uv);
   }
 
   let input = vec4(front_color.rgb * front_color.a + back_color.rgb * (1 - front_color.a), 1.0);
