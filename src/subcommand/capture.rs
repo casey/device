@@ -28,8 +28,6 @@ pub(crate) struct Capture {
 }
 
 impl Capture {
-  const AUDIO: &str = "audio.wav";
-
   pub(crate) fn run(self, options: Options) -> Result {
     let config = Config::load()?;
 
@@ -101,7 +99,7 @@ impl Capture {
     let tempdir_path = tempdir.path().into_utf8_path()?;
 
     Sound::save(
-      &tempdir_path.join(Self::AUDIO),
+      &tempdir_path.join(AUDIO),
       media.iter().map(|(_image, sound)| sound),
     )?;
 
@@ -111,7 +109,7 @@ impl Capture {
       .args(["-video_size", &format!("{resolution}x{resolution}")])
       .args(["-framerate", &fps.to_string()])
       .args(["-i", "-"])
-      .args(["-i", Self::AUDIO])
+      .args(["-i", AUDIO])
       .args(["-c:v", "libx264"])
       .args(["-crf", "18"])
       .args(["-movflags", "+faststart"])
