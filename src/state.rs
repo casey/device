@@ -71,6 +71,11 @@ impl State {
     self
   }
 
+  pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
+    self.interpolate = interpolate;
+    self
+  }
+
   #[cfg(test)]
   pub(crate) fn left(mut self) -> Self {
     self.filter.field = Field::Left;

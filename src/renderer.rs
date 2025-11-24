@@ -1290,6 +1290,38 @@ mod tests {
 
   #[test]
   #[ignore]
+  fn circle_scale_interpolated() {
+    case(
+      "circle-scale-interpolated",
+      256,
+      256,
+      State::default()
+        .invert()
+        .circle()
+        .scale(2.0)
+        .times(2)
+        .interpolate(true),
+    );
+  }
+
+  #[test]
+  #[ignore]
+  fn x_scale_interpolated() {
+    case(
+      "x-scale-interpolated",
+      256,
+      256,
+      State::default()
+        .invert()
+        .x()
+        .scale(2.0)
+        .times(2)
+        .interpolate(true),
+    );
+  }
+
+  #[test]
+  #[ignore]
   fn resolution_is_clamped_to_2d_texture_limit() {
     let resolution = 65536.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
