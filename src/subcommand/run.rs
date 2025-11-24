@@ -7,8 +7,8 @@ pub(crate) struct Run {
 }
 
 impl Run {
-  pub(crate) fn run(self, options: Options) -> Result {
-    let mut app = App::new(options, self.record)?;
+  pub(crate) fn run(self, options: Options, config: Config) -> Result {
+    let mut app = App::new(options, self.record, config)?;
 
     let event_loop = EventLoop::with_user_event()
       .build()

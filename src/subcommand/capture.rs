@@ -28,9 +28,7 @@ pub(crate) struct Capture {
 }
 
 impl Capture {
-  pub(crate) fn run(self, options: Options) -> Result {
-    let config = Config::load()?;
-
+  pub(crate) fn run(self, options: Options, config: Config) -> Result {
     let mut stream = options.stream(&config)?;
 
     let mut analyzer = Analyzer::new();

@@ -93,9 +93,7 @@ impl App {
     Ok(())
   }
 
-  pub(crate) fn new(options: Options, record: bool) -> Result<Self> {
-    let config = Config::load()?;
-
+  pub(crate) fn new(options: Options, record: bool, config: Config) -> Result<Self> {
     let host = cpal::default_host();
 
     let output_device = host

@@ -24,6 +24,9 @@ pub(crate) struct Arguments {
 
 impl Arguments {
   pub(crate) fn run(self) -> Result {
-    self.subcommand.unwrap_or_default().run(self.options)
+    self
+      .subcommand
+      .unwrap_or_default()
+      .run(self.options, Config::load()?)
   }
 }
