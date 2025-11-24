@@ -74,7 +74,7 @@ impl App {
     }
 
     if let Some(recorder) = &self.recorder {
-      recorder.lock().unwrap().save(&self.options)?;
+      recorder.lock().unwrap().save(&self.options, &self.config)?;
     }
 
     Ok(())

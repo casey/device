@@ -26,7 +26,7 @@ impl Recorder {
     })
   }
 
-  pub(crate) fn save(&mut self, options: &Options) -> Result {
+  pub(crate) fn save(&mut self, options: &Options, config: &Config) -> Result {
     const CONCAT: &str = "concat.txt";
 
     log::info!(
@@ -94,8 +94,9 @@ impl Recorder {
       );
     }
 
-    fs::rename(self.tempdir_path.join(RECORDING), RECORDING)
-      .context(error::FilesystemIo { path: RECORDING })?;
+    let path = config.capture("mp4");
+
+    fs::rename(self.tempdir_path.join(RECORDING), &path).context(error::FilesystemIo { path })?;
 
     Ok(())
   }
