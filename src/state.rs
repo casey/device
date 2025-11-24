@@ -161,13 +161,13 @@ impl State {
     self
   }
 
-  pub(crate) fn z(mut self, z: f32) -> Self {
-    self.position.z = z;
+  pub(crate) fn x(mut self) -> Self {
+    self.filter.field = Field::X;
     self
   }
 
-  pub(crate) fn x(mut self) -> Self {
-    self.filter.field = Field::X;
+  pub(crate) fn z(mut self, z: f32) -> Self {
+    self.position.z = z;
     self
   }
 }
