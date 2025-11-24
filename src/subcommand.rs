@@ -23,3 +23,9 @@ impl Subcommand {
     }
   }
 }
+
+impl Default for Subcommand {
+  fn default() -> Self {
+    Self::Run(default())
+  }
+}

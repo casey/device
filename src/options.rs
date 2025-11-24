@@ -43,7 +43,7 @@ pub(crate) struct Options {
 }
 
 impl Options {
-  fn find_song(song: &str) -> Result<Utf8PathBuf> {
+  fn find_song(config: &Config, song: &str) -> Result<Utf8PathBuf> {
     let song = RegexBuilder::new(song)
       .case_insensitive(true)
       .build()
@@ -51,9 +51,7 @@ impl Options {
 
     let mut matches = Vec::<Utf8PathBuf>::new();
 
-    let home = dirs::home_dir().context(error::Home)?;
-
-    let music = home.join("Music/Music/Media.localized/Music");
+    let music = config.music()?;
 
     for entry in WalkDir::new(&music) {
       let entry = entry.context(error::SongWalk)?;
@@ -104,9 +102,9 @@ impl Options {
     }
   }
 
-  pub(crate) fn stream(&self) -> Result<Box<dyn Stream>> {
+  pub(crate) fn stream(&self, config: &Config) -> Result<Box<dyn Stream>> {
     if let Some(song) = &self.song {
-      Ok(Box::new(Track::new(&Self::find_song(song)?)?))
+      Ok(Box::new(Track::new(&Self::find_song(config, song)?)?))
     } else if let Some(score) = self.score {
       Ok(Box::new(score.synthesizer()))
     } else if let Some(track) = &self.track {

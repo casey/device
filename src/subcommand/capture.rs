@@ -29,7 +29,9 @@ pub(crate) struct Capture {
 
 impl Capture {
   pub(crate) fn run(self, options: Options) -> Result {
-    let mut stream = options.stream()?;
+    let config = Config::load()?;
+
+    let mut stream = options.stream(&config)?;
 
     let mut analyzer = Analyzer::new();
 
@@ -151,8 +153,19 @@ impl Capture {
       );
     }
 
-    fs::rename(tempdir_path.join(RECORDING), RECORDING)
-      .context(error::FilesystemIo { path: RECORDING })?;
+    let path = if let Some(captures) = config.captures() {
+      captures.join(format!(
+        "{}.mp4",
+        SystemTime::now()
+          .duration_since(UNIX_EPOCH)
+          .unwrap_or(Duration::default())
+          .as_secs()
+      ))
+    } else {
+      RECORDING.into()
+    };
+
+    fs::rename(tempdir_path.join(RECORDING), &path).context(error::FilesystemIo { path })?;
 
     Ok(())
   }

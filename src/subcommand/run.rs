@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Parser)]
+#[derive(Default, Parser)]
 pub(crate) struct Run {
   #[arg(long)]
   record: bool,

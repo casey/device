@@ -1,13 +1,14 @@
 use {
   self::{
-    analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, controller::Controller,
-    error::Error, event::Event, field::Field, filter::Filter, format::Format, fps::Fps,
-    frame::Frame, hub::Hub, image::Image, input::Input, into_u64::IntoU64, into_u128::IntoU128,
-    into_usize::IntoUsize, into_utf8_path::IntoUtf8Path, message::Message, options::Options,
-    parameter::Parameter, program::Program, recorder::Recorder, renderer::Renderer, score::Score,
-    shared::Shared, sound::Sound, state::State, stream::Stream, subcommand::Subcommand,
-    synthesizer::Synthesizer, tally::Tally, target::Target, templates::ShaderWgsl, text::Text,
-    tiling::Tiling, track::Track, uniforms::Uniforms, voice::Voice,
+    analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, config::Config,
+    controller::Controller, error::Error, event::Event, field::Field, filter::Filter,
+    format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
+    into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
+    message::Message, options::Options, parameter::Parameter, program::Program, recorder::Recorder,
+    renderer::Renderer, score::Score, shared::Shared, sound::Sound, state::State, stream::Stream,
+    subcommand::Subcommand, synthesizer::Synthesizer, tally::Tally, target::Target,
+    templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
+    voice::Voice,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -27,6 +28,7 @@ use {
     },
   },
   rustfft::{FftPlanner, num_complex::Complex},
+  serde::Deserialize,
   snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu},
   std::{
     array,
@@ -42,7 +44,7 @@ use {
     process::{self, Command, ExitStatus, Stdio},
     str::FromStr,
     sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
   },
   strum::{EnumIter, IntoEnumIterator, IntoStaticStr},
   tempfile::TempDir,
@@ -83,6 +85,7 @@ mod analyzer;
 mod app;
 mod arguments;
 mod bindings;
+mod config;
 mod controller;
 mod error;
 mod event;
@@ -124,6 +127,7 @@ const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
 
 const AUDIO: &str = "audio.wav";
+const CAPTURE: &str = "capture.png";
 const COLOR_CHANNELS: u32 = 4;
 const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
@@ -139,6 +143,15 @@ type Vec4f = nalgebra::Vector4<f32>;
 
 fn default<T: Default>() -> T {
   T::default()
+}
+
+fn home() -> Result<Utf8PathBuf> {
+  Ok(
+    dirs::home_dir()
+      .context(error::Home)?
+      .into_utf8_path()?
+      .to_owned(),
+  )
 }
 
 fn invert_color() -> Mat4f {
