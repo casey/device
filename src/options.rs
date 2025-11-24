@@ -40,6 +40,12 @@ pub(crate) struct Options {
   pub(crate) verbose: bool,
   #[arg(long)]
   pub(crate) volume: Option<f32>,
+  #[arg(allow_hyphen_values = true, default_value_t, long)]
+  pub(crate) vx: f32,
+  #[arg(allow_hyphen_values = true, default_value_t, long)]
+  pub(crate) vy: f32,
+  #[arg(allow_hyphen_values = true, default_value_t, long)]
+  pub(crate) vz: f32,
 }
 
 impl Options {
@@ -91,6 +97,7 @@ impl Options {
     state.fps = self.fps.or(state.fps);
     state.interpolate = self.interpolate;
     state.resolution = self.resolution.or(state.resolution);
+    state.velocity = Vec3f::new(self.vx, self.vy, self.vz);
     state
   }
 
