@@ -124,7 +124,7 @@ impl State {
   pub(crate) fn tick(&mut self, elapsed: Duration) {
     let elapsed = elapsed.as_secs_f32();
     self.position.x -= self.velocity.x * 4.0 * elapsed;
-    self.position.y -= self.velocity.x * 4.0 * elapsed;
+    self.position.y -= self.velocity.y * 4.0 * elapsed;
     self.position.z -= self.velocity.z * elapsed;
     self.position.w -= self.velocity.w * elapsed;
   }
