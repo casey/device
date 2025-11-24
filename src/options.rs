@@ -38,14 +38,14 @@ pub(crate) struct Options {
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
   pub(crate) verbose: bool,
+  #[arg(long)]
+  pub(crate) volume: Option<f32>,
   #[arg(allow_hyphen_values = true, default_value_t, long)]
   pub(crate) vx: f32,
   #[arg(allow_hyphen_values = true, default_value_t, long)]
   pub(crate) vy: f32,
   #[arg(allow_hyphen_values = true, default_value_t, long)]
   pub(crate) vz: f32,
-  #[arg(long)]
-  pub(crate) volume: Option<f32>,
 }
 
 impl Options {
