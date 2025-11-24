@@ -151,17 +151,7 @@ impl Capture {
       );
     }
 
-    let path = if let Some(captures) = config.captures() {
-      captures.join(format!(
-        "{}.mp4",
-        SystemTime::now()
-          .duration_since(UNIX_EPOCH)
-          .unwrap_or_default()
-          .as_secs()
-      ))
-    } else {
-      RECORDING.into()
-    };
+    let path = config.capture("mp4");
 
     fs::rename(tempdir_path.join(RECORDING), &path).context(error::FilesystemIo { path })?;
 

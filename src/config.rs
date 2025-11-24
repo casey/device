@@ -7,10 +7,6 @@ pub(crate) struct Config {
 }
 
 impl Config {
-  pub(crate) fn captures(&self) -> Option<&Utf8Path> {
-    self.captures.as_deref()
-  }
-
   fn home() -> Result<Utf8PathBuf> {
     Ok(
       env::home_dir()
@@ -18,6 +14,22 @@ impl Config {
         .into_utf8_path()?
         .to_owned(),
     )
+  }
+
+  pub(crate) fn capture(&self, extension: &str) -> Utf8PathBuf {
+    let filename = format!(
+      "{}.{extension}",
+      SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs(),
+    );
+
+    self
+      .captures
+      .as_ref()
+      .map(|captures| captures.join(&filename))
+      .unwrap_or_else(|| filename.into())
   }
 
   pub(crate) fn load() -> Result<Self> {
