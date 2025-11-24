@@ -13,6 +13,7 @@ pub(crate) struct Uniforms {
   pub(crate) front_read: bool,
   pub(crate) gain: f32,
   pub(crate) index: u32,
+  pub(crate) interpolate: bool,
   pub(crate) offset: Vec2f,
   pub(crate) position: Mat3f,
   pub(crate) repeat: bool,
@@ -38,6 +39,7 @@ impl Uniforms {
     self.front_read.write(dst, &mut i, &mut a);
     self.gain.write(dst, &mut i, &mut a);
     self.index.write(dst, &mut i, &mut a);
+    self.interpolate.write(dst, &mut i, &mut a);
     self.offset.write(dst, &mut i, &mut a);
     self.position.write(dst, &mut i, &mut a);
     self.repeat.write(dst, &mut i, &mut a);

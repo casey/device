@@ -241,6 +241,9 @@ impl App {
           "f" => {
             self.state.fit = !self.state.fit;
           }
+          "i" => {
+            self.state.interpolate = !self.state.interpolate;
+          }
           "l" => self.state.filters.push(Filter {
             color: invert_color(),
             field: Field::Frequencies,
