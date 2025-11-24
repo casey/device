@@ -23,7 +23,7 @@ impl Score {
         },
         period: 1.0,
       }
-      .gain(0.125)
+      .gain(0.25)
       .into(),
       Self::ClickTrack => voice::Cycle {
         period: 2.0 / 3.0,
