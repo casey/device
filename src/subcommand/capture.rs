@@ -28,8 +28,8 @@ pub(crate) struct Capture {
 }
 
 impl Capture {
-  pub(crate) fn run(self, options: Options) -> Result {
-    let mut stream = options.stream()?;
+  pub(crate) fn run(self, options: Options, config: Config) -> Result {
+    let mut stream = options.stream(&config)?;
 
     let mut analyzer = Analyzer::new();
 
@@ -151,8 +151,9 @@ impl Capture {
       );
     }
 
-    fs::rename(tempdir_path.join(RECORDING), RECORDING)
-      .context(error::FilesystemIo { path: RECORDING })?;
+    let path = config.capture("mp4");
+
+    fs::rename(tempdir_path.join(RECORDING), &path).context(error::FilesystemIo { path })?;
 
     Ok(())
   }

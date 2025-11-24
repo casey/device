@@ -6,6 +6,7 @@ pub(crate) struct App {
   capture_tx: mpsc::Sender<Result>,
   captures_pending: u64,
   command: Option<Vec<String>>,
+  config: Config,
   deadline: Instant,
   errors: Vec<Error>,
   horizontal: f32,
@@ -30,9 +31,10 @@ pub(crate) struct App {
 
 impl App {
   fn capture(&mut self) -> Result {
+    let destination = self.config.capture("png");
     let tx = self.capture_tx.clone();
     self.renderer.as_ref().unwrap().capture(move |capture| {
-      if let Err(err) = tx.send(capture.save("capture.png".as_ref())) {
+      if let Err(err) = tx.send(capture.save(&destination)) {
         eprintln!("failed to send capture result: {err}");
       }
     })?;
@@ -72,13 +74,13 @@ impl App {
     }
 
     if let Some(recorder) = &self.recorder {
-      recorder.lock().unwrap().save(&self.options)?;
+      recorder.lock().unwrap().save(&self.options, &self.config)?;
     }
 
     Ok(())
   }
 
-  pub(crate) fn new(options: Options, record: bool) -> Result<Self> {
+  pub(crate) fn new(options: Options, record: bool, config: Config) -> Result<Self> {
     let host = cpal::default_host();
 
     let output_device = host
@@ -120,7 +122,7 @@ impl App {
 
       Box::new(Input::new(input_device, stream_config)?)
     } else {
-      let stream = options.stream()?;
+      let stream = options.stream(&config)?;
       stream.append(&sink);
       stream
     };
@@ -141,6 +143,7 @@ impl App {
       capture_tx,
       captures_pending: 0,
       command: None,
+      config,
       deadline: now,
       errors: Vec::new(),
       horizontal: 0.0,

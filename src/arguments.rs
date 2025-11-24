@@ -19,11 +19,14 @@ pub(crate) struct Arguments {
   #[command(flatten)]
   options: Options,
   #[command(subcommand)]
-  subcommand: Subcommand,
+  subcommand: Option<Subcommand>,
 }
 
 impl Arguments {
   pub(crate) fn run(self) -> Result {
-    self.subcommand.run(self.options)
+    self
+      .subcommand
+      .unwrap_or_default()
+      .run(self.options, Config::load()?)
   }
 }

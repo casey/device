@@ -78,6 +78,12 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
+  #[snafu(display("failed to deserialize config file at `{path}`"))]
+  ConfigDeserialize {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: serde_yaml::Error,
+  },
   #[snafu(display("failed to create overlay renderer"))]
   CreateOverlayRenderer {
     backtrace: Option<Backtrace>,
@@ -144,6 +150,8 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: midir::PortInfoError,
   },
+  #[snafu(display("no music directory configured"))]
+  Music { backtrace: Option<Backtrace> },
   #[snafu(display("path not valid unicode: `{}`", path.display()))]
   PathUnicode {
     backtrace: Option<Backtrace>,

@@ -11,9 +11,8 @@ repository = "https://github.com/casey/device"
 
 [dependencies]
 boilerplate = "1.0.1"
-camino = "1.2.1"
+camino = { version = "1.2.1", features = ["serde1"] }
 clap = { version = "4.5.21", features = ["derive"] }
-dirs = "6.0.0"
 env_logger = "0.11.0"
 hound = "3.5.1"
 indicatif = "0.18.3"
@@ -28,6 +27,8 @@ rand = "0.9.2"
 regex = "1.11.1"
 rodio = { version = "0.21.1", features = ["playback", "symphonia-all"], default-features = false }
 rustfft = "6.2.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_yaml = "0.9.34"
 snafu = "0.8.5"
 strum = { version = "0.27.1", features = ["derive"] }
 symphonia = { version = "0.5.5", features = [ "all-codecs", "all-formats" ] }
