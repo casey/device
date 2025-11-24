@@ -5,8 +5,8 @@ use {
     format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
     into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
     message::Message, options::Options, parameter::Parameter, program::Program, recorder::Recorder,
-    renderer::Renderer, score::Score, shared::Shared, sound::Sound, state::State, stream::Stream,
-    subcommand::Subcommand, synthesizer::Synthesizer, tally::Tally, target::Target,
+    renderer::Renderer, scene::Scene, score::Score, shared::Shared, sound::Sound, state::State,
+    stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer, tally::Tally, target::Target,
     templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
     voice::Voice,
   },
@@ -107,6 +107,7 @@ mod parameter;
 mod program;
 mod recorder;
 mod renderer;
+mod scene;
 mod score;
 mod shared;
 mod sound;

@@ -25,11 +25,13 @@ pub(crate) struct Options {
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
   #[arg(long)]
-  pub(crate) interpolate: bool,
+  pub(crate) interpolate: Option<bool>,
   #[arg(long)]
   pub(crate) program: Option<Program>,
   #[arg(long)]
   pub(crate) resolution: Option<NonZeroU32>,
+  #[arg(long)]
+  pub(crate) scene: Option<Scene>,
   #[arg(group = AUDIO, long)]
   pub(crate) score: Option<Score>,
   #[arg(group = AUDIO, long)]
@@ -49,53 +51,25 @@ pub(crate) struct Options {
 }
 
 impl Options {
-  fn find_song(config: &Config, song: &str) -> Result<Utf8PathBuf> {
-    let song = RegexBuilder::new(song)
-      .case_insensitive(true)
-      .build()
-      .context(error::SongRegex)?;
-
-    let mut matches = Vec::<Utf8PathBuf>::new();
-
-    let music = config.music()?;
-
-    for entry in WalkDir::new(music) {
-      let entry = entry.context(error::SongWalk)?;
-
-      if entry.file_type().is_dir() {
-        continue;
-      }
-
-      let path = entry.path();
-
-      let haystack = path.strip_prefix(music).unwrap().with_extension("");
-
-      let Some(haystack) = haystack.to_str() else {
-        continue;
-      };
-
-      if song.is_match(haystack) {
-        matches.push(path.into_utf8_path()?.into());
-      }
-    }
-
-    if matches.len() > 1 {
-      return Err(error::SongAmbiguous { matches }.build());
-    }
-
-    match matches.into_iter().next() {
-      Some(path) => Ok(path),
-      None => Err(error::SongMatch { song }.build()),
-    }
-  }
-
   pub(crate) fn state(&self) -> State {
-    let mut state = self.program.map(Program::state).unwrap_or_default();
+    let mut state = if let Some(scene) = self.scene {
+      scene.state()
+    } else if let Some(program) = self.program {
+      program.state()
+    } else {
+      default()
+    };
+
     if let Some(db) = self.db {
       state.db = db;
     }
+
+    if let Some(interpolate) = self.interpolate {
+      state.interpolate = interpolate;
+    }
+
     state.fps = self.fps.or(state.fps);
-    state.interpolate = self.interpolate;
+
     state.resolution = self.resolution.or(state.resolution);
     state.velocity = Vec3f::new(self.vx, self.vy, self.vz);
     state
@@ -111,11 +85,13 @@ impl Options {
 
   pub(crate) fn stream(&self, config: &Config) -> Result<Box<dyn Stream>> {
     if let Some(song) = &self.song {
-      Ok(Box::new(Track::new(&Self::find_song(config, song)?)?))
+      Ok(Box::new(Track::new(&config.find_song(song)?)?))
     } else if let Some(score) = self.score {
       Ok(Box::new(score.synthesizer()))
     } else if let Some(track) = &self.track {
       Ok(Box::new(Track::new(track)?))
+    } else if let Some(program) = self.program {
+      program.stream(config)
     } else {
       Ok(Box::new(Score::Silence.synthesizer()))
     }

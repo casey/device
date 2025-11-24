@@ -58,12 +58,16 @@ impl State {
     self
   }
 
+  pub(crate) fn db(mut self, db: f32) -> Self {
+    self.db = db;
+    self
+  }
+
   pub(crate) fn frequencies(mut self) -> Self {
     self.filter.field = Field::Frequencies;
     self
   }
 
-  #[cfg(test)]
   pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
     self.interpolate = interpolate;
     self
