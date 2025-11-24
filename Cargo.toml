@@ -1,6 +1,6 @@
 [package]
 name = "device"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Casey Rodarmor <casey@rodarmor.com>"]
 description = "A generative engine"
 edition = "2024"
