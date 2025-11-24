@@ -53,7 +53,7 @@ impl Options {
 
     let music = config.music()?;
 
-    for entry in WalkDir::new(&music) {
+    for entry in WalkDir::new(music) {
       let entry = entry.context(error::SongWalk)?;
 
       if entry.file_type().is_dir() {
@@ -62,7 +62,7 @@ impl Options {
 
       let path = entry.path();
 
-      let haystack = path.strip_prefix(&music).unwrap().with_extension("");
+      let haystack = path.strip_prefix(music).unwrap().with_extension("");
 
       let Some(haystack) = haystack.to_str() else {
         continue;

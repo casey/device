@@ -30,17 +30,19 @@ pub(crate) struct App {
 }
 
 impl App {
+  const CAPTURE: &str = "capture.png";
+
   fn capture(&mut self) -> Result {
     let destination = if let Some(captures) = self.config.captures() {
       captures.join(format!(
         "{}.png",
         SystemTime::now()
           .duration_since(UNIX_EPOCH)
-          .unwrap_or(Duration::default())
+          .unwrap_or_default()
           .as_secs()
       ))
     } else {
-      CAPTURE.into()
+      Self::CAPTURE.into()
     };
 
     let tx = self.capture_tx.clone();

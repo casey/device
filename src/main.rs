@@ -126,8 +126,6 @@ mod voice;
 const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
 
-const AUDIO: &str = "audio.wav";
-const CAPTURE: &str = "capture.png";
 const COLOR_CHANNELS: u32 = 4;
 const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();

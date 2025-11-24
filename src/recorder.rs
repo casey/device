@@ -28,6 +28,7 @@ impl Recorder {
 
   pub(crate) fn save(&mut self, options: &Options) -> Result {
     const CONCAT: &str = "concat.txt";
+    const AUDIO: &str = "audio.wav";
 
     log::info!(
       "saving {} frame recording to {RECORDING}",
