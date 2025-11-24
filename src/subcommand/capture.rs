@@ -33,7 +33,7 @@ impl Capture {
 
     let mut analyzer = Analyzer::new();
 
-    let state = options.state();
+    let mut state = options.state();
 
     let resolution = state.resolution.unwrap_or(DEFAULT_RESOLUTION);
 
@@ -89,6 +89,8 @@ impl Capture {
 
       let image = rx.recv().unwrap();
       media.push((image, sound));
+
+      state.tick(fps.duration());
     }
 
     progress.finish();

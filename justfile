@@ -43,11 +43,12 @@ unused:
 doc:
   cargo doc --workspace --open
 
-hello:
-  cargo run --release -- --program hello
+program program:
+  cargo run --release -- --program {{program}}
 
-busy:
-  cargo run --release -- --program busy
+hello: (program "hello")
+busy: (program "busy")
+noise: (program "noise")
 
 maria:
   cargo run --release -- --song 'total 4/13 maria' run
@@ -61,3 +62,11 @@ capture-hello:
     --resolution 2048 \
     --verbose \
     capture
+
+capture-noise:
+  cargo run --release -- \
+    --program noise \
+    --resolution 2048 \
+    --verbose \
+    capture \
+    --duration 10

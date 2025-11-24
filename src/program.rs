@@ -5,6 +5,7 @@ use super::*;
 pub(crate) enum Program {
   Hello,
   Busy,
+  Noise,
 }
 
 impl Program {
@@ -12,6 +13,7 @@ impl Program {
     match self {
       Self::Hello => Scene::Hello.state(),
       Self::Busy => Scene::Highwaystar.state(),
+      Self::Noise => Scene::Noise.state(),
     }
   }
 
@@ -21,6 +23,7 @@ impl Program {
         &config.find_song("old generic boss")?,
       )?)),
       Self::Busy => Ok(Box::new(Score::BusySignal.synthesizer())),
+      Self::Noise => Ok(Box::new(Score::BrownNoise.synthesizer())),
     }
   }
 }

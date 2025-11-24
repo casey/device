@@ -528,11 +528,13 @@ impl Renderer {
       None
     };
 
+    let filters = state.filters.len() + 1;
+
     let mut uniforms = Vec::new();
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let tiling_size = if state.tile {
-      (state.filters.len().max(1) as f64).sqrt().ceil() as u32
+      (filters.max(1) as f64).sqrt().ceil() as u32
     } else {
       1
     };
@@ -566,13 +568,20 @@ impl Renderer {
     let frequency_range = frequency_count as f32 / self.frequencies.texture().width() as f32;
     self.write_texture(frequencies, self.frequencies.texture());
 
-    let filter_count = u32::try_from(state.filters.len()).unwrap();
+    let filter_count = u32::try_from(filters).unwrap();
 
     let gain = 10f32.powf(state.db / 20.0);
 
     let rms = analyzer.rms();
 
-    for (i, filter) in state.filters.iter().enumerate() {
+    let transient = state.transient();
+
+    for (i, filter) in state
+      .filters
+      .iter()
+      .chain(iter::once(&transient))
+      .enumerate()
+    {
       let i = u32::try_from(i).unwrap();
       uniforms.push(Uniforms {
         back_read: false,
@@ -592,7 +601,7 @@ impl Renderer {
         repeat: false,
         resolution: tiling.resolution(),
         rms: if state.spread {
-          rms * (i as f32 + 1.0) / state.filters.len() as f32
+          rms * (i as f32 + 1.0) / filters as f32
         } else {
           rms
         },
@@ -711,7 +720,7 @@ impl Renderer {
 
     let mut source = 0;
     let mut destination = 1;
-    for i in 0..state.filters.len() {
+    for i in 0..filters {
       let i = u32::try_from(i).unwrap();
       self.draw(
         &self.bindings().targets[source].bind_group,
@@ -760,7 +769,7 @@ impl Renderer {
     log::info!(
       "{}",
       Frame {
-        filters: state.filters.len(),
+        filters,
         fps,
         number: self.frame,
       }

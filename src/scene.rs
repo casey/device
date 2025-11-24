@@ -9,6 +9,7 @@ pub(crate) enum Scene {
   Hello,
   Highwaystar,
   Middle,
+  Noise,
   None,
   RedX,
   Rip,
@@ -42,6 +43,17 @@ impl Scene {
         .scale(2.0)
         .times(8),
       Self::Middle => State::default().invert().top().push().bottom().push(),
+      Self::Noise => State::default()
+        .invert()
+        .x()
+        .push()
+        .samples()
+        .push()
+        .vz(-0.05)
+        .interpolate(true)
+        .position(Mat3f::new_rotation(-0.01))
+        .none()
+        .times(157),
       Self::None => State::default(),
       Self::RedX => State::default().invert_r().x().push(),
       Self::Rip => State::default().invert().top().push().samples().push(),
