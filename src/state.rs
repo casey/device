@@ -127,6 +127,11 @@ impl State {
     self
   }
 
+  pub(crate) fn vz(mut self, vz: f32) -> Self {
+    self.velocity.z = vz;
+    self
+  }
+
   pub(crate) fn x(mut self) -> Self {
     self.filter.field = Field::X;
     self

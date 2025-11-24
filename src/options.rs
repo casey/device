@@ -42,12 +42,12 @@ pub(crate) struct Options {
   pub(crate) verbose: bool,
   #[arg(long)]
   pub(crate) volume: Option<f32>,
-  #[arg(allow_hyphen_values = true, default_value_t, long)]
-  pub(crate) vx: f32,
-  #[arg(allow_hyphen_values = true, default_value_t, long)]
-  pub(crate) vy: f32,
-  #[arg(allow_hyphen_values = true, default_value_t, long)]
-  pub(crate) vz: f32,
+  #[arg(allow_hyphen_values = true, long)]
+  pub(crate) vx: Option<f32>,
+  #[arg(allow_hyphen_values = true, long)]
+  pub(crate) vy: Option<f32>,
+  #[arg(allow_hyphen_values = true, long)]
+  pub(crate) vz: Option<f32>,
 }
 
 impl Options {
@@ -68,10 +68,20 @@ impl Options {
       state.interpolate = interpolate;
     }
 
-    state.fps = self.fps.or(state.fps);
+    if let Some(vx) = self.vx {
+      state.velocity.x = vx;
+    }
 
+    if let Some(vy) = self.vy {
+      state.velocity.y = vy;
+    }
+
+    if let Some(vz) = self.vz {
+      state.velocity.z = vz;
+    }
+
+    state.fps = self.fps.or(state.fps);
     state.resolution = self.resolution.or(state.resolution);
-    state.velocity = Vec3f::new(self.vx, self.vy, self.vz);
     state
   }
 
