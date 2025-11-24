@@ -515,8 +515,6 @@ impl Renderer {
       );
     }
 
-    let filters = state.filters.len() + 1;
-
     if self.frame_times.len() == self.frame_times.capacity() {
       self.frame_times.pop_front();
     }
@@ -529,6 +527,8 @@ impl Renderer {
     } else {
       None
     };
+
+    let filters = state.filters.len() + 1;
 
     let mut uniforms = Vec::new();
 
