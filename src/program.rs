@@ -1,6 +1,7 @@
 use super::*;
 
 #[derive(Clone, Copy, ValueEnum)]
+#[allow(clippy::arbitrary_source_item_ordering)]
 pub(crate) enum Program {
   Hello,
   Busy,
