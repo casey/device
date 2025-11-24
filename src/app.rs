@@ -395,6 +395,8 @@ impl App {
     let elapsed = (now - self.start).as_secs_f32();
     self.start = now;
 
+    // todo:
+    // - move into state
     self.scaling -= self.state.velocity.z * elapsed;
     self.translation -= self.state.velocity.xy() * 4.0 * elapsed;
 

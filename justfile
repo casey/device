@@ -62,3 +62,11 @@ capture-hello:
     --resolution 2048 \
     --verbose \
     capture
+
+capture-noise:
+  cargo run --release -- \
+    --program noise \
+    --resolution 2048 \
+    --verbose \
+    capture \
+    --duration 10

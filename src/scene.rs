@@ -50,7 +50,10 @@ impl Scene {
         .samples()
         .push()
         .vz(-0.1)
-        .interpolate(true),
+        .interpolate(true)
+        .position(Mat3f::new_rotation(-0.01))
+        .none()
+        .times(157),
       Self::None => State::default(),
       Self::RedX => State::default().invert_r().x().push(),
       Self::Rip => State::default().invert().top().push().samples().push(),

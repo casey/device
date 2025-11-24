@@ -63,8 +63,18 @@ impl State {
     self
   }
 
+  pub(crate) fn position(mut self, position: Mat3f) -> Self {
+    self.filter.position = position;
+    self
+  }
+
   pub(crate) fn frequencies(mut self) -> Self {
     self.filter.field = Field::Frequencies;
+    self
+  }
+
+  pub(crate) fn none(mut self) -> Self {
+    self.filter.field = Field::None;
     self
   }
 
