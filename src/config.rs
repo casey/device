@@ -25,11 +25,11 @@ impl Config {
         .as_secs(),
     );
 
-    self
-      .captures
-      .as_ref()
-      .map(|captures| captures.join(&filename))
-      .unwrap_or_else(|| filename.into())
+    if let Some(captures) = &self.captures {
+      captures.join(filename)
+    } else {
+      filename.into()
+    }
   }
 
   pub(crate) fn load() -> Result<Self> {
