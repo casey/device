@@ -31,7 +31,7 @@ impl Default for State {
       fps: None,
       interpolate: false,
       parameter: Parameter::default(),
-      position: Vec4f::zeros(),
+      position: Vec4f::new(0.0, 0.0, 1.0, 0.0),
       repeat: false,
       resolution: None,
       spread: false,
@@ -150,7 +150,7 @@ impl State {
   pub(crate) fn transient(&self) -> Filter {
     Filter {
       position: Mat3f::new_rotation(self.position.w)
-        * Mat3f::new_translation(&self.position.xy()).prepend_scaling(1.0 + self.position.z),
+        * Mat3f::new_translation(&self.position.xy()).prepend_scaling(self.position.z),
       wrap: self.wrap,
       ..default()
     }
@@ -158,6 +158,11 @@ impl State {
 
   pub(crate) fn vz(mut self, vz: f32) -> Self {
     self.velocity.z = vz;
+    self
+  }
+
+  pub(crate) fn z(mut self, z: f32) -> Self {
+    self.position.z = z;
     self
   }
 
