@@ -9,7 +9,6 @@ pub(crate) struct App {
   config: Config,
   deadline: Instant,
   errors: Vec<Error>,
-  horizontal: f32,
   hub: Hub,
   macro_recording: Option<Vec<Key>>,
   makro: Vec<Key>,
@@ -24,9 +23,7 @@ pub(crate) struct App {
   state: State,
   stream: Box<dyn Stream>,
   translation: Vec2f,
-  vertical: f32,
   window: Option<Arc<Window>>,
-  zoom: f32,
 }
 
 impl App {
@@ -146,7 +143,6 @@ impl App {
       config,
       deadline: now,
       errors: Vec::new(),
-      horizontal: 0.0,
       hub: Hub::new()?,
       macro_recording: None,
       makro: Vec::new(),
@@ -160,9 +156,7 @@ impl App {
       state,
       stream,
       translation: Vec2f::zeros(),
-      vertical: 0.0,
       window: None,
-      zoom: 0.0,
     })
   }
 
@@ -382,9 +376,9 @@ impl App {
           match control {
             0 => self.state.alpha = parameter,
             1 => self.state.db = parameter.value() as f32,
-            4 => self.horizontal = parameter.bipolar(),
-            5 => self.vertical = parameter.bipolar(),
-            6 => self.zoom = parameter.bipolar(),
+            4 => self.state.velocity.x = parameter.bipolar(),
+            5 => self.state.velocity.y = parameter.bipolar(),
+            6 => self.state.velocity.z = parameter.bipolar(),
             _ => {}
           }
         }
@@ -401,9 +395,8 @@ impl App {
     let elapsed = (now - self.start).as_secs_f32();
     self.start = now;
 
-    self.scaling -= self.zoom * elapsed;
-    self.translation.x -= self.horizontal * 4.0 * elapsed;
-    self.translation.y -= self.vertical * 4.0 * elapsed;
+    self.scaling -= self.state.velocity.z * elapsed;
+    self.translation -= self.state.velocity.xy() * 4.0 * elapsed;
 
     self.state.filters.push(Filter {
       position: Mat3f::new_translation(&self.translation).prepend_scaling(self.scaling),

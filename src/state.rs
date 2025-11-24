@@ -15,6 +15,7 @@ pub(crate) struct State {
   pub(crate) status: bool,
   pub(crate) text: Option<Text>,
   pub(crate) tile: bool,
+  pub(crate) velocity: Vec3f,
   pub(crate) wrap: bool,
 }
 
@@ -35,6 +36,7 @@ impl Default for State {
       status: false,
       text: None,
       tile: false,
+      velocity: Vec3f::zeros(),
       wrap: true,
     }
   }
