@@ -25,6 +25,8 @@ pub(crate) struct Options {
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
   #[arg(long)]
+  pub(crate) interpolate: bool,
+  #[arg(long)]
   pub(crate) program: Option<Program>,
   #[arg(long)]
   pub(crate) resolution: Option<NonZeroU32>,
@@ -89,6 +91,7 @@ impl Options {
       state.db = db;
     }
     state.fps = self.fps.or(state.fps);
+    state.interpolate = self.interpolate;
     state.resolution = self.resolution.or(state.resolution);
     state
   }
