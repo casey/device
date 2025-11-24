@@ -70,21 +70,12 @@ impl Options {
       state.interpolate = interpolate;
     }
 
-    if let Some(vx) = self.vx {
-      state.velocity.x = vx;
-    }
-
-    if let Some(vy) = self.vy {
-      state.velocity.y = vy;
-    }
-
-    if let Some(vz) = self.vz {
-      state.velocity.z = vz;
-    }
-
-    if let Some(vw) = self.vw {
-      state.velocity.w = vw;
-    }
+    state.velocity = Vec4f::new(
+      self.vx.unwrap_or(state.velocity.x),
+      self.vy.unwrap_or(state.velocity.y),
+      self.vz.unwrap_or(state.velocity.z),
+      self.vw.unwrap_or(state.velocity.w),
+    );
 
     state.fps = self.fps.or(state.fps);
     state.resolution = self.resolution.or(state.resolution);
