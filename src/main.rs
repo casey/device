@@ -35,7 +35,7 @@ use {
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     collections::VecDeque,
-    f32,
+    env, f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
@@ -143,15 +143,6 @@ type Vec4f = nalgebra::Vector4<f32>;
 
 fn default<T: Default>() -> T {
   T::default()
-}
-
-fn home() -> Result<Utf8PathBuf> {
-  Ok(
-    dirs::home_dir()
-      .context(error::Home)?
-      .into_utf8_path()?
-      .to_owned(),
-  )
 }
 
 fn invert_color() -> Mat4f {

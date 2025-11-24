@@ -6,37 +6,33 @@ pub(crate) struct Config {
   music: Option<Utf8PathBuf>,
 }
 
-// todo:
-// - increment if one already exists
-
 impl Config {
   pub(crate) fn captures(&self) -> Option<&Utf8Path> {
     self.captures.as_deref()
   }
 
-  pub(crate) fn load() -> Result<Self> {
-    let path = home()?;
+  fn home() -> Result<Utf8PathBuf> {
+    Ok(
+      env::home_dir()
+        .context(error::Home)?
+        .into_utf8_path()?
+        .to_owned(),
+    )
+  }
 
-    let path = path.join(".config").join("device.yaml");
+  pub(crate) fn load() -> Result<Self> {
+    let path = Self::home()?.join(".config").join("device.yaml");
 
     let yaml = match fs::read_to_string(&path) {
-      Err(err) => {
-        if err.kind() == io::ErrorKind::NotFound {
-          return Ok(Self::default());
-        } else {
-          return Err(error::FilesystemIo { path }.into_error(err));
-        }
-      }
+      Err(err) if err.kind() == io::ErrorKind::NotFound => return Ok(Self::default()),
+      Err(err) => return Err(error::FilesystemIo { path }.into_error(err)),
       Ok(yaml) => yaml,
     };
 
-    Ok(serde_yaml::from_str(&yaml).unwrap())
+    serde_yaml::from_str(&yaml).context(error::ConfigDeserialize { path })
   }
 
-  pub(crate) fn music(&self) -> Result<Utf8PathBuf> {
-    if let Some(music) = &self.music {
-      return Ok(music.into());
-    }
-    Ok(home()?.join("Music/Music/Media.localized/Music"))
+  pub(crate) fn music(&self) -> Result<&Utf8Path> {
+    self.music.as_deref().context(error::Music)
   }
 }
