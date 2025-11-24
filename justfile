@@ -3,6 +3,9 @@ set positional-arguments
 watch +args='lcheck':
   cargo watch --clear --exec '{{args}}'
 
+run *args:
+  cargo run -- {{args}}
+
 forbid:
   ./bin/forbid
 
@@ -69,4 +72,4 @@ capture-noise:
     --resolution 2048 \
     --verbose \
     capture \
-    --duration 10
+    --duration 60
