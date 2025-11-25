@@ -3,7 +3,8 @@ use super::*;
 // todo:
 // - return None from emitter so it can be dropped or pruned
 // - figure out which notes each key should be
-
+// - remove dc component from brown noise
+//
 // - not getting output
 //   - store Option<Synthesizer> when output is a synth
 //   - instead of adding to mixer, add to synth
@@ -17,6 +18,13 @@ use super::*;
 //     - remove song
 //     - play sound
 //   - probably more complicated though
+//
+// - convert all sources to 48khz f32
+// - use 48khz sample rate output and input where possible
+// - handle my own tappable mixer
+// - remove individual sample saving implementations
+
+struct Foo {}
 
 pub(crate) struct App {
   analyzer: Analyzer,
