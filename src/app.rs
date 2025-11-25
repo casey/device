@@ -175,17 +175,16 @@ impl App {
     Ok(())
   }
 
-  pub(crate) fn errors(mut self) -> Result {
-    if self.errors.is_empty() {
-      Ok(())
-    } else {
-      let source = self.errors.remove(0);
-      Err(
+  pub(crate) fn errors(self) -> Result {
+    let mut errors = self.errors.into_iter();
+    match errors.next() {
+      Some(source) => Err(
         error::AppExit {
-          additional: self.errors,
+          additional: errors.collect::<Vec<Error>>(),
         }
         .into_error(Box::new(source)),
-      )
+      ),
+      None => Ok(()),
     }
   }
 
