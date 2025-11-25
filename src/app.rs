@@ -2,9 +2,21 @@ use super::*;
 
 // todo:
 // - return None from emitter so it can be dropped or pruned
-// - not getting output
 // - figure out which notes each key should be
-// - use numbers to select voice
+
+// - not getting output
+//   - store Option<Synthesizer> when output is a synth
+//   - instead of adding to mixer, add to synth
+//   - can only play output when output is synthesizer, no playing over input or songs
+//   - adding to synth makes the most sense, it already holds a voice
+//   - can instead hold a vec voices
+//   - voices/synth/patches don't actually have sample rates, so can mix into anything
+//   - alternative is some kind of mixer for streams
+//   - mixer for streams would let me do more complex dj stuff
+//     - add song
+//     - remove song
+//     - play sound
+//   - probably more complicated though
 
 pub(crate) struct App {
   analyzer: Analyzer,
