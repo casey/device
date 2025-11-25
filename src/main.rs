@@ -40,7 +40,7 @@ use {
     fmt::{self, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
-    iter,
+    iter, mem,
     num::NonZeroU32,
     ops::{Add, AddAssign, SubAssign},
     process::{self, Command, ExitStatus, Stdio},

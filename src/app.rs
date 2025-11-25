@@ -4,6 +4,7 @@ use super::*;
 // - return None from emitter so it can be dropped or pruned
 // - figure out which notes each key should be
 // - remove dc component from brown noise
+// - pause input?
 //
 // - not getting output
 //   - store Option<Synthesizer> when output is a synth
@@ -23,8 +24,114 @@ use super::*;
 // - use 48khz sample rate output and input where possible
 // - handle my own tappable mixer
 // - remove individual sample saving implementations
+// - however, input samples must make it to the analyzer but not the output
+// - convert synth into stereo
+// - am i actually minimizing the input buffer size?
 
-struct Foo {}
+// todo:
+// - should we produce Item = [f32; 2] or a newtype
+//   since we are enforcing stereo?
+// - can we get a more accurate playback position instead of assuming
+//   that everything which has been drained has been played?
+
+// - we really have two paradigms, and i'm not sure if they can be combined
+// - input, which is driven by the rate of production from the microphone
+// - output, which is driven by the rate of consumption by the speakers
+//
+// - instead of trying to unify them in a single mixer type,
+//   let's instead unify them in the analyzer
+//
+// - or we could create an iterator over the input, but it returns 0 when there aren't samples
+//
+// - Stereo and Mono traits
+// - don't use iter<item=f32> too error prone
+
+trait Stereo: Iterator<Item = f32> {
+  fn is_audible(&self) -> bool;
+}
+
+#[derive(Default)]
+struct Tap {
+  active: Vec<Box<dyn Stereo>>,
+  pending: Vec<Box<dyn Stereo>>,
+  sample: u64,
+  samples: Vec<f32>,
+}
+
+impl Tap {
+  const CHANNELS: u16 = 2;
+  const SAMPLE_RATE: u32 = 48_000;
+
+  fn add<T: Stereo + 'static>(&mut self, stereo: T) {
+    self.pending.push(Box::new(stereo));
+  }
+
+  fn drain(&mut self) -> Sound {
+    // todo:
+    // - does sound still need to have channel and sample rate info?
+    Sound {
+      channels: Self::CHANNELS,
+      sample_rate: Self::SAMPLE_RATE,
+      samples: mem::take(&mut self.samples),
+    }
+  }
+}
+
+impl Stereo for Input {
+  fn is_audible(&self) -> bool {
+    false
+  }
+}
+
+impl Source for Tap {
+  fn channels(&self) -> u16 {
+    Self::CHANNELS
+  }
+
+  fn current_span_len(&self) -> Option<usize> {
+    None
+  }
+
+  fn sample_rate(&self) -> u32 {
+    Self::SAMPLE_RATE
+  }
+
+  fn total_duration(&self) -> Option<std::time::Duration> {
+    None
+  }
+}
+
+impl Iterator for Tap {
+  type Item = f32;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    if self.sample.is_multiple_of(2) {
+      self.active.append(&mut self.pending);
+    }
+
+    let mut audible = 0.0;
+    let mut muted = 0.0;
+
+    self.active.retain_mut(|source| {
+      source
+        .next()
+        .inspect(|sample| {
+          if source.is_audible() {
+            audible += sample;
+          } else {
+            muted += sample;
+          }
+        })
+        .is_some()
+    });
+
+    self.samples.push(audible + muted);
+
+    self.sample += 1;
+
+    Some(audible)
+  }
+}
 
 pub(crate) struct App {
   analyzer: Analyzer,
@@ -35,6 +142,7 @@ pub(crate) struct App {
   config: Config,
   deadline: Instant,
   errors: Vec<Error>,
+  tap: Tap,
   hub: Hub,
   last: Instant,
   macro_recording: Option<Vec<(Key, bool)>>,
@@ -49,6 +157,7 @@ pub(crate) struct App {
   state: State,
   stream: Box<dyn Stream>,
   window: Option<Arc<Window>>,
+  input: Option<Input>,
 }
 
 impl App {
@@ -128,7 +237,7 @@ impl App {
       .context(error::AudioBuildOutputStream)?;
 
     log::info!(
-      "output stream opened: {}x{}x{}|{}",
+      "output stream opened: {}x{}x{}x{}",
       output_stream.config().channel_count(),
       output_stream.config().sample_rate(),
       output_stream.config().sample_format(),
@@ -148,7 +257,9 @@ impl App {
       sink.set_volume(volume);
     }
 
-    let stream = if options.input {
+    let tap = Tap::default();
+
+    let input = if options.input {
       let input_device = host
         .default_input_device()
         .context(error::AudioDefaultInputDevice)?;
@@ -159,12 +270,13 @@ impl App {
           .context(error::AudioSupportedStreamConfigs)?,
       )?;
 
-      Box::new(Input::new(input_device, stream_config)?)
+      Some(Input::new(input_device, stream_config)?)
     } else {
-      let stream = options.stream(&config)?;
-      stream.append(&sink);
-      stream
+      None
     };
+
+    let stream = options.stream(&config)?;
+    stream.append(&sink);
 
     let recorder = record
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
@@ -186,6 +298,7 @@ impl App {
       deadline: now,
       errors: Vec::new(),
       hub: Hub::new()?,
+      input,
       last: now,
       macro_recording: None,
       makro: Vec::new(),
@@ -198,6 +311,7 @@ impl App {
       sink,
       state,
       stream,
+      tap,
       window: None,
     })
   }

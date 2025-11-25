@@ -1,7 +1,7 @@
 use super::*;
 
 pub(crate) struct Input {
-  queue: Arc<Mutex<VecDeque<f32>>>,
+  queue: Arc<Mutex<Vec<f32>>>,
   #[allow(unused)]
   stream: cpal::Stream,
   stream_config: StreamConfig,
@@ -9,8 +9,9 @@ pub(crate) struct Input {
 
 impl Input {
   pub(crate) fn new(device: rodio::Device, stream_config: SupportedStreamConfig) -> Result<Self> {
-    let queue = Arc::new(Mutex::new(VecDeque::new()));
-
+    // todo:
+    // - is this actually doing what I think it's doing?
+    // - use 128 buffer size and put it in a constant
     let buffer_size = match stream_config.buffer_size() {
       SupportedBufferSize::Range { min, .. } => {
         log::info!("input audio buffer size: {min}");
@@ -27,6 +28,8 @@ impl Input {
     if let Some(buffer_size) = buffer_size {
       stream_config.buffer_size = cpal::BufferSize::Fixed(buffer_size);
     }
+
+    let queue = Arc::new(Mutex::new(Vec::new()));
 
     let stream = device
       .build_input_stream(
