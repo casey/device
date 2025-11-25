@@ -18,6 +18,13 @@ mod sum;
 mod white_noise;
 
 pub(crate) trait Voice: Send {
+  fn emitter(self) -> Emitter<Self>
+  where
+    Self: Sized,
+  {
+    Emitter::new(self)
+  }
+
   fn envelope(self, attack: f32, decay: f32, sustain: f32, release: f32) -> Envelope<Self>
   where
     Self: Sized,
@@ -39,13 +46,6 @@ pub(crate) trait Voice: Send {
   }
 
   fn sample(&mut self, t: f32) -> f32;
-
-  fn emitter(self) -> Emitter<Self>
-  where
-    Self: Sized,
-  {
-    Emitter::new(self)
-  }
 }
 
 fn distribution() -> Uniform<f32> {
