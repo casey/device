@@ -2,9 +2,9 @@ use super::*;
 
 #[derive(Clone, Copy, Default)]
 pub(crate) enum Patch {
+  Saw,
   #[default]
   Sine,
-  Saw,
 }
 
 impl Patch {
@@ -12,17 +12,17 @@ impl Patch {
     let frequency = 261.63 * 2.0f32.powf(semitones as f32 / 12.0);
 
     match self {
-      Self::Sine => {
+      Self::Saw => {
         mixer.add(
-          voice::Sine { frequency }
+          voice::Saw { frequency }
             .envelope(0.001, 0.1, 0.2, 0.1)
             .gain(0.25)
             .emitter(),
         );
       }
-      Self::Saw => {
+      Self::Sine => {
         mixer.add(
-          voice::Saw { frequency }
+          voice::Sine { frequency }
             .envelope(0.001, 0.1, 0.2, 0.1)
             .gain(0.25)
             .emitter(),
