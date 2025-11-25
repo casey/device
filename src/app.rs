@@ -1,5 +1,11 @@
 use super::*;
 
+// todo:
+// - return None from emitter so it can be dropped or pruned
+// - not getting output
+// - figure out which notes each key should be
+// - use numbers to select voice
+
 pub(crate) struct App {
   analyzer: Analyzer,
   capture_rx: mpsc::Receiver<Result>,
@@ -11,11 +17,12 @@ pub(crate) struct App {
   errors: Vec<Error>,
   hub: Hub,
   last: Instant,
-  macro_recording: Option<Vec<Key>>,
-  makro: Vec<Key>,
+  macro_recording: Option<Vec<(Key, bool)>>,
+  makro: Vec<(Key, bool)>,
   options: Options,
-  #[allow(unused)]
   output_stream: OutputStream,
+  patch: Patch,
+  play: bool,
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
   sink: Sink,
@@ -91,8 +98,25 @@ impl App {
     let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
       .context(error::AudioBuildOutputStream)?
       .with_supported_config(&stream_config)
+      .with_buffer_size(match stream_config.buffer_size() {
+        cpal::SupportedBufferSize::Range { min, max } => {
+          cpal::BufferSize::Fixed(128.clamp(*min, *max))
+        }
+        cpal::SupportedBufferSize::Unknown => cpal::BufferSize::Default,
+      })
       .open_stream()
       .context(error::AudioBuildOutputStream)?;
+
+    log::info!(
+      "output stream opened: {}x{}x{}|{}",
+      output_stream.config().channel_count(),
+      output_stream.config().sample_rate(),
+      output_stream.config().sample_format(),
+      match output_stream.config().buffer_size() {
+        cpal::BufferSize::Default => "default",
+        cpal::BufferSize::Fixed(n) => &n.to_string(),
+      }
+    );
 
     output_stream.log_on_drop(false);
 
@@ -147,6 +171,8 @@ impl App {
       makro: Vec::new(),
       options,
       output_stream,
+      patch: Patch::default(),
+      play: false,
       recorder,
       renderer: None,
       sink,
@@ -156,7 +182,7 @@ impl App {
     })
   }
 
-  fn press(&mut self, event_loop: &ActiveEventLoop, key: Key) {
+  fn press(&mut self, event_loop: &ActiveEventLoop, key: Key, repeat: bool) {
     let mut capture = true;
 
     if let Some(command) = self.command.as_mut() {
@@ -190,6 +216,22 @@ impl App {
         }
         _ => {}
       }
+    } else if self.play {
+      if !repeat {
+        match &key {
+          Key::Named(NamedKey::Escape) => self.play = false,
+          Key::Character(c) => match c.as_str() {
+            "1" => self.patch = Patch::Sine,
+            "2" => self.patch = Patch::Saw,
+            _ => {
+              if let Some(semitones) = Self::semitones(c) {
+                self.patch.add(semitones, self.output_stream.mixer());
+              }
+            }
+          },
+          _ => {}
+        }
+      }
     } else {
       match &key {
         Key::Character(c) => match c.as_str() {
@@ -209,8 +251,8 @@ impl App {
             }
           }
           "@" => {
-            for key in self.makro.clone() {
-              self.press(event_loop, key);
+            for (key, repeat) in self.makro.clone() {
+              self.press(event_loop, key, repeat);
             }
             capture = false;
           }
@@ -248,6 +290,7 @@ impl App {
             wrap: self.state.wrap,
             ..default()
           }),
+          "p" => self.play = true,
           "q" => {
             if let Some(recording) = self.macro_recording.take() {
               self.makro = recording;
@@ -307,7 +350,7 @@ impl App {
     }
 
     if capture && let Some(recording) = &mut self.macro_recording {
-      recording.push(key);
+      recording.push((key, repeat));
     }
   }
 
@@ -446,6 +489,47 @@ impl App {
     (size, resolution)
   }
 
+  fn semitones(key: &str) -> Option<u8> {
+    #[allow(clippy::identity_op, clippy::match_same_arms)]
+    match key {
+      "z" => Some(0),
+      "x" => Some(1),
+      "c" => Some(2),
+      "v" => Some(3),
+      "b" => Some(4),
+      "n" => Some(5),
+      "m" => Some(6),
+      "," => Some(7),
+      "." => Some(8),
+      "/" => Some(9),
+      "a" => Some(0 + 5),
+      "s" => Some(1 + 5),
+      "d" => Some(2 + 5),
+      "f" => Some(3 + 5),
+      "g" => Some(4 + 5),
+      "h" => Some(5 + 5),
+      "j" => Some(6 + 5),
+      "k" => Some(7 + 5),
+      "l" => Some(8 + 5),
+      ";" => Some(9 + 5),
+      "'" => Some(10 + 5),
+      "q" => Some(0 + 10),
+      "w" => Some(1 + 10),
+      "e" => Some(2 + 10),
+      "r" => Some(3 + 10),
+      "t" => Some(4 + 10),
+      "y" => Some(5 + 10),
+      "u" => Some(6 + 10),
+      "i" => Some(7 + 10),
+      "o" => Some(8 + 10),
+      "p" => Some(9 + 10),
+      "[" => Some(10 + 10),
+      "]" => Some(11 + 10),
+      "\\" => Some(12 + 10),
+      _ => None,
+    }
+  }
+
   fn stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
   ) -> Result<SupportedStreamConfig> {
@@ -456,13 +540,7 @@ impl App {
     Ok(SupportedStreamConfig::new(
       config.channels(),
       config.max_sample_rate(),
-      match config.buffer_size() {
-        SupportedBufferSize::Range { min, .. } => SupportedBufferSize::Range {
-          min: *min,
-          max: *min,
-        },
-        SupportedBufferSize::Unknown => SupportedBufferSize::Unknown,
-      },
+      *config.buffer_size(),
       config.sample_format(),
     ))
   }
@@ -559,7 +637,7 @@ impl ApplicationHandler for App {
         log::info!("window destroyed");
       }
       WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
-        self.press(event_loop, event.logical_key);
+        self.press(event_loop, event.logical_key, event.repeat);
       }
       WindowEvent::RedrawRequested => {
         if let Err(err) = self.redraw(event_loop) {

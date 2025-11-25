@@ -1,14 +1,14 @@
 use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, config::Config,
-    controller::Controller, error::Error, event::Event, field::Field, filter::Filter,
-    format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
+    controller::Controller, emitter::Emitter, error::Error, event::Event, field::Field,
+    filter::Filter, format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
     into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
-    message::Message, options::Options, parameter::Parameter, program::Program, recorder::Recorder,
-    renderer::Renderer, scene::Scene, score::Score, shared::Shared, sound::Sound, state::State,
-    stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer, tally::Tally, target::Target,
-    templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
-    voice::Voice,
+    message::Message, options::Options, parameter::Parameter, patch::Patch, program::Program,
+    recorder::Recorder, renderer::Renderer, scene::Scene, score::Score, shared::Shared,
+    sound::Sound, state::State, stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer,
+    tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
+    uniforms::Uniforms, voice::Voice,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -26,6 +26,7 @@ use {
       SupportedStreamConfigRange,
       traits::{DeviceTrait, HostTrait, StreamTrait},
     },
+    mixer::Mixer,
   },
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
@@ -88,6 +89,7 @@ mod arguments;
 mod bindings;
 mod config;
 mod controller;
+mod emitter;
 mod error;
 mod event;
 mod field;
@@ -105,6 +107,7 @@ mod into_utf8_path;
 mod message;
 mod options;
 mod parameter;
+mod patch;
 mod program;
 mod recorder;
 mod renderer;
