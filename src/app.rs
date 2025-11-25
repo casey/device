@@ -177,14 +177,16 @@ impl App {
 
   pub(crate) fn errors(self) -> Result {
     let mut errors = self.errors.into_iter();
-    match errors.next() {
-      Some(source) => Err(
+
+    if let Some(source) = errors.next() {
+      Err(
         error::AppExit {
           additional: errors.collect::<Vec<Error>>(),
         }
         .into_error(Box::new(source)),
-      ),
-      None => Ok(()),
+      )
+    } else {
+      Ok(())
     }
   }
 
