@@ -29,7 +29,12 @@ pub(crate) struct Capture {
 
 impl Capture {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
-    let mut stream = options.stream(&config)?;
+    // todo: make 48khz a constant?
+    let mut tap = Tap::new(2, 48_000);
+
+    if let Some(source) = options.source(&config)? {
+      tap.add(source);
+    }
 
     let mut analyzer = Analyzer::new();
 
@@ -45,7 +50,7 @@ impl Capture {
 
     let fps = state.fps.unwrap_or(DEFAULT_FPS.try_into().unwrap());
 
-    let spf = fps.spf(stream.sample_rate())?;
+    let spf = fps.spf(tap.sample_rate())?;
 
     let (tx, rx) = mpsc::channel();
 
@@ -70,11 +75,13 @@ impl Capture {
 
       progress.inc(1);
 
-      for _ in 0..spf * u32::from(stream.channels()) {
-        done |= stream.next().is_none();
+      done = tap.is_empty();
+
+      for _ in 0..spf * u32::from(tap.channels()) {
+        tap.next();
       }
 
-      let sound = stream.drain();
+      let sound = tap.drain();
       analyzer.update(&sound, done, &state);
       renderer.render(&analyzer, &state, Instant::now())?;
 

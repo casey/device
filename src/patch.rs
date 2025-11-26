@@ -8,7 +8,7 @@ pub(crate) enum Patch {
 }
 
 impl Patch {
-  pub(crate) fn add(self, semitones: u8, mixer: &Mixer) {
+  pub(crate) fn add(self, semitones: u8, mixer: &Tap) {
     let frequency = 261.63 * 2.0f32.powf(semitones as f32 / 12.0);
 
     match self {

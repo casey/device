@@ -53,6 +53,21 @@ pub(crate) struct Options {
 }
 
 impl Options {
+  // todo: worry about double-boxing
+  pub(crate) fn source(&self, config: &Config) -> Result<Option<Box<dyn Source + Send>>> {
+    if let Some(song) = &self.song {
+      Ok(Some(Box::new(open_song(&config.find_song(song)?)?)))
+    } else if let Some(score) = self.score {
+      Ok(Some(Box::new(score.source())))
+    } else if let Some(track) = &self.track {
+      Ok(Some(Box::new(open_song(track)?)))
+    } else if let Some(program) = self.program {
+      program.source(config).map(Some)
+    } else {
+      Ok(None)
+    }
+  }
+
   pub(crate) fn state(&self) -> State {
     let mut state = if let Some(scene) = self.scene {
       scene.state()
@@ -81,20 +96,6 @@ impl Options {
       Stdio::inherit()
     } else {
       Stdio::piped()
-    }
-  }
-
-  pub(crate) fn stream(&self, config: &Config) -> Result<Box<dyn Stream>> {
-    if let Some(song) = &self.song {
-      Ok(Box::new(Track::new(&config.find_song(song)?)?))
-    } else if let Some(score) = self.score {
-      Ok(Box::new(score.synthesizer()))
-    } else if let Some(track) = &self.track {
-      Ok(Box::new(Track::new(track)?))
-    } else if let Some(program) = self.program {
-      program.stream(config)
-    } else {
-      Ok(Box::new(Score::Silence.synthesizer()))
     }
   }
 }

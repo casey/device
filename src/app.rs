@@ -1,138 +1,5 @@
 use super::*;
 
-// todo:
-// - return None from emitter so it can be dropped or pruned
-// - figure out which notes each key should be
-// - remove dc component from brown noise
-// - pause input?
-//
-// - not getting output
-//   - store Option<Synthesizer> when output is a synth
-//   - instead of adding to mixer, add to synth
-//   - can only play output when output is synthesizer, no playing over input or songs
-//   - adding to synth makes the most sense, it already holds a voice
-//   - can instead hold a vec voices
-//   - voices/synth/patches don't actually have sample rates, so can mix into anything
-//   - alternative is some kind of mixer for streams
-//   - mixer for streams would let me do more complex dj stuff
-//     - add song
-//     - remove song
-//     - play sound
-//   - probably more complicated though
-//
-// - convert all sources to 48khz f32
-// - use 48khz sample rate output and input where possible
-// - handle my own tappable mixer
-// - remove individual sample saving implementations
-// - however, input samples must make it to the analyzer but not the output
-// - convert synth into stereo
-// - am i actually minimizing the input buffer size?
-
-// todo:
-// - should we produce Item = [f32; 2] or a newtype
-//   since we are enforcing stereo?
-// - can we get a more accurate playback position instead of assuming
-//   that everything which has been drained has been played?
-
-// - we really have two paradigms, and i'm not sure if they can be combined
-// - input, which is driven by the rate of production from the microphone
-// - output, which is driven by the rate of consumption by the speakers
-//
-// - instead of trying to unify them in a single mixer type,
-//   let's instead unify them in the analyzer
-//
-// - or we could create an iterator over the input, but it returns 0 when there aren't samples
-//
-// - Stereo and Mono traits
-// - don't use iter<item=f32> too error prone
-
-trait Stereo: Iterator<Item = f32> {
-  fn is_audible(&self) -> bool;
-}
-
-#[derive(Default)]
-struct Tap {
-  active: Vec<Box<dyn Stereo>>,
-  pending: Vec<Box<dyn Stereo>>,
-  sample: u64,
-  samples: Vec<f32>,
-}
-
-impl Tap {
-  const CHANNELS: u16 = 2;
-  const SAMPLE_RATE: u32 = 48_000;
-
-  fn add<T: Stereo + 'static>(&mut self, stereo: T) {
-    self.pending.push(Box::new(stereo));
-  }
-
-  fn drain(&mut self) -> Sound {
-    // todo:
-    // - does sound still need to have channel and sample rate info?
-    Sound {
-      channels: Self::CHANNELS,
-      sample_rate: Self::SAMPLE_RATE,
-      samples: mem::take(&mut self.samples),
-    }
-  }
-}
-
-impl Stereo for Input {
-  fn is_audible(&self) -> bool {
-    false
-  }
-}
-
-impl Source for Tap {
-  fn channels(&self) -> u16 {
-    Self::CHANNELS
-  }
-
-  fn current_span_len(&self) -> Option<usize> {
-    None
-  }
-
-  fn sample_rate(&self) -> u32 {
-    Self::SAMPLE_RATE
-  }
-
-  fn total_duration(&self) -> Option<std::time::Duration> {
-    None
-  }
-}
-
-impl Iterator for Tap {
-  type Item = f32;
-
-  fn next(&mut self) -> Option<Self::Item> {
-    if self.sample.is_multiple_of(2) {
-      self.active.append(&mut self.pending);
-    }
-
-    let mut audible = 0.0;
-    let mut muted = 0.0;
-
-    self.active.retain_mut(|source| {
-      source
-        .next()
-        .inspect(|sample| {
-          if source.is_audible() {
-            audible += sample;
-          } else {
-            muted += sample;
-          }
-        })
-        .is_some()
-    });
-
-    self.samples.push(audible + muted);
-
-    self.sample += 1;
-
-    Some(audible)
-  }
-}
-
 pub(crate) struct App {
   analyzer: Analyzer,
   capture_rx: mpsc::Receiver<Result>,
@@ -142,12 +9,13 @@ pub(crate) struct App {
   config: Config,
   deadline: Instant,
   errors: Vec<Error>,
-  tap: Tap,
   hub: Hub,
+  input: Option<Input>,
   last: Instant,
   macro_recording: Option<Vec<(Key, bool)>>,
   makro: Vec<(Key, bool)>,
   options: Options,
+  #[allow(unused)]
   output_stream: OutputStream,
   patch: Patch,
   play: bool,
@@ -155,9 +23,8 @@ pub(crate) struct App {
   renderer: Option<Renderer>,
   sink: Sink,
   state: State,
-  stream: Box<dyn Stream>,
+  tap: Tap,
   window: Option<Arc<Window>>,
-  input: Option<Input>,
 }
 
 impl App {
@@ -234,6 +101,7 @@ impl App {
         }
         cpal::SupportedBufferSize::Unknown => cpal::BufferSize::Default,
       })
+      .with_error_callback(|err| eprintln!("output stream error: {err}"))
       .open_stream()
       .context(error::AudioBuildOutputStream)?;
 
@@ -243,8 +111,8 @@ impl App {
       output_stream.config().sample_rate(),
       output_stream.config().sample_format(),
       match output_stream.config().buffer_size() {
-        cpal::BufferSize::Default => "default",
-        cpal::BufferSize::Fixed(n) => &n.to_string(),
+        cpal::BufferSize::Default => display("default"),
+        cpal::BufferSize::Fixed(n) => display(n.to_string()),
       }
     );
 
@@ -258,7 +126,12 @@ impl App {
       sink.set_volume(volume);
     }
 
-    let tap = Tap::default();
+    let tap = Tap::new(
+      output_stream.config().channel_count(),
+      output_stream.config().sample_rate(),
+    );
+
+    sink.append(tap.clone());
 
     let input = if options.input {
       let input_device = host
@@ -276,8 +149,9 @@ impl App {
       None
     };
 
-    let stream = options.stream(&config)?;
-    stream.append(&sink);
+    if let Some(source) = options.source(&config)? {
+      tap.add(source);
+    }
 
     let recorder = record
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
@@ -311,7 +185,6 @@ impl App {
       renderer: None,
       sink,
       state,
-      stream,
       tap,
       window: None,
     })
@@ -360,7 +233,7 @@ impl App {
             "2" => self.patch = Patch::Saw,
             _ => {
               if let Some(semitones) = Self::semitones(c) {
-                self.patch.add(semitones, self.output_stream.mixer());
+                self.patch.add(semitones, &self.tap);
               }
             }
           },
@@ -560,10 +433,13 @@ impl App {
       }
     }
 
-    let sound = self.stream.drain();
-    self
-      .analyzer
-      .update(&sound, self.stream.is_done(), &self.state);
+    let sound = if let Some(input) = &self.input {
+      input.drain()
+    } else {
+      self.tap.drain()
+    };
+
+    self.analyzer.update(&sound, false, &self.state);
 
     let now = Instant::now();
     let elapsed = now - self.last;
@@ -606,7 +482,7 @@ impl App {
       }
     }
 
-    if self.recorder.is_some() && self.stream.is_done() {
+    if self.recorder.is_some() && self.tap.is_empty() {
       event_loop.exit();
     }
 
@@ -669,11 +545,12 @@ impl App {
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
   ) -> Result<SupportedStreamConfig> {
     let config = configs
+      .filter(|config| config.sample_format() == cpal::SampleFormat::F32)
       .max_by_key(SupportedStreamConfigRange::max_sample_rate)
       .context(error::AudioSupportedStreamConfig)?;
 
     Ok(SupportedStreamConfig::new(
-      config.channels(),
+      config.channels().min(2),
       config.max_sample_rate(),
       *config.buffer_size(),
       config.sample_format(),

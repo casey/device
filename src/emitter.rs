@@ -15,10 +15,6 @@ impl<T: Voice> Iterator for Emitter<T> {
   type Item = f32;
 
   fn next(&mut self) -> Option<Self::Item> {
-    if self.sample > self.sample_rate().into() {
-      return None;
-    }
-
     let sample = self
       .voice
       .sample(self.sample as f32 / self.sample_rate() as f32);

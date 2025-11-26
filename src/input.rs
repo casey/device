@@ -8,6 +8,14 @@ pub(crate) struct Input {
 }
 
 impl Input {
+  pub(crate) fn drain(&self) -> Sound {
+    Sound {
+      samples: std::mem::take(&mut self.queue.lock().unwrap()),
+      channels: self.stream_config.channels,
+      sample_rate: self.stream_config.sample_rate.0,
+    }
+  }
+
   pub(crate) fn new(device: rodio::Device, stream_config: SupportedStreamConfig) -> Result<Self> {
     // todo:
     // - is this actually doing what I think it's doing?
@@ -54,33 +62,5 @@ impl Input {
       stream,
       stream_config,
     })
-  }
-}
-
-impl Stream for Input {
-  fn append(&self, _sink: &Sink) {}
-
-  fn channels(&self) -> u16 {
-    self.stream_config.channels
-  }
-
-  fn drain_samples(&mut self, samples: &mut Vec<f32>) {
-    samples.extend(self.queue.lock().unwrap().drain(..));
-  }
-
-  fn is_done(&self) -> bool {
-    false
-  }
-
-  fn sample_rate(&self) -> u32 {
-    self.stream_config.sample_rate.0
-  }
-}
-
-impl Iterator for Input {
-  type Item = f32;
-
-  fn next(&mut self) -> Option<f32> {
-    Some(0.0)
   }
 }

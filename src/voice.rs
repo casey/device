@@ -46,6 +46,13 @@ pub(crate) trait Voice: Send {
   }
 
   fn sample(&mut self, t: f32) -> f32;
+
+  fn source(self) -> Box<dyn Source + Send>
+  where
+    Self: Sized + 'static,
+  {
+    Box::new(self.emitter())
+  }
 }
 
 fn distribution() -> Uniform<f32> {

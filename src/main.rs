@@ -6,9 +6,8 @@ use {
     into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
     message::Message, options::Options, parameter::Parameter, patch::Patch, program::Program,
     recorder::Recorder, renderer::Renderer, scene::Scene, score::Score, shared::Shared,
-    sound::Sound, state::State, stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer,
-    tally::Tally, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track,
-    uniforms::Uniforms, voice::Voice,
+    sound::Sound, state::State, subcommand::Subcommand, tally::Tally, tap::Tap, target::Target,
+    templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms, voice::Voice,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -22,11 +21,10 @@ use {
   rodio::{
     Decoder, OutputStream, Sink, Source,
     cpal::{
-      self, Sample, SampleFormat, StreamConfig, SupportedBufferSize, SupportedStreamConfig,
+      self, SampleFormat, StreamConfig, SupportedBufferSize, SupportedStreamConfig,
       SupportedStreamConfigRange,
       traits::{DeviceTrait, HostTrait, StreamTrait},
     },
-    mixer::Mixer,
   },
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
@@ -45,7 +43,7 @@ use {
     ops::{Add, AddAssign, SubAssign},
     process::{self, Command, ExitStatus, Stdio},
     str::FromStr,
-    sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
+    sync::{Arc, Mutex, mpsc},
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
   },
   strum::{EnumIter, IntoEnumIterator, IntoStaticStr},
@@ -116,15 +114,13 @@ mod score;
 mod shared;
 mod sound;
 mod state;
-mod stream;
 mod subcommand;
-mod synthesizer;
 mod tally;
+mod tap;
 mod target;
 mod templates;
 mod text;
 mod tiling;
-mod track;
 mod uniforms;
 mod voice;
 
@@ -149,6 +145,10 @@ fn default<T: Default>() -> T {
   T::default()
 }
 
+fn display<T: Display + 'static>(t: T) -> Box<dyn Display> {
+  Box::new(t)
+}
+
 fn invert_color() -> Mat4f {
   Mat4f::from_diagonal(&Vec4f::new(-1.0, -1.0, -1.0, 1.0))
 }
@@ -156,6 +156,13 @@ fn invert_color() -> Mat4f {
 fn pad(i: usize, alignment: usize) -> usize {
   assert!(alignment.is_power_of_two());
   (i + alignment - 1) & !(alignment - 1)
+}
+
+fn open_song(path: &Utf8Path) -> Result<Decoder<BufReader<File>>> {
+  let file = File::open(path).context(error::FilesystemIo { path })?;
+  let reader = BufReader::new(file);
+  let source = Decoder::new(reader).context(error::DecoderOpen { path })?;
+  Ok(source)
 }
 
 fn main() {
