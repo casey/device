@@ -16,26 +16,22 @@ impl Input {
     }
   }
 
-  pub(crate) fn new(device: rodio::Device, stream_config: SupportedStreamConfig) -> Result<Self> {
-    // todo:
-    // - is this actually doing what I think it's doing?
-    // - use 128 buffer size and put it in a constant
-    let buffer_size = match stream_config.buffer_size() {
-      SupportedBufferSize::Range { min, .. } => {
+  pub(crate) fn new(
+    device: rodio::Device,
+    supported_stream_config: SupportedStreamConfig,
+  ) -> Result<Self> {
+    let mut stream_config = supported_stream_config.config();
+
+    stream_config.buffer_size = match supported_stream_config.buffer_size() {
+      SupportedBufferSize::Range { min, max } => {
         log::info!("input audio buffer size: {min}");
-        Some(*min)
+        cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
       }
       SupportedBufferSize::Unknown => {
         log::info!("input audio buffer size: unknown");
-        None
+        cpal::BufferSize::Default
       }
     };
-
-    let mut stream_config = stream_config.config();
-
-    if let Some(buffer_size) = buffer_size {
-      stream_config.buffer_size = cpal::BufferSize::Fixed(buffer_size);
-    }
 
     let queue = Arc::new(Mutex::new(Vec::new()));
 

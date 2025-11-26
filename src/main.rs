@@ -129,6 +129,7 @@ const MIB: usize = KIB << 10;
 
 const AUDIO: &str = "audio.wav";
 const COLOR_CHANNELS: u32 = 4;
+const DEFAULT_BUFFER_SIZE: u32 = 128;
 const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
 const FONT: &str = "Helvetica Neue";

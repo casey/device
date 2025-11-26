@@ -97,7 +97,7 @@ impl App {
       .with_supported_config(&stream_config)
       .with_buffer_size(match stream_config.buffer_size() {
         cpal::SupportedBufferSize::Range { min, max } => {
-          cpal::BufferSize::Fixed(128.clamp(*min, *max))
+          cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
         }
         cpal::SupportedBufferSize::Unknown => cpal::BufferSize::Default,
       })
@@ -131,8 +131,6 @@ impl App {
       output_stream.config().sample_rate(),
     );
 
-    sink.append(tap.clone());
-
     let input = if options.input {
       let input_device = host
         .default_input_device()
@@ -146,6 +144,7 @@ impl App {
 
       Some(Input::new(input_device, stream_config)?)
     } else {
+      sink.append(tap.clone());
       None
     };
 
@@ -433,14 +432,13 @@ impl App {
       }
     }
 
-    let sound = if let Some(input) = &self.input {
-      input.drain()
+    let (done, sound) = if let Some(input) = &self.input {
+      (false, input.drain())
     } else {
-      // todo: deal with the fact that we don't drain tap if we have input
-      self.tap.drain()
+      (self.tap.is_empty(), self.tap.drain())
     };
 
-    self.analyzer.update(&sound, false, &self.state);
+    self.analyzer.update(&sound, done, &self.state);
 
     let now = Instant::now();
     let elapsed = now - self.last;
