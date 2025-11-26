@@ -55,11 +55,11 @@ pub(crate) struct Options {
 impl Options {
   pub(crate) fn add_source(&self, config: &Config, tap: &Tap) -> Result {
     if let Some(song) = &self.song {
-      tap.add(open_song(&config.find_song(song)?)?);
+      tap.add(open_audio_file(&config.find_song(song)?)?);
     } else if let Some(score) = self.score {
       tap.add(score.source());
     } else if let Some(track) = &self.track {
-      tap.add(open_song(track)?);
+      tap.add(open_audio_file(track)?);
     } else if let Some(program) = self.program {
       program.add_source(config, tap)?;
     }

@@ -163,7 +163,7 @@ fn pad(i: usize, alignment: usize) -> usize {
   (i + alignment - 1) & !(alignment - 1)
 }
 
-fn open_song(path: &Utf8Path) -> Result<Decoder<BufReader<File>>> {
+fn open_audio_file(path: &Utf8Path) -> Result<Decoder<BufReader<File>>> {
   let file = File::open(path).context(error::FilesystemIo { path })?;
   let reader = BufReader::new(file);
   let source = Decoder::new(reader).context(error::DecoderOpen { path })?;
