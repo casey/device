@@ -1,11 +1,12 @@
 use super::*;
 
+#[allow(clippy::arbitrary_source_item_ordering)]
 pub(crate) struct Envelope<T> {
+  pub(crate) inner: T,
   pub(crate) attack: f32,
   pub(crate) decay: f32,
-  pub(crate) inner: T,
-  pub(crate) release: f32,
   pub(crate) sustain: f32,
+  pub(crate) release: f32,
 }
 
 impl<T: Voice> Voice for Envelope<T> {

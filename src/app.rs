@@ -10,17 +10,20 @@ pub(crate) struct App {
   deadline: Instant,
   errors: Vec<Error>,
   hub: Hub,
+  input: Option<Input>,
   last: Instant,
-  macro_recording: Option<Vec<Key>>,
-  makro: Vec<Key>,
+  macro_recording: Option<Vec<(Key, bool)>>,
+  makro: Vec<(Key, bool)>,
   options: Options,
   #[allow(unused)]
   output_stream: OutputStream,
+  patch: Patch,
+  play: bool,
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
   sink: Sink,
   state: State,
-  stream: Box<dyn Stream>,
+  tap: Tap,
   window: Option<Arc<Window>>,
 }
 
@@ -39,17 +42,18 @@ impl App {
     Ok(())
   }
 
-  pub(crate) fn errors(mut self) -> Result {
-    if self.errors.is_empty() {
-      Ok(())
-    } else {
-      let source = self.errors.remove(0);
+  pub(crate) fn errors(self) -> Result {
+    let mut errors = self.errors.into_iter();
+
+    if let Some(source) = errors.next() {
       Err(
         error::AppExit {
-          additional: self.errors,
+          additional: errors.collect::<Vec<Error>>(),
         }
         .into_error(Box::new(source)),
       )
+    } else {
+      Ok(())
     }
   }
 
@@ -82,7 +86,7 @@ impl App {
       .default_output_device()
       .context(error::AudioDefaultOutputDevice)?;
 
-    let stream_config = Self::stream_config(
+    let stream_config = Self::select_stream_config(
       output_device
         .supported_output_configs()
         .context(error::AudioSupportedStreamConfigs)?,
@@ -91,8 +95,26 @@ impl App {
     let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
       .context(error::AudioBuildOutputStream)?
       .with_supported_config(&stream_config)
+      .with_buffer_size(match stream_config.buffer_size() {
+        cpal::SupportedBufferSize::Range { min, max } => {
+          cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
+        }
+        cpal::SupportedBufferSize::Unknown => cpal::BufferSize::Default,
+      })
+      .with_error_callback(|err| eprintln!("output stream error: {err}"))
       .open_stream()
       .context(error::AudioBuildOutputStream)?;
+
+    log::info!(
+      "output stream opened: {}x{}x{}x{}",
+      output_stream.config().sample_rate(),
+      output_stream.config().channel_count(),
+      output_stream.config().sample_format(),
+      match output_stream.config().buffer_size() {
+        cpal::BufferSize::Default => display("default"),
+        cpal::BufferSize::Fixed(n) => display(*n),
+      }
+    );
 
     output_stream.log_on_drop(false);
 
@@ -104,23 +126,29 @@ impl App {
       sink.set_volume(volume);
     }
 
-    let stream = if options.input {
+    let tap = Tap::new(
+      output_stream.config().channel_count(),
+      output_stream.config().sample_rate(),
+    );
+
+    let input = if options.input {
       let input_device = host
         .default_input_device()
         .context(error::AudioDefaultInputDevice)?;
 
-      let stream_config = Self::stream_config(
+      let stream_config = Self::select_stream_config(
         input_device
           .supported_input_configs()
           .context(error::AudioSupportedStreamConfigs)?,
       )?;
 
-      Box::new(Input::new(input_device, stream_config)?)
+      Some(Input::new(input_device, stream_config)?)
     } else {
-      let stream = options.stream(&config)?;
-      stream.append(&sink);
-      stream
+      sink.append(tap.clone());
+      None
     };
+
+    options.add_source(&config, &tap)?;
 
     let recorder = record
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
@@ -142,21 +170,24 @@ impl App {
       deadline: now,
       errors: Vec::new(),
       hub: Hub::new()?,
+      input,
       last: now,
       macro_recording: None,
       makro: Vec::new(),
       options,
       output_stream,
+      patch: Patch::default(),
+      play: false,
       recorder,
       renderer: None,
       sink,
       state,
-      stream,
+      tap,
       window: None,
     })
   }
 
-  fn press(&mut self, event_loop: &ActiveEventLoop, key: Key) {
+  fn press(&mut self, event_loop: &ActiveEventLoop, key: Key, repeat: bool) {
     let mut capture = true;
 
     if let Some(command) = self.command.as_mut() {
@@ -190,6 +221,22 @@ impl App {
         }
         _ => {}
       }
+    } else if self.play {
+      if !repeat {
+        match &key {
+          Key::Named(NamedKey::Escape) => self.play = false,
+          Key::Character(c) => match c.as_str() {
+            "1" => self.patch = Patch::Sine,
+            "2" => self.patch = Patch::Saw,
+            _ => {
+              if let Some(semitones) = Self::semitones(c) {
+                self.patch.add(semitones, &self.tap);
+              }
+            }
+          },
+          _ => {}
+        }
+      }
     } else {
       match &key {
         Key::Character(c) => match c.as_str() {
@@ -209,8 +256,8 @@ impl App {
             }
           }
           "@" => {
-            for key in self.makro.clone() {
-              self.press(event_loop, key);
+            for (key, repeat) in self.makro.clone() {
+              self.press(event_loop, key, repeat);
             }
             capture = false;
           }
@@ -248,6 +295,7 @@ impl App {
             wrap: self.state.wrap,
             ..default()
           }),
+          "p" => self.play = true,
           "q" => {
             if let Some(recording) = self.macro_recording.take() {
               self.makro = recording;
@@ -307,11 +355,11 @@ impl App {
     }
 
     if capture && let Some(recording) = &mut self.macro_recording {
-      recording.push(key);
+      recording.push((key, repeat));
     }
   }
 
-  fn redraw(&mut self, event_loop: &ActiveEventLoop) -> Result {
+  fn redraw(&mut self) -> Result {
     for message in self.hub.messages().lock().unwrap().drain(..) {
       match message.tuple() {
         (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
@@ -382,10 +430,13 @@ impl App {
       }
     }
 
-    let sound = self.stream.drain();
-    self
-      .analyzer
-      .update(&sound, self.stream.is_done(), &self.state);
+    let (done, sound) = if let Some(input) = &self.input {
+      (false, input.drain())
+    } else {
+      (self.tap.is_empty(), self.tap.drain())
+    };
+
+    self.analyzer.update(&sound, done, &self.state);
 
     let now = Instant::now();
     let elapsed = now - self.last;
@@ -428,10 +479,6 @@ impl App {
       }
     }
 
-    if self.recorder.is_some() && self.stream.is_done() {
-      event_loop.exit();
-    }
-
     Ok(())
   }
 
@@ -446,25 +493,61 @@ impl App {
     (size, resolution)
   }
 
-  fn stream_config(
+  fn select_stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
   ) -> Result<SupportedStreamConfig> {
     let config = configs
+      .filter(|config| config.sample_format() == cpal::SampleFormat::F32)
       .max_by_key(SupportedStreamConfigRange::max_sample_rate)
       .context(error::AudioSupportedStreamConfig)?;
 
     Ok(SupportedStreamConfig::new(
-      config.channels(),
+      config.channels().min(2),
       config.max_sample_rate(),
-      match config.buffer_size() {
-        SupportedBufferSize::Range { min, .. } => SupportedBufferSize::Range {
-          min: *min,
-          max: *min,
-        },
-        SupportedBufferSize::Unknown => SupportedBufferSize::Unknown,
-      },
+      *config.buffer_size(),
       config.sample_format(),
     ))
+  }
+
+  fn semitones(key: &str) -> Option<u8> {
+    #[allow(clippy::identity_op, clippy::match_same_arms)]
+    match key {
+      "z" => Some(0),
+      "x" => Some(1),
+      "c" => Some(2),
+      "v" => Some(3),
+      "b" => Some(4),
+      "n" => Some(5),
+      "m" => Some(6),
+      "," => Some(7),
+      "." => Some(8),
+      "/" => Some(9),
+      "a" => Some(0 + 5),
+      "s" => Some(1 + 5),
+      "d" => Some(2 + 5),
+      "f" => Some(3 + 5),
+      "g" => Some(4 + 5),
+      "h" => Some(5 + 5),
+      "j" => Some(6 + 5),
+      "k" => Some(7 + 5),
+      "l" => Some(8 + 5),
+      ";" => Some(9 + 5),
+      "'" => Some(10 + 5),
+      "q" => Some(0 + 10),
+      "w" => Some(1 + 10),
+      "e" => Some(2 + 10),
+      "r" => Some(3 + 10),
+      "t" => Some(4 + 10),
+      "y" => Some(5 + 10),
+      "u" => Some(6 + 10),
+      "i" => Some(7 + 10),
+      "o" => Some(8 + 10),
+      "p" => Some(9 + 10),
+      "[" => Some(10 + 10),
+      "]" => Some(11 + 10),
+      "\\" => Some(12 + 10),
+      _ => None,
+    }
   }
 
   fn window(&self) -> &Window {
@@ -559,10 +642,10 @@ impl ApplicationHandler for App {
         log::info!("window destroyed");
       }
       WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
-        self.press(event_loop, event.logical_key);
+        self.press(event_loop, event.logical_key, event.repeat);
       }
       WindowEvent::RedrawRequested => {
-        if let Err(err) = self.redraw(event_loop) {
+        if let Err(err) = self.redraw() {
           self.errors.push(err);
           event_loop.exit();
         }

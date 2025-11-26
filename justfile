@@ -4,7 +4,7 @@ watch +args='lcheck':
   cargo watch --clear --exec '{{args}}'
 
 run *args:
-  cargo run -- {{args}}
+  cargo run --release -- {{args}}
 
 forbid:
   ./bin/forbid
@@ -52,6 +52,9 @@ program program:
 hello: (program "hello")
 busy: (program "busy")
 noise: (program "noise")
+
+curtains:
+  cargo run --release -- --song 'curtains closing' run
 
 maria:
   cargo run --release -- --song 'total 4/13 maria' run

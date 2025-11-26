@@ -1,14 +1,13 @@
 use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, config::Config,
-    controller::Controller, error::Error, event::Event, field::Field, filter::Filter,
-    format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
+    controller::Controller, emitter::Emitter, error::Error, event::Event, field::Field,
+    filter::Filter, format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
     into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
-    message::Message, options::Options, parameter::Parameter, program::Program, recorder::Recorder,
-    renderer::Renderer, scene::Scene, score::Score, shared::Shared, sound::Sound, state::State,
-    stream::Stream, subcommand::Subcommand, synthesizer::Synthesizer, tally::Tally, target::Target,
-    templates::ShaderWgsl, text::Text, tiling::Tiling, track::Track, uniforms::Uniforms,
-    voice::Voice,
+    message::Message, options::Options, parameter::Parameter, patch::Patch, program::Program,
+    recorder::Recorder, renderer::Renderer, scene::Scene, score::Score, shared::Shared,
+    sound::Sound, state::State, subcommand::Subcommand, tally::Tally, tap::Tap, target::Target,
+    templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms, voice::Voice,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -22,10 +21,11 @@ use {
   rodio::{
     Decoder, OutputStream, Sink, Source,
     cpal::{
-      self, Sample, SampleFormat, StreamConfig, SupportedBufferSize, SupportedStreamConfig,
+      self, SampleFormat, StreamConfig, SupportedBufferSize, SupportedStreamConfig,
       SupportedStreamConfigRange,
       traits::{DeviceTrait, HostTrait, StreamTrait},
     },
+    source::UniformSourceIterator,
   },
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
@@ -39,12 +39,13 @@ use {
     fmt::{self, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
-    iter,
+    iter, mem,
     num::NonZeroU32,
     ops::{Add, AddAssign, SubAssign},
     process::{self, Command, ExitStatus, Stdio},
     str::FromStr,
-    sync::{Arc, Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard, mpsc},
+    sync::{Arc, Mutex, mpsc},
+    thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
   },
   strum::{EnumIter, IntoEnumIterator, IntoStaticStr},
@@ -88,6 +89,7 @@ mod arguments;
 mod bindings;
 mod config;
 mod controller;
+mod emitter;
 mod error;
 mod event;
 mod field;
@@ -105,6 +107,7 @@ mod into_utf8_path;
 mod message;
 mod options;
 mod parameter;
+mod patch;
 mod program;
 mod recorder;
 mod renderer;
@@ -113,15 +116,13 @@ mod score;
 mod shared;
 mod sound;
 mod state;
-mod stream;
 mod subcommand;
-mod synthesizer;
 mod tally;
+mod tap;
 mod target;
 mod templates;
 mod text;
 mod tiling;
-mod track;
 mod uniforms;
 mod voice;
 
@@ -130,8 +131,11 @@ const MIB: usize = KIB << 10;
 
 const AUDIO: &str = "audio.wav";
 const COLOR_CHANNELS: u32 = 4;
+const DEFAULT_BUFFER_SIZE: u32 = 128;
+const DEFAULT_CHANNEL_COUNT: u16 = 2;
 const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
+const DEFAULT_SAMPLE_RATE: u32 = 48_000;
 const FONT: &str = "Helvetica Neue";
 const RECORDING: &str = "recording.mp4";
 
@@ -146,6 +150,10 @@ fn default<T: Default>() -> T {
   T::default()
 }
 
+fn display<'a, T: Display + 'a>(t: T) -> Box<dyn Display + 'a> {
+  Box::new(t)
+}
+
 fn invert_color() -> Mat4f {
   Mat4f::from_diagonal(&Vec4f::new(-1.0, -1.0, -1.0, 1.0))
 }
@@ -153,6 +161,13 @@ fn invert_color() -> Mat4f {
 fn pad(i: usize, alignment: usize) -> usize {
   assert!(alignment.is_power_of_two());
   (i + alignment - 1) & !(alignment - 1)
+}
+
+fn open_audio_file(path: &Utf8Path) -> Result<Decoder<BufReader<File>>> {
+  let file = File::open(path).context(error::FilesystemIo { path })?;
+  let reader = BufReader::new(file);
+  let source = Decoder::new(reader).context(error::DecoderOpen { path })?;
+  Ok(source)
 }
 
 fn main() {

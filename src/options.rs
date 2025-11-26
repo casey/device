@@ -53,6 +53,20 @@ pub(crate) struct Options {
 }
 
 impl Options {
+  pub(crate) fn add_source(&self, config: &Config, tap: &Tap) -> Result {
+    if let Some(song) = &self.song {
+      tap.add(open_audio_file(&config.find_song(song)?)?);
+    } else if let Some(score) = self.score {
+      tap.add(score.source());
+    } else if let Some(track) = &self.track {
+      tap.add(open_audio_file(track)?);
+    } else if let Some(program) = self.program {
+      program.add_source(config, tap)?;
+    }
+
+    Ok(())
+  }
+
   pub(crate) fn state(&self) -> State {
     let mut state = if let Some(scene) = self.scene {
       scene.state()
@@ -81,20 +95,6 @@ impl Options {
       Stdio::inherit()
     } else {
       Stdio::piped()
-    }
-  }
-
-  pub(crate) fn stream(&self, config: &Config) -> Result<Box<dyn Stream>> {
-    if let Some(song) = &self.song {
-      Ok(Box::new(Track::new(&config.find_song(song)?)?))
-    } else if let Some(score) = self.score {
-      Ok(Box::new(score.synthesizer()))
-    } else if let Some(track) = &self.track {
-      Ok(Box::new(Track::new(track)?))
-    } else if let Some(program) = self.program {
-      program.stream(config)
-    } else {
-      Ok(Box::new(Score::Silence.synthesizer()))
     }
   }
 }

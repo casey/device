@@ -9,21 +9,20 @@ pub(crate) enum Program {
 }
 
 impl Program {
+  pub(crate) fn add_source(self, config: &Config, tap: &Tap) -> Result {
+    match self {
+      Self::Hello => tap.add(open_audio_file(&config.find_song("old generic boss")?)?),
+      Self::Busy => tap.add(Score::BusySignal.source()),
+      Self::Noise => tap.add(Score::BrownNoise.source()),
+    }
+    Ok(())
+  }
+
   pub(crate) fn state(self) -> State {
     match self {
       Self::Hello => Scene::Hello.state(),
       Self::Busy => Scene::Highwaystar.state(),
       Self::Noise => Scene::Noise.state(),
-    }
-  }
-
-  pub(crate) fn stream(self, config: &Config) -> Result<Box<dyn Stream>> {
-    match self {
-      Self::Hello => Ok(Box::new(Track::new(
-        &config.find_song("old generic boss")?,
-      )?)),
-      Self::Busy => Ok(Box::new(Score::BusySignal.synthesizer())),
-      Self::Noise => Ok(Box::new(Score::BrownNoise.synthesizer())),
     }
   }
 }
