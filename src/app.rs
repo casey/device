@@ -359,7 +359,7 @@ impl App {
     }
   }
 
-  fn redraw(&mut self, event_loop: &ActiveEventLoop) -> Result {
+  fn redraw(&mut self) -> Result {
     for message in self.hub.messages().lock().unwrap().drain(..) {
       match message.tuple() {
         (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
@@ -477,10 +477,6 @@ impl App {
 
         self.captures_pending -= 1;
       }
-    }
-
-    if self.recorder.is_some() && self.tap.is_empty() {
-      event_loop.exit();
     }
 
     Ok(())
@@ -649,7 +645,7 @@ impl ApplicationHandler for App {
         self.press(event_loop, event.logical_key, event.repeat);
       }
       WindowEvent::RedrawRequested => {
-        if let Err(err) = self.redraw(event_loop) {
+        if let Err(err) = self.redraw() {
           self.errors.push(err);
           event_loop.exit();
         }
