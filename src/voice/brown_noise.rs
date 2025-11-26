@@ -1,26 +1,28 @@
 use super::*;
 
 pub(crate) struct BrownNoise {
-  distribution: Uniform<f32>,
   gain: f32,
-  rng: SmallRng,
   state: f32,
+  inner: WhiteNoise,
 }
 
 impl BrownNoise {
   pub(crate) fn new() -> Self {
     Self {
-      distribution: distribution(),
       gain: 0.015,
-      rng: SmallRng::from_rng(&mut rand::rng()),
+      inner: WhiteNoise::new(),
       state: 0.0,
     }
   }
 }
 
 impl Voice for BrownNoise {
+  fn reset(&mut self) {
+    self.inner.reset();
+  }
+
   fn sample(&mut self) -> Option<f32> {
-    let sample = self.rng.sample(self.distribution);
+    let sample = self.inner.sample()?;
     self.state += sample * self.gain;
     self.state = self.state.clamp(-1.0, 1.0);
     Some(self.state)

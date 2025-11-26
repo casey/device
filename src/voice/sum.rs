@@ -16,17 +16,19 @@ impl Sum {
 }
 
 impl Voice for Sum {
-  fn sample(&mut self) -> Option<f32> {
-    let mut sum = 0.0;
-
-    self
-      .voices
-      .retain_mut(|voice| voice.sample().inspect(|sample| sum += sample).is_some());
-
-    if self.voices.is_empty() {
-      return None;
+  fn reset(&mut self) {
+    for voice in &mut self.voices {
+      voice.reset();
     }
+  }
 
-    Some(sum)
+  fn sample(&mut self) -> Option<f32> {
+    let mut sum = None;
+    for voice in &mut self.voices {
+      if let Some(sample) = voice.sample() {
+        sum = Some(sum.unwrap_or_default() + sample);
+      }
+    }
+    sum
   }
 }

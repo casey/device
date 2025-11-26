@@ -1,7 +1,7 @@
 use super::*;
 
 pub(crate) struct Saw {
-  timer: Timer,
+  pub(crate) timer: Timer,
   pub(crate) frequency: f32,
 }
 
@@ -15,8 +15,12 @@ impl Saw {
 }
 
 impl Voice for Saw {
+  fn reset(&mut self) {
+    self.timer.reset()
+  }
+
   fn sample(&mut self) -> Option<f32> {
-    Some(self.frequency * self.timer.next() % 1.0 * 2.0 - 1.0)
+    Some(self.frequency * self.timer.tick() % 1.0 * 2.0 - 1.0)
   }
 }
 

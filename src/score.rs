@@ -14,28 +14,16 @@ impl Score {
   pub(crate) fn source(self) -> Box<dyn Source + Send> {
     match self {
       Self::BrownNoise => voice::BrownNoise::new().gain(0.125).source(),
-      Self::BusySignal => voice::Cycle {
-        inner: voice::Gate {
-          after: 0.5,
-          inner: voice::Sum::new()
-            .add(voice::Sine::new(480.0))
-            .add(voice::Sine::new(620.0)),
-        },
-        period: 1.0,
-      }
-      .gain(0.25)
-      .source(),
-      Self::ClickTrack => voice::Cycle {
-        period: 2.0 / 3.0,
-        inner: voice::Envelope {
-          attack: 0.001,
-          decay: 0.02,
-          sustain: 0.000,
-          release: 0.002,
-          inner: voice::BrownNoise::new(),
-        },
-      }
-      .source(),
+      Self::BusySignal => voice::Sum::new()
+        .add(voice::Sine::new(480.0))
+        .add(voice::Sine::new(620.0))
+        .duty(0.5, 0.5)
+        .gain(0.25)
+        .source(),
+      Self::ClickTrack => voice::BrownNoise::new()
+        .envelope(0.001, 0.02, 0.000, 0.002)
+        .cycle(2.0 / 3.0)
+        .source(),
       Self::PinkNoise => voice::PinkNoise::new().gain(0.125).source(),
       Self::Silence => voice::Silence.source(),
       Self::WhiteNoise => voice::WhiteNoise::new().gain(0.125).source(),

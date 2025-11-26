@@ -1,12 +1,13 @@
 use super::*;
 
 pub(crate) use {
-  brown_noise::BrownNoise, cycle::Cycle, envelope::Envelope, gain::Gain, gate::Gate,
+  brown_noise::BrownNoise, cycle::Cycle, duty::Duty, envelope::Envelope, gain::Gain, gate::Gate,
   pink_noise::PinkNoise, saw::Saw, silence::Silence, sine::Sine, sum::Sum, white_noise::WhiteNoise,
 };
 
 mod brown_noise;
 mod cycle;
+mod duty;
 mod envelope;
 mod gain;
 mod gate;
@@ -18,6 +19,8 @@ mod sum;
 mod white_noise;
 
 pub(crate) trait Voice: Send {
+  fn reset(&mut self);
+
   fn emitter(self) -> Emitter<Self>
   where
     Self: Sized,
@@ -31,10 +34,34 @@ pub(crate) trait Voice: Send {
   {
     Envelope {
       inner: self,
+      timer: Timer::default(),
       attack,
       decay,
       sustain,
       release,
+    }
+  }
+
+  fn duty(self, on: f32, off: f32) -> Duty<Self>
+  where
+    Self: Sized,
+  {
+    Duty {
+      inner: self,
+      off,
+      on,
+      timer: Timer::default(),
+    }
+  }
+
+  fn cycle(self, period: f32) -> Cycle<Self>
+  where
+    Self: Sized,
+  {
+    Cycle {
+      inner: self,
+      sample: 0,
+      period: (period / 48_000.0) as u64,
     }
   }
 
@@ -43,6 +70,17 @@ pub(crate) trait Voice: Send {
     Self: Sized,
   {
     Gain { inner: self, gain }
+  }
+
+  fn gate(self, after: f32) -> Gate<Self>
+  where
+    Self: Sized,
+  {
+    Gate {
+      after,
+      inner: self,
+      timer: Timer::default(),
+    }
   }
 
   fn sample(&mut self) -> Option<f32>;

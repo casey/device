@@ -4,7 +4,11 @@ pub(crate) struct Timer {
 }
 
 impl Timer {
-  pub(crate) fn next(&mut self) -> f32 {
+  pub(crate) fn reset(&mut self) {
+    self.time = 0.0;
+  }
+
+  pub(crate) fn tick(&mut self) -> f32 {
     let next = self.time;
     self.time += 1.0 / 48_000.0;
     next

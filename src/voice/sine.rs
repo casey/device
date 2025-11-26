@@ -1,7 +1,7 @@
 use super::*;
 
 pub(crate) struct Sine {
-  timer: Timer,
+  pub(crate) timer: Timer,
   pub(crate) frequency: f32,
 }
 
@@ -15,7 +15,11 @@ impl Sine {
 }
 
 impl Voice for Sine {
+  fn reset(&mut self) {
+    self.timer.reset();
+  }
+
   fn sample(&mut self) -> Option<f32> {
-    Some((self.timer.next() * self.frequency * f32::consts::TAU).sin())
+    Some((self.timer.tick() * self.frequency * f32::consts::TAU).sin())
   }
 }

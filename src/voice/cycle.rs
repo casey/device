@@ -2,11 +2,21 @@ use super::*;
 
 pub(crate) struct Cycle<T> {
   pub(crate) inner: T,
-  pub(crate) period: f32,
+  pub(crate) period: u64,
+  pub(crate) sample: u64,
 }
 
 impl<T: Voice> Voice for Cycle<T> {
-  fn sample(&mut self, t: f32) -> Option<f32> {
-    self.inner.sample(t % self.period)
+  fn reset(&mut self) {
+    self.inner.reset();
+    self.sample = 0;
+  }
+
+  fn sample(&mut self) -> Option<f32> {
+    if self.sample == self.period {
+      self.reset();
+    }
+
+    self.inner.sample()
   }
 }

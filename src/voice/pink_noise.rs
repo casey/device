@@ -4,26 +4,28 @@ const ROWS: usize = 16;
 
 pub(crate) struct PinkNoise {
   counter: u32,
-  distribution: Uniform<f32>,
-  rng: SmallRng,
+  inner: WhiteNoise,
   rows: [f32; ROWS],
 }
 
 impl PinkNoise {
   pub(crate) fn new() -> Self {
-    let distribution = distribution();
-    let mut rng = SmallRng::from_rng(&mut rand::rng());
-    let rows = array::from_fn(|_| rng.sample(distribution));
+    let mut inner = WhiteNoise::new();
+    let rows = array::from_fn(|_| inner.sample().unwrap());
     PinkNoise {
       counter: 0,
-      distribution,
-      rng,
+      inner,
       rows,
     }
   }
 }
 
 impl Voice for PinkNoise {
+  fn reset(&mut self) {
+    self.inner.reset();
+    self.rows = array::from_fn(|_| self.inner.sample().unwrap());
+  }
+
   fn sample(&mut self) -> Option<f32> {
     self.counter = self.counter.wrapping_add(1);
 
@@ -31,7 +33,7 @@ impl Voice for PinkNoise {
     let mut i = 0;
 
     while c & 1 == 0 && i < ROWS {
-      self.rows[i] = self.rng.sample(self.distribution);
+      self.rows[i] = self.inner.sample()?;
       c >>= 1;
       i += 1;
     }
