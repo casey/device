@@ -52,6 +52,8 @@ use super::*;
 // - don't use iter<item=f32> too error prone
 //
 // - add frame count and time to capture
+//
+// - clean up voice and emitter traits
 
 #[derive(Clone)]
 pub(crate) struct Tap(Arc<Mutex<Inner>>);
@@ -81,9 +83,6 @@ impl Tap {
 
   pub(crate) fn drain(&mut self) -> Sound {
     let mut inner = self.0.lock().unwrap();
-
-    // todo:
-    // - does sound still need to have channel and sample rate info?
     Sound {
       channels: inner.channels,
       sample_rate: inner.sample_rate,

@@ -436,7 +436,6 @@ impl App {
     let sound = if let Some(input) = &self.input {
       input.drain()
     } else {
-      // todo: deal with the fact that we don't drain tap
       self.tap.drain()
     };
 
