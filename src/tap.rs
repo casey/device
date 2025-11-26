@@ -1,10 +1,8 @@
 use super::*;
 
 // todo:
-// - return None from emitter so it can be dropped or pruned
 // - figure out which notes each key should be
-// - remove dc component from brown noise
-// - pause input?
+//
 // - request input/output with
 //   - f32 samples
 //   - 48khz

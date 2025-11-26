@@ -86,7 +86,7 @@ impl App {
       .default_output_device()
       .context(error::AudioDefaultOutputDevice)?;
 
-    let stream_config = Self::stream_config(
+    let stream_config = Self::select_stream_config(
       output_device
         .supported_output_configs()
         .context(error::AudioSupportedStreamConfigs)?,
@@ -136,7 +136,7 @@ impl App {
         .default_input_device()
         .context(error::AudioDefaultInputDevice)?;
 
-      let stream_config = Self::stream_config(
+      let stream_config = Self::select_stream_config(
         input_device
           .supported_input_configs()
           .context(error::AudioSupportedStreamConfigs)?,
@@ -538,7 +538,7 @@ impl App {
     }
   }
 
-  fn stream_config(
+  fn select_stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
   ) -> Result<SupportedStreamConfig> {
     let config = configs
