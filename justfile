@@ -76,3 +76,12 @@ capture-noise:
     --verbose \
     capture \
     --duration 60
+
+capture-curtains:
+  cargo run --release -- \
+    --fps 60 \
+    --resolution 2048 \
+    --song 'curtains closing' \
+    --verbose \
+    run \
+    --record
