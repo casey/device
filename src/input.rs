@@ -10,7 +10,7 @@ pub(crate) struct Input {
 impl Input {
   pub(crate) fn drain(&self) -> Sound {
     Sound {
-      samples: std::mem::take(&mut self.queue.lock().unwrap()),
+      samples: mem::take(&mut self.queue.lock().unwrap()),
       channels: self.stream_config.channels,
       sample_rate: self.stream_config.sample_rate.0,
     }
