@@ -217,7 +217,7 @@ impl Renderer {
         return;
       }
 
-      std::thread::spawn(move || {
+      thread::spawn(move || {
         let view = buffer.get_mapped_range(..);
 
         let channels = COLOR_CHANNELS.into_usize();

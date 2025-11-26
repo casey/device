@@ -45,6 +45,7 @@ use {
     process::{self, Command, ExitStatus, Stdio},
     str::FromStr,
     sync::{Arc, Mutex, mpsc},
+    thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
   },
   strum::{EnumIter, IntoEnumIterator, IntoStaticStr},
