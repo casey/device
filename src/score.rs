@@ -14,8 +14,7 @@ impl Score {
   pub(crate) fn source(self) -> Box<dyn Source + Send> {
     match self {
       Self::BrownNoise => voice::BrownNoise::new().gain(0.125).source(),
-      Self::BusySignal => voice::Sum::new()
-        .add(voice::Sine::new(480.0))
+      Self::BusySignal => voice::Sine::new(480.0)
         .add(voice::Sine::new(620.0))
         .duty(0.5, 0.5)
         .gain(0.25)

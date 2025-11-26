@@ -1,10 +1,12 @@
 use super::*;
 
 pub(crate) use {
-  brown_noise::BrownNoise, cycle::Cycle, duty::Duty, envelope::Envelope, gain::Gain, gate::Gate,
-  pink_noise::PinkNoise, saw::Saw, silence::Silence, sine::Sine, sum::Sum, white_noise::WhiteNoise,
+  add::Add, brown_noise::BrownNoise, cycle::Cycle, duty::Duty, envelope::Envelope, gain::Gain,
+  gate::Gate, pink_noise::PinkNoise, saw::Saw, silence::Silence, sine::Sine,
+  white_noise::WhiteNoise,
 };
 
+mod add;
 mod brown_noise;
 mod cycle;
 mod duty;
@@ -15,7 +17,6 @@ mod pink_noise;
 mod saw;
 mod silence;
 mod sine;
-mod sum;
 mod white_noise;
 
 pub(crate) trait Voice: Send {
@@ -90,6 +91,13 @@ pub(crate) trait Voice: Send {
     Self: Sized + 'static,
   {
     Box::new(self.emitter())
+  }
+
+  fn add<B: Voice + Sized>(self, b: B) -> Add<Self, B>
+  where
+    Self: Sized,
+  {
+    Add { a: self, b }
   }
 }
 
