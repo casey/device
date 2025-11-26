@@ -43,5 +43,8 @@ jobs:
     - name: Check for Forbidden Words
       run: ./bin/forbid
 
+    - name: Disallow Duplicate Dependencies
+      run: cargo tree --invert --package cpal
+
     - name: Test
       run: cargo test --workspace

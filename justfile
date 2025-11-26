@@ -12,6 +12,7 @@ forbid:
 ci: forbid
   cargo lclippy --workspace --all-targets -- --deny warnings
   cargo fmt --all -- --check
+  cargo tree --invert --package cpal
   cargo ltest --workspace -- --include-ignored
 
 clippy: (watch 'lclippy --all-targets -- --deny warnings')
