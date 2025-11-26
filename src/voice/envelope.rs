@@ -58,23 +58,17 @@ mod tests {
 
   #[test]
   fn envelope() {
-    let mut envelope = Envelope {
-      attack: 1.0,
-      decay: 1.0,
-      inner: Constant { value: 1.0 },
-      release: 1.0,
-      sustain: 1.0,
-    };
+    let mut envelope = Constant { value: 1.0 }.envelope(1.0, 1.0, 1.0, 1.0);
 
-    assert_eq!(envelope.sample(0.0), 0.0);
-    assert_eq!(envelope.sample(0.5), 0.5);
-    assert_eq!(envelope.sample(1.0), 1.0);
-    assert_eq!(envelope.sample(1.5), 0.75);
-    assert_eq!(envelope.sample(2.0), 0.5);
-    assert_eq!(envelope.sample(2.5), 0.5);
-    assert_eq!(envelope.sample(3.0), 0.5);
-    assert_eq!(envelope.sample(3.5), 0.25);
-    assert_eq!(envelope.sample(4.0), 0.0);
-    assert_eq!(envelope.sample(4.5), 0.0);
+    assert_eq!(envelope.sample().unwrap(), 0.0);
+    assert_eq!(envelope.sample().unwrap(), 0.5);
+    assert_eq!(envelope.sample().unwrap(), 1.0);
+    assert_eq!(envelope.sample().unwrap(), 0.75);
+    assert_eq!(envelope.sample().unwrap(), 0.5);
+    assert_eq!(envelope.sample().unwrap(), 0.5);
+    assert_eq!(envelope.sample().unwrap(), 0.5);
+    assert_eq!(envelope.sample().unwrap(), 0.25);
+    assert_eq!(envelope.sample().unwrap(), 0.0);
+    assert_eq!(envelope.sample().unwrap(), 0.0);
   }
 }

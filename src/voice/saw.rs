@@ -1,22 +1,22 @@
 use super::*;
 
 pub(crate) struct Saw {
-  pub(crate) timer: Timer,
   pub(crate) frequency: f32,
+  pub(crate) timer: Timer,
 }
 
 impl Saw {
   pub(crate) fn new(frequency: f32) -> Self {
     Saw {
-      timer: Timer::default(),
       frequency,
+      timer: Timer::default(),
     }
   }
 }
 
 impl Voice for Saw {
   fn reset(&mut self) {
-    self.timer.reset()
+    self.timer.reset();
   }
 
   fn sample(&mut self) -> Option<f32> {
@@ -30,18 +30,18 @@ mod tests {
 
   #[test]
   fn saw() {
-    let mut saw = Saw { frequency: 1.0 };
-    assert_eq!(saw.sample(0.00), -1.0);
-    assert_eq!(saw.sample(0.25), -0.5);
-    assert_eq!(saw.sample(0.50), 0.0);
-    assert_eq!(saw.sample(0.75), 0.5);
-    assert_eq!(saw.sample(1.00), -1.0);
+    let mut saw = Saw::new(1.0);
+    assert_eq!(saw.sample().unwrap(), -1.0);
+    assert_eq!(saw.sample().unwrap(), -0.5);
+    assert_eq!(saw.sample().unwrap(), 0.0);
+    assert_eq!(saw.sample().unwrap(), 0.5);
+    assert_eq!(saw.sample().unwrap(), -1.0);
 
-    let mut saw = Saw { frequency: 2.0 };
-    assert_eq!(saw.sample(0.000), -1.0);
-    assert_eq!(saw.sample(0.125), -0.5);
-    assert_eq!(saw.sample(0.250), 0.0);
-    assert_eq!(saw.sample(0.375), 0.5);
-    assert_eq!(saw.sample(0.500), -1.0);
+    let mut saw = Saw::new(2.0);
+    assert_eq!(saw.sample().unwrap(), -1.0);
+    assert_eq!(saw.sample().unwrap(), -0.5);
+    assert_eq!(saw.sample().unwrap(), 0.0);
+    assert_eq!(saw.sample().unwrap(), 0.5);
+    assert_eq!(saw.sample().unwrap(), -1.0);
   }
 }

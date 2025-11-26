@@ -2,8 +2,7 @@ use super::*;
 
 pub(crate) use {
   add::Add, brown_noise::BrownNoise, cycle::Cycle, duty::Duty, envelope::Envelope, gain::Gain,
-  gate::Gate, pink_noise::PinkNoise, saw::Saw, silence::Silence, sine::Sine,
-  white_noise::WhiteNoise,
+  pink_noise::PinkNoise, saw::Saw, silence::Silence, sine::Sine, white_noise::WhiteNoise,
 };
 
 mod add;
@@ -12,7 +11,6 @@ mod cycle;
 mod duty;
 mod envelope;
 mod gain;
-mod gate;
 mod pink_noise;
 mod saw;
 mod silence;
@@ -20,7 +18,36 @@ mod sine;
 mod white_noise;
 
 pub(crate) trait Voice: Send {
-  fn reset(&mut self);
+  fn add<B: Voice + Sized>(self, b: B) -> Add<Self, B>
+  where
+    Self: Sized,
+  {
+    Add { a: self, b }
+  }
+
+  fn cycle(self, period: f32) -> Cycle<Self>
+  where
+    Self: Sized,
+  {
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+    Cycle {
+      inner: self,
+      sample: 0,
+      period: (period * 48_000.0) as u64,
+    }
+  }
+
+  fn duty(self, on: f32, off: f32) -> Duty<Self>
+  where
+    Self: Sized,
+  {
+    Duty {
+      inner: self,
+      off,
+      on,
+      timer: Timer::default(),
+    }
+  }
 
   fn emitter(self) -> Emitter<Self>
   where
@@ -43,29 +70,6 @@ pub(crate) trait Voice: Send {
     }
   }
 
-  fn duty(self, on: f32, off: f32) -> Duty<Self>
-  where
-    Self: Sized,
-  {
-    Duty {
-      inner: self,
-      off,
-      on,
-      timer: Timer::default(),
-    }
-  }
-
-  fn cycle(self, period: f32) -> Cycle<Self>
-  where
-    Self: Sized,
-  {
-    Cycle {
-      inner: self,
-      sample: 0,
-      period: (period * 48_000.0) as u64,
-    }
-  }
-
   fn gain(self, gain: f32) -> Gain<Self>
   where
     Self: Sized,
@@ -73,16 +77,7 @@ pub(crate) trait Voice: Send {
     Gain { inner: self, gain }
   }
 
-  fn gate(self, after: f32) -> Gate<Self>
-  where
-    Self: Sized,
-  {
-    Gate {
-      after,
-      inner: self,
-      timer: Timer::default(),
-    }
-  }
+  fn reset(&mut self);
 
   fn sample(&mut self) -> Option<f32>;
 
@@ -91,13 +86,6 @@ pub(crate) trait Voice: Send {
     Self: Sized + 'static,
   {
     Box::new(self.emitter())
-  }
-
-  fn add<B: Voice + Sized>(self, b: B) -> Add<Self, B>
-  where
-    Self: Sized,
-  {
-    Add { a: self, b }
   }
 }
 

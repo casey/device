@@ -2,8 +2,8 @@ use super::*;
 
 pub(crate) struct BrownNoise {
   gain: f32,
-  state: f32,
   inner: WhiteNoise,
+  state: f32,
 }
 
 impl BrownNoise {

@@ -1,8 +1,8 @@
 use super::*;
 
 pub(crate) struct Sine {
-  pub(crate) timer: Timer,
   pub(crate) frequency: f32,
+  pub(crate) timer: Timer,
 }
 
 impl Sine {
