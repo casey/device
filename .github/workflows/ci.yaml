@@ -26,9 +26,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install \
-          libasound2-dev \
-          libfontconfig1-dev \
-          libfreetype6-dev \
           pkg-config \
           ripgrep
 
