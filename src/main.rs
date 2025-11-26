@@ -25,6 +25,7 @@ use {
       SupportedStreamConfigRange,
       traits::{DeviceTrait, HostTrait, StreamTrait},
     },
+    source::UniformSourceIterator,
   },
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
