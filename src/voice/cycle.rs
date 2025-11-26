@@ -15,6 +15,8 @@ impl<T: Voice> Voice for Cycle<T> {
   fn sample(&mut self) -> Option<f32> {
     if self.sample == self.period {
       self.reset();
+    } else {
+      self.sample += 1;
     }
 
     self.inner.sample()

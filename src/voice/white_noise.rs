@@ -23,6 +23,6 @@ impl Voice for WhiteNoise {
   }
 
   fn sample(&mut self) -> Option<f32> {
-    Some(self.rng.sample(self.distribution))
+    self.rng.sample(self.distribution)
   }
 }

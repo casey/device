@@ -61,7 +61,7 @@ pub(crate) trait Voice: Send {
     Cycle {
       inner: self,
       sample: 0,
-      period: (period / 48_000.0) as u64,
+      period: (period * 48_000.0) as u64,
     }
   }
 

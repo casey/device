@@ -33,7 +33,7 @@ impl<T: Voice> Voice for Envelope<T> {
     } else if t < a + d + s + r {
       -((t - a - d - s) / r - 1.0) / 2.0
     } else {
-      return None;
+      return Some(0.0);
     };
 
     Some(self.inner.sample()? * scale)
@@ -49,8 +49,10 @@ mod tests {
   }
 
   impl Voice for Constant {
-    fn sample(&mut self, _t: f32) -> f32 {
-      self.value
+    fn reset(&mut self) {}
+
+    fn sample(&mut self) -> Option<f32> {
+      Some(self.value)
     }
   }
 
