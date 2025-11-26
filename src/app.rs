@@ -497,6 +497,22 @@ impl App {
     (size, resolution)
   }
 
+  fn select_stream_config(
+    configs: impl Iterator<Item = SupportedStreamConfigRange>,
+  ) -> Result<SupportedStreamConfig> {
+    let config = configs
+      .filter(|config| config.sample_format() == cpal::SampleFormat::F32)
+      .max_by_key(SupportedStreamConfigRange::max_sample_rate)
+      .context(error::AudioSupportedStreamConfig)?;
+
+    Ok(SupportedStreamConfig::new(
+      config.channels().min(2),
+      config.max_sample_rate(),
+      *config.buffer_size(),
+      config.sample_format(),
+    ))
+  }
+
   fn semitones(key: &str) -> Option<u8> {
     #[allow(clippy::identity_op, clippy::match_same_arms)]
     match key {
@@ -536,22 +552,6 @@ impl App {
       "\\" => Some(12 + 10),
       _ => None,
     }
-  }
-
-  fn select_stream_config(
-    configs: impl Iterator<Item = SupportedStreamConfigRange>,
-  ) -> Result<SupportedStreamConfig> {
-    let config = configs
-      .filter(|config| config.sample_format() == cpal::SampleFormat::F32)
-      .max_by_key(SupportedStreamConfigRange::max_sample_rate)
-      .context(error::AudioSupportedStreamConfig)?;
-
-    Ok(SupportedStreamConfig::new(
-      config.channels().min(2),
-      config.max_sample_rate(),
-      *config.buffer_size(),
-      config.sample_format(),
-    ))
   }
 
   fn window(&self) -> &Window {
