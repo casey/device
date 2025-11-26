@@ -6,7 +6,7 @@ pub(crate) struct Gain<T> {
 }
 
 impl<T: Voice> Voice for Gain<T> {
-  fn sample(&mut self, t: f32) -> f32 {
-    self.inner.sample(t) * self.gain
+  fn sample(&mut self) -> Option<f32> {
+    Some(self.inner.sample()? * self.gain)
   }
 }

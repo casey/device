@@ -18,8 +18,8 @@ impl Score {
         inner: voice::Gate {
           after: 0.5,
           inner: voice::Sum::new()
-            .add(voice::Sine { frequency: 480.0 })
-            .add(voice::Sine { frequency: 620.0 }),
+            .add(voice::Sine::new(480.0))
+            .add(voice::Sine::new(620.0)),
         },
         period: 1.0,
       }

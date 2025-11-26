@@ -24,7 +24,7 @@ impl PinkNoise {
 }
 
 impl Voice for PinkNoise {
-  fn sample(&mut self, _t: f32) -> f32 {
+  fn sample(&mut self) -> Option<f32> {
     self.counter = self.counter.wrapping_add(1);
 
     let mut c = self.counter;
@@ -36,6 +36,6 @@ impl Voice for PinkNoise {
       i += 1;
     }
 
-    self.rows.iter().copied().sum::<f32>() / ROWS as f32
+    Some(self.rows.iter().copied().sum::<f32>() / ROWS as f32)
   }
 }

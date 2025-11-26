@@ -14,7 +14,7 @@ impl Patch {
     match self {
       Self::Saw => {
         mixer.add(
-          voice::Saw { frequency }
+          voice::Saw::new(frequency)
             .envelope(0.001, 0.1, 0.2, 0.1)
             .gain(0.25)
             .emitter(),
@@ -22,7 +22,7 @@ impl Patch {
       }
       Self::Sine => {
         mixer.add(
-          voice::Sine { frequency }
+          voice::Sine::new(frequency)
             .envelope(0.001, 0.1, 0.2, 0.1)
             .gain(0.25)
             .emitter(),

@@ -19,10 +19,10 @@ impl BrownNoise {
 }
 
 impl Voice for BrownNoise {
-  fn sample(&mut self, _: f32) -> f32 {
+  fn sample(&mut self) -> Option<f32> {
     let sample = self.rng.sample(self.distribution);
     self.state += sample * self.gain;
     self.state = self.state.clamp(-1.0, 1.0);
-    self.state
+    Some(self.state)
   }
 }

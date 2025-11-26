@@ -16,7 +16,17 @@ impl Sum {
 }
 
 impl Voice for Sum {
-  fn sample(&mut self, t: f32) -> f32 {
-    self.voices.iter_mut().map(|voice| voice.sample(t)).sum()
+  fn sample(&mut self) -> Option<f32> {
+    let mut sum = 0.0;
+
+    self
+      .voices
+      .retain_mut(|voice| voice.sample().inspect(|sample| sum += sample).is_some());
+
+    if self.voices.is_empty() {
+      return None;
+    }
+
+    Some(sum)
   }
 }

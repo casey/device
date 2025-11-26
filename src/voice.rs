@@ -45,7 +45,7 @@ pub(crate) trait Voice: Send {
     Gain { inner: self, gain }
   }
 
-  fn sample(&mut self, t: f32) -> f32;
+  fn sample(&mut self) -> Option<f32>;
 
   fn source(self) -> Box<dyn Source + Send>
   where

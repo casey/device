@@ -6,7 +6,7 @@ pub(crate) struct Cycle<T> {
 }
 
 impl<T: Voice> Voice for Cycle<T> {
-  fn sample(&mut self, t: f32) -> f32 {
+  fn sample(&mut self, t: f32) -> Option<f32> {
     self.inner.sample(t % self.period)
   }
 }

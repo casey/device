@@ -7,7 +7,8 @@ use {
     message::Message, options::Options, parameter::Parameter, patch::Patch, program::Program,
     recorder::Recorder, renderer::Renderer, scene::Scene, score::Score, shared::Shared,
     sound::Sound, state::State, subcommand::Subcommand, tally::Tally, tap::Tap, target::Target,
-    templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms, voice::Voice,
+    templates::ShaderWgsl, text::Text, tiling::Tiling, timer::Timer, uniforms::Uniforms,
+    voice::Voice,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -123,6 +124,7 @@ mod target;
 mod templates;
 mod text;
 mod tiling;
+mod timer;
 mod uniforms;
 mod voice;
 
