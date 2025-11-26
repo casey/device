@@ -1,6 +1,5 @@
 use super::*;
 
-// todo: Should I parameterize this with sample rate?
 pub(crate) struct Emitter<T> {
   sample: u64,
   voice: T,
