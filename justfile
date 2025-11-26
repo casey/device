@@ -62,22 +62,18 @@ maria:
 nobrain:
   cargo run --release -- --song 'no brain$' run
 
-capture-hello:
+capture program:
   cargo run --release -- \
-    --program hello \
+    --program {{program}} \
     --resolution 2048 \
     --verbose \
     capture
 
-capture-noise:
-  cargo run --release -- \
-    --program noise \
-    --resolution 2048 \
-    --verbose \
-    capture \
-    --duration 60
+capture-hello: (capture "hello")
+capture-busy: (capture "busy")
+capture-noise: (capture "noise")
 
-capture-curtains:
+record-curtains:
   cargo run --release -- \
     --fps 60 \
     --resolution 2048 \
