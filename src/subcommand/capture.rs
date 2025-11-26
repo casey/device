@@ -29,12 +29,9 @@ pub(crate) struct Capture {
 
 impl Capture {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
-    // todo: make 48khz a constant?
     let mut tap = Tap::new(2, 48_000);
 
-    if let Some(source) = options.source(&config)? {
-      tap.add(source);
-    }
+    options.add_source(&config, &tap)?;
 
     let mut analyzer = Analyzer::new();
 

@@ -9,12 +9,13 @@ pub(crate) enum Program {
 }
 
 impl Program {
-  pub(crate) fn source(self, config: &Config) -> Result<Box<dyn Source + Send>> {
+  pub(crate) fn add_source(self, config: &Config, tap: &Tap) -> Result {
     match self {
-      Self::Hello => Ok(Box::new(open_song(&config.find_song("old generic boss")?)?)),
-      Self::Busy => Ok(Box::new(Score::BusySignal.source())),
-      Self::Noise => Ok(Box::new(Score::BrownNoise.source())),
+      Self::Hello => tap.add(open_song(&config.find_song("old generic boss")?)?),
+      Self::Busy => tap.add(Score::BusySignal.source()),
+      Self::Noise => tap.add(Score::BrownNoise.source()),
     }
+    Ok(())
   }
 
   pub(crate) fn state(self) -> State {

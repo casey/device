@@ -53,19 +53,18 @@ pub(crate) struct Options {
 }
 
 impl Options {
-  // todo: worry about double-boxing
-  pub(crate) fn source(&self, config: &Config) -> Result<Option<Box<dyn Source + Send>>> {
+  pub(crate) fn add_source(&self, config: &Config, tap: &Tap) -> Result {
     if let Some(song) = &self.song {
-      Ok(Some(Box::new(open_song(&config.find_song(song)?)?)))
+      tap.add(open_song(&config.find_song(song)?)?);
     } else if let Some(score) = self.score {
-      Ok(Some(Box::new(score.source())))
+      tap.add(score.source());
     } else if let Some(track) = &self.track {
-      Ok(Some(Box::new(open_song(track)?)))
+      tap.add(open_song(track)?);
     } else if let Some(program) = self.program {
-      program.source(config).map(Some)
-    } else {
-      Ok(None)
+      program.add_source(config, tap)?;
     }
+
+    Ok(())
   }
 
   pub(crate) fn state(&self) -> State {

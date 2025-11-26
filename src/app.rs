@@ -148,9 +148,7 @@ impl App {
       None
     };
 
-    if let Some(source) = options.source(&config)? {
-      tap.add(source);
-    }
+    options.add_source(&config, &tap)?;
 
     let recorder = record
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
