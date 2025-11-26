@@ -107,12 +107,12 @@ impl App {
 
     log::info!(
       "output stream opened: {}x{}x{}x{}",
-      output_stream.config().channel_count(),
       output_stream.config().sample_rate(),
+      output_stream.config().channel_count(),
       output_stream.config().sample_format(),
       match output_stream.config().buffer_size() {
         cpal::BufferSize::Default => display("default"),
-        cpal::BufferSize::Fixed(n) => display(n.to_string()),
+        cpal::BufferSize::Fixed(n) => display(*n),
       }
     );
 

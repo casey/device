@@ -24,13 +24,9 @@ impl Input {
 
     stream_config.buffer_size = match supported_stream_config.buffer_size() {
       SupportedBufferSize::Range { min, max } => {
-        log::info!("input audio buffer size: {min}");
         cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
       }
-      SupportedBufferSize::Unknown => {
-        log::info!("input audio buffer size: unknown");
-        cpal::BufferSize::Default
-      }
+      SupportedBufferSize::Unknown => cpal::BufferSize::Default,
     };
 
     let queue = Arc::new(Mutex::new(Vec::new()));
@@ -45,13 +41,23 @@ impl Input {
           }
         },
         move |err| {
-          eprintln!("audio input error: {err}");
+          eprintln!("input stream error: {err}");
         },
         None,
       )
       .context(error::AudioBuildInputStream)?;
 
     stream.play().context(error::AudioPlayStream)?;
+
+    log::info!(
+      "input stream opened: {}x{}x{}",
+      stream_config.sample_rate.0,
+      stream_config.channels,
+      match stream_config.buffer_size {
+        cpal::BufferSize::Default => display("default"),
+        cpal::BufferSize::Fixed(n) => display(n),
+      }
+    );
 
     Ok(Self {
       queue,

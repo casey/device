@@ -146,7 +146,7 @@ fn default<T: Default>() -> T {
   T::default()
 }
 
-fn display<T: Display + 'static>(t: T) -> Box<dyn Display> {
+fn display<'a, T: Display + 'a>(t: T) -> Box<dyn Display + 'a> {
   Box::new(t)
 }
 
