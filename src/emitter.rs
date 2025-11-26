@@ -33,7 +33,7 @@ impl<T: Voice> Source for Emitter<T> {
   }
 
   fn sample_rate(&self) -> u32 {
-    48_000
+    DEFAULT_SAMPLE_RATE
   }
 
   fn total_duration(&self) -> Option<Duration> {
