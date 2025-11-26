@@ -26,6 +26,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install \
+          libdbus-1-dev \
           pkg-config \
           ripgrep
 
