@@ -32,7 +32,6 @@ use {
   serde::Deserialize,
   snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu},
   std::{
-    array,
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     collections::VecDeque,

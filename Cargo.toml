@@ -15,6 +15,7 @@ camino = { version = "1.2.1", features = ["serde1"] }
 clap = { version = "4.5.21", features = ["derive"] }
 cpal = { version = "0.16.0", features = ["audio_thread_priority"] }
 env_logger = "0.11.0"
+fundsp = "0.20.0"
 hound = "3.5.1"
 indicatif = "0.18.3"
 log = "0.4.22"

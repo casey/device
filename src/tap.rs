@@ -86,6 +86,8 @@ impl Iterator for Inner {
 
     let mut sum = 0.0;
 
+    eprintln!("sampling {} voices", self.active.len());
+
     self
       .active
       .retain_mut(|source| source.next().inspect(|sample| sum += sample).is_some());
