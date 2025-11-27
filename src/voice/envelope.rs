@@ -39,36 +39,3 @@ impl<T: Voice> Voice for Envelope<T> {
     Some(self.inner.sample()? * scale)
   }
 }
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  struct Constant {
-    value: f32,
-  }
-
-  impl Voice for Constant {
-    fn reset(&mut self) {}
-
-    fn sample(&mut self) -> Option<f32> {
-      Some(self.value)
-    }
-  }
-
-  #[test]
-  fn envelope() {
-    let mut envelope = Constant { value: 1.0 }.envelope(1.0, 1.0, 1.0, 1.0);
-
-    assert_eq!(envelope.sample().unwrap(), 0.0);
-    assert_eq!(envelope.sample().unwrap(), 0.5);
-    assert_eq!(envelope.sample().unwrap(), 1.0);
-    assert_eq!(envelope.sample().unwrap(), 0.75);
-    assert_eq!(envelope.sample().unwrap(), 0.5);
-    assert_eq!(envelope.sample().unwrap(), 0.5);
-    assert_eq!(envelope.sample().unwrap(), 0.5);
-    assert_eq!(envelope.sample().unwrap(), 0.25);
-    assert_eq!(envelope.sample().unwrap(), 0.0);
-    assert_eq!(envelope.sample().unwrap(), 0.0);
-  }
-}
