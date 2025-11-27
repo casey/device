@@ -38,6 +38,15 @@ impl<T: fundsp::audionode::AudioNode> Iterator for Wrapper<T> {
   }
 }
 
+// One click per second: a narrow pulse at 1 Hz, shaped as noise
+fn click_1hz() -> fundsp::prelude::An<impl fundsp::prelude::AudioNode> {
+  use fundsp::hacker32::*;
+
+  let trigger = ramp_hz(1.0) >> shape_fn(|x: f32| if x < 0.010 { 1.0 } else { 0.0 });
+
+  trigger * brown() * 0.5
+}
+
 impl Score {
   // todo: set sample rate
   pub(crate) fn source(self) -> Box<dyn Source + Send> {
@@ -48,10 +57,7 @@ impl Score {
           * 0.25,
       )),
       Self::BrownNoise => Box::new(Wrapper(fundsp::hacker32::brown() * 0.25)),
-      Self::ClickTrack => voice::BrownNoise::new()
-        .envelope(0.001, 0.02, 0.000, 0.002)
-        .cycle(2.0 / 3.0)
-        .source(),
+      Self::ClickTrack => Box::new(Wrapper(click_1hz())),
       Self::PinkNoise => Box::new(Wrapper(fundsp::hacker32::pink() * 0.25)),
       Self::Silence => Box::new(Wrapper(fundsp::hacker32::constant(0.0))),
       Self::WhiteNoise => Box::new(Wrapper(fundsp::hacker32::white() * 0.25)),

@@ -1,14 +1,13 @@
 use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, config::Config,
-    controller::Controller, emitter::Emitter, error::Error, event::Event, field::Field,
-    filter::Filter, format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
+    controller::Controller, error::Error, event::Event, field::Field, filter::Filter,
+    format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
     into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
     message::Message, options::Options, parameter::Parameter, patch::Patch, program::Program,
     recorder::Recorder, renderer::Renderer, scene::Scene, score::Score, shared::Shared,
     sound::Sound, state::State, subcommand::Subcommand, tally::Tally, tap::Tap, target::Target,
-    templates::ShaderWgsl, text::Text, tiling::Tiling, timer::Timer, uniforms::Uniforms,
-    voice::Voice,
+    templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -17,7 +16,6 @@ use {
   indicatif::{ProgressBar, ProgressStyle},
   nalgebra::Vector2,
   parley::{FontContext, LayoutContext},
-  rand::{Rng, SeedableRng, distr::Uniform, rngs::SmallRng},
   regex::{Regex, RegexBuilder},
   rodio::{
     Decoder, OutputStream, Sink, Source,
@@ -89,7 +87,6 @@ mod arguments;
 mod bindings;
 mod config;
 mod controller;
-mod emitter;
 mod error;
 mod event;
 mod field;
@@ -123,9 +120,7 @@ mod target;
 mod templates;
 mod text;
 mod tiling;
-mod timer;
 mod uniforms;
-mod voice;
 
 const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
