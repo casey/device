@@ -1,5 +1,25 @@
 use super::*;
 
+trait Foo {
+  fn into_source(self, sample_rate: u32, channels: u16) -> Box<dyn Source + Send>;
+}
+
+impl<T: fundsp::hacker32::AudioNode<Inputs = fundsp::hacker32::U0, Outputs = fundsp::hacker32::U1>>
+  Foo for fundsp::hacker32::An<T>
+{
+  fn into_source(mut self, sample_rate: u32, channels: u16) -> Box<dyn Source + Send> {
+    self.set_sample_rate(sample_rate as f64);
+    let x = self >> fundsp::hacker32::split::<fundsp::hacker32::U2>();
+    Wrapper(x)
+  }
+}
+
+struct Wrapper<T>(T);
+
+impl<T: fundsp::hacker32::AudioNode<Inputs = fundsp::hacker32::U0, Outputs = fundsp::hacker32::U2>
+impl<T> Source for Wrapper {
+}
+
 #[derive(Clone)]
 pub(crate) struct Tap(Arc<Mutex<Inner>>);
 
@@ -13,6 +33,12 @@ struct Inner {
 }
 
 impl Tap {
+  fn foo<T: Foo + 'static>(&self, mut foo: T) {
+    let mut inner = self.0.lock().unwrap();
+    let source = foo.into_source(inner.sample_rate, inner.channels);
+    inner.pending.push(Box::new(source));
+  }
+
   pub(crate) fn add<T: Source + Send + 'static>(&self, source: T) {
     let mut inner = self.0.lock().unwrap();
     let channels = inner.channels;

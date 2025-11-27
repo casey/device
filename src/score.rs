@@ -63,4 +63,19 @@ impl Score {
       Self::WhiteNoise => Box::new(Wrapper(fundsp::hacker32::white() * 0.25)),
     }
   }
+
+  pub(crate) fn foo(self) -> Box<dyn fundsp::audiounit::AudioUnit> {
+    match self {
+      Self::BusySignal => Box::new(
+        (fundsp::hacker32::sine_hz(480.0) + fundsp::hacker32::sine_hz(620.0))
+          * fundsp::hacker32::lfo(|t| if t % 1.0 < 0.5 { 1.0 } else { 0.0 })
+          * 0.25,
+      ),
+      Self::BrownNoise => Box::new(fundsp::hacker32::brown() * 0.25),
+      Self::ClickTrack => Box::new(click_1hz()),
+      Self::PinkNoise => Box::new(fundsp::hacker32::pink() * 0.25),
+      Self::Silence => Box::new(fundsp::hacker32::constant(0.0)),
+      Self::WhiteNoise => Box::new(fundsp::hacker32::white() * 0.25),
+    }
+  }
 }
