@@ -1,5 +1,14 @@
 use super::*;
 
+use fundsp::{
+  audionode::AudioNode,
+  audiounit::AudioUnit,
+  buffer::{BufferRef, BufferVec},
+  combinator::An,
+  prelude::{U0, U1, U2, split},
+  sequencer::{Fade, Sequencer},
+};
+
 trait Foo {
   fn into_source(self, sample_rate: u32, channels: u16) -> Box<dyn Source + Send>;
 }
@@ -10,15 +19,15 @@ impl<T: fundsp::hacker32::AudioNode<Inputs = fundsp::hacker32::U0, Outputs = fun
   fn into_source(mut self, sample_rate: u32, channels: u16) -> Box<dyn Source + Send> {
     self.set_sample_rate(sample_rate as f64);
     let x = self >> fundsp::hacker32::split::<fundsp::hacker32::U2>();
-    Wrapper(x)
+    todo!()
   }
 }
 
 struct Wrapper<T>(T);
 
-impl<T: fundsp::hacker32::AudioNode<Inputs = fundsp::hacker32::U0, Outputs = fundsp::hacker32::U2>
-impl<T> Source for Wrapper {
-}
+// impl<T: fundsp::hacker32::AudioNode<Inputs = fundsp::hacker32::U0, Outputs = fundsp::hacker32::U2>
+// impl<T> Source for Wrapper {
+// }
 
 #[derive(Clone)]
 pub(crate) struct Tap(Arc<Mutex<Inner>>);
@@ -30,9 +39,25 @@ struct Inner {
   sample: u64,
   sample_rate: u32,
   samples: Vec<f32>,
+  sequencer: Sequencer,
+  buffer: BufferVec,
 }
 
 impl Tap {
+  fn sequence<T: AudioNode<Inputs = U0, Outputs = U2> + 'static>(&self, mut foo: An<T>) {
+    let mut inner = self.0.lock().unwrap();
+    inner
+      .sequencer
+      .push_relative(0.0, 1.0, Fade::default(), 0.0, 0.0, Box::new(foo));
+  }
+
+  pub(crate) fn sequence_mono<T: AudioNode<Inputs = U0, Outputs = U1> + 'static>(
+    &self,
+    mut foo: An<T>,
+  ) {
+    self.sequence(foo >> split::<U2>());
+  }
+
   fn foo<T: Foo + 'static>(&self, mut foo: T) {
     let mut inner = self.0.lock().unwrap();
     let source = foo.into_source(inner.sample_rate, inner.channels);
@@ -65,6 +90,8 @@ impl Tap {
   }
 
   pub(crate) fn new(channels: u16, sample_rate: u32) -> Self {
+    let mut sequencer = Sequencer::new(false, channels.into());
+    sequencer.set_sample_rate(sample_rate.into());
     Self(Arc::new(Mutex::new(Inner {
       active: Vec::new(),
       channels,
@@ -72,6 +99,8 @@ impl Tap {
       sample: 0,
       sample_rate,
       samples: Vec::new(),
+      sequencer,
+      buffer: BufferVec::new(channels.into()),
     })))
   }
 }
@@ -110,9 +139,23 @@ impl Iterator for Inner {
       self.active.append(&mut self.pending);
     }
 
-    let mut sum = 0.0;
+    if self
+      .sample
+      .is_multiple_of(fundsp::MAX_BUFFER_SIZE.into_u64() * u64::from(self.channels))
+    {
+      self.sequencer.process(
+        fundsp::MAX_BUFFER_SIZE,
+        &BufferRef::empty(),
+        &mut self.buffer.buffer_mut(),
+      );
+    }
 
-    eprintln!("sampling {} voices", self.active.len());
+    let channel = self.sample.into_usize() % self.channels.into_usize();
+    let sample = self.sample.into_usize() / self.channels.into_usize() % self.channels.into_usize();
+
+    // dbg!((channel, sample));
+
+    let mut sum = self.buffer.at_f32(channel, sample);
 
     self
       .active

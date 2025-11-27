@@ -5,6 +5,7 @@ pub(crate) enum Patch {
   Saw,
   #[default]
   Sine,
+  SineNew,
 }
 
 struct Wrapper<T: fundsp::audionode::AudioNode<Outputs = fundsp::prelude::U1>> {
@@ -81,11 +82,19 @@ fn adsr_one_shot(
   })
 }
 
+use fundsp::prelude::{An, AudioNode, U0, U1, U2, adsr_live, envelope};
+
+fn gate(after: f32) -> An<impl AudioNode<Inputs = U0, Outputs = U1>> {
+  fundsp::hacker32::envelope(move |t: f32| if t < after { 1.0 } else { 0.0 })
+    >> adsr_live(0.1, 0.1, 0.6, 0.3)
+}
+
 impl Patch {
   pub(crate) fn add(self, semitones: u8, tap: &Tap) {
     let frequency = 261.63 * 2.0f32.powf(semitones as f32 / 12.0);
 
     match self {
+      Self::SineNew => tap.sequence_mono(fundsp::hacker32::sine_hz(frequency) * 0.25),
       Self::Sine => tap.add(Wrapper {
         inner: (fundsp::hacker32::sine_hz(frequency)
           * 0.25
@@ -95,9 +104,8 @@ impl Patch {
         sample: 0,
       }),
       Self::Saw => tap.add(Wrapper {
-        inner: (fundsp::hacker32::saw_hz(frequency)
-          * 0.25
-          * adsr_one_shot(1.001, 0.1, 0.2, 0.1, 1.0)),
+        inner: fundsp::hacker32::saw_hz(frequency) * 0.25 * gate(0.5),
+        // * adsr_one_shot(1.001, 0.1, 0.2, 0.1, 1.0)),
         // todo: convert to real value
         samples: 44_100,
         sample: 0,

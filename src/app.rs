@@ -90,6 +90,7 @@ impl App {
       output_device
         .supported_output_configs()
         .context(error::AudioSupportedStreamConfigs)?,
+      2,
     )?;
 
     let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
@@ -140,6 +141,7 @@ impl App {
         input_device
           .supported_input_configs()
           .context(error::AudioSupportedStreamConfigs)?,
+        1,
       )?;
 
       Some(Input::new(input_device, stream_config)?)
@@ -228,6 +230,7 @@ impl App {
           Key::Character(c) => match c.as_str() {
             "1" => self.patch = Patch::Sine,
             "2" => self.patch = Patch::Saw,
+            "3" => self.patch = Patch::SineNew,
             _ => {
               if let Some(semitones) = Self::semitones(c) {
                 self.patch.add(semitones, &self.tap);
@@ -495,14 +498,17 @@ impl App {
 
   fn select_stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
+    channels: u16,
   ) -> Result<SupportedStreamConfig> {
     let config = configs
-      .filter(|config| config.sample_format() == cpal::SampleFormat::F32)
+      .filter(|config| {
+        config.channels() >= channels && config.sample_format() == cpal::SampleFormat::F32
+      })
       .max_by_key(SupportedStreamConfigRange::max_sample_rate)
       .context(error::AudioSupportedStreamConfig)?;
 
     Ok(SupportedStreamConfig::new(
-      config.channels().min(2),
+      config.channels().min(channels),
       config.max_sample_rate(),
       *config.buffer_size(),
       config.sample_format(),

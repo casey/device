@@ -84,6 +84,7 @@ macro_rules! label {
 mod analyzer;
 mod app;
 mod arguments;
+mod audio;
 mod bindings;
 mod config;
 mod controller;
