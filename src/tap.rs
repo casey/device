@@ -25,7 +25,7 @@ struct Backend {
 }
 
 impl Tap {
-  const CHANNELS: u16 = 2;
+  pub(crate) const CHANNELS: u16 = 2;
 
   pub(crate) fn add<T: Source + Send + 'static>(&self, source: T) {
     let mut backend = self.0.lock().unwrap();

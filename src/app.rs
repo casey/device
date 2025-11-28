@@ -90,7 +90,7 @@ impl App {
       output_device
         .supported_output_configs()
         .context(error::AudioSupportedStreamConfigs)?,
-      2,
+      Tap::CHANNELS,
     )?;
 
     let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
