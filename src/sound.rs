@@ -16,6 +16,13 @@ impl Sound {
       / u128::from(self.sample_rate)
   }
 
+  pub(crate) fn downmix(&self) -> impl Iterator<Item = f32> {
+    self
+      .samples
+      .chunks(self.channels.into())
+      .map(|chunk| chunk.iter().sum::<f32>() / self.channels as f32)
+  }
+
   pub(crate) fn save<'a>(path: &Utf8Path, mut sounds: impl Iterator<Item = &'a Sound>) -> Result {
     let first = sounds.next();
 

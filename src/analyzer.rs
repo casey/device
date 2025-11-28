@@ -38,12 +38,7 @@ impl Analyzer {
       self.samples.clear();
     } else {
       let old = self.samples.len();
-      self.samples.extend(
-        sound
-          .samples
-          .chunks(sound.channels.into())
-          .map(|chunk| chunk.iter().sum::<f32>() / sound.channels as f32),
-      );
+      self.samples.extend(sound.downmix());
       self
         .samples
         .drain(..self.samples.len().saturating_sub(128).min(old));
