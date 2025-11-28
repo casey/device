@@ -72,7 +72,7 @@ impl Capture {
 
       progress.inc(1);
 
-      done = tap.is_empty();
+      done = tap.is_done();
 
       for _ in 0..spf * u32::from(tap.channels()) {
         tap.next();

@@ -46,7 +46,7 @@ impl Tap {
     }
   }
 
-  pub(crate) fn is_empty(&self) -> bool {
+  pub(crate) fn is_done(&self) -> bool {
     let backend = self.0.lock().unwrap();
     backend.active.is_empty()
       && backend.pending.is_empty()
