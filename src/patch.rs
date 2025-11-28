@@ -14,8 +14,8 @@ impl Patch {
   pub(crate) fn sequence(self, semitones: u8, tap: &Tap) {
     let frequency = 261.63 * 2.0f32.powf(semitones as f32 / 12.0);
     match self {
-      Self::Saw => tap.sequence(saw_hz(frequency) * 0.25, 1.0, 0.0, 0.0),
-      Self::Sine => tap.sequence(sine_hz(frequency) * 0.25, 1.0, 0.0, 0.0),
+      Self::Saw => tap.sequence(saw_hz(frequency) * 0.25, 0.3, 0.05, 0.05),
+      Self::Sine => tap.sequence(sine_hz(frequency) * 0.25, 0.3, 0.05, 0.05),
     }
   }
 }
