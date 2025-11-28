@@ -1,6 +1,7 @@
 use super::*;
 
 use fundsp::{
+  MAX_BUFFER_SIZE,
   audionode::AudioNode,
   audiounit::AudioUnit,
   buffer::{BufferRef, BufferVec},
@@ -9,105 +10,94 @@ use fundsp::{
   sequencer::{Fade, Sequencer},
 };
 
-trait Foo {
-  fn into_source(self, sample_rate: u32, channels: u16) -> Box<dyn Source + Send>;
-}
-
-impl<T: fundsp::hacker32::AudioNode<Inputs = fundsp::hacker32::U0, Outputs = fundsp::hacker32::U1>>
-  Foo for fundsp::hacker32::An<T>
-{
-  fn into_source(mut self, sample_rate: u32, channels: u16) -> Box<dyn Source + Send> {
-    self.set_sample_rate(sample_rate as f64);
-    let x = self >> fundsp::hacker32::split::<fundsp::hacker32::U2>();
-    todo!()
-  }
-}
-
-struct Wrapper<T>(T);
-
-// impl<T: fundsp::hacker32::AudioNode<Inputs = fundsp::hacker32::U0, Outputs = fundsp::hacker32::U2>
-// impl<T> Source for Wrapper {
-// }
-
 #[derive(Clone)]
-pub(crate) struct Tap(Arc<Mutex<Inner>>);
+pub(crate) struct Tap(Arc<Mutex<Backend>>);
 
-struct Inner {
+struct Backend {
   active: Vec<Box<dyn Source + Send>>,
-  channels: u16,
+  buffer: BufferVec,
+  done: f64,
   pending: Vec<Box<dyn Source + Send>>,
   sample: u64,
   sample_rate: u32,
   samples: Vec<f32>,
   sequencer: Sequencer,
-  buffer: BufferVec,
 }
 
 impl Tap {
-  fn sequence<T: AudioNode<Inputs = U0, Outputs = U2> + 'static>(&self, mut foo: An<T>) {
-    let mut inner = self.0.lock().unwrap();
-    inner
-      .sequencer
-      .push_relative(0.0, 1.0, Fade::default(), 0.0, 0.0, Box::new(foo));
-  }
-
-  pub(crate) fn sequence_mono<T: AudioNode<Inputs = U0, Outputs = U1> + 'static>(
-    &self,
-    mut foo: An<T>,
-  ) {
-    self.sequence(foo >> split::<U2>());
-  }
-
-  fn foo<T: Foo + 'static>(&self, mut foo: T) {
-    let mut inner = self.0.lock().unwrap();
-    let source = foo.into_source(inner.sample_rate, inner.channels);
-    inner.pending.push(Box::new(source));
-  }
+  const CHANNELS: u16 = 2;
 
   pub(crate) fn add<T: Source + Send + 'static>(&self, source: T) {
-    let mut inner = self.0.lock().unwrap();
-    let channels = inner.channels;
-    let sample_rate = inner.sample_rate;
-    inner.pending.push(Box::new(UniformSourceIterator::new(
+    let mut backend = self.0.lock().unwrap();
+    let sample_rate = backend.sample_rate;
+    backend.pending.push(Box::new(UniformSourceIterator::new(
       source,
-      channels,
+      Self::CHANNELS,
       sample_rate,
     )));
   }
 
   pub(crate) fn drain(&mut self) -> Sound {
-    let mut inner = self.0.lock().unwrap();
+    let mut backend = self.0.lock().unwrap();
     Sound {
-      channels: inner.channels,
-      sample_rate: inner.sample_rate,
-      samples: mem::take(&mut inner.samples),
+      channels: Self::CHANNELS,
+      sample_rate: backend.sample_rate,
+      samples: mem::take(&mut backend.samples),
     }
   }
 
   pub(crate) fn is_empty(&self) -> bool {
-    let inner = self.0.lock().unwrap();
-    inner.active.is_empty() && inner.pending.is_empty()
+    let backend = self.0.lock().unwrap();
+    backend.active.is_empty()
+      && backend.pending.is_empty()
+      && backend.done >= backend.sequencer.time()
   }
 
-  pub(crate) fn new(channels: u16, sample_rate: u32) -> Self {
-    let mut sequencer = Sequencer::new(false, channels.into());
+  pub(crate) fn new(sample_rate: u32) -> Self {
+    let mut sequencer = Sequencer::new(false, Self::CHANNELS.into());
     sequencer.set_sample_rate(sample_rate.into());
-    Self(Arc::new(Mutex::new(Inner {
+    Self(Arc::new(Mutex::new(Backend {
       active: Vec::new(),
-      channels,
+      buffer: BufferVec::new(2),
+      done: 0.0,
       pending: Vec::new(),
       sample: 0,
       sample_rate,
       samples: Vec::new(),
       sequencer,
-      buffer: BufferVec::new(channels.into()),
     })))
+  }
+
+  pub(crate) fn sequence<T: AudioNode<Inputs = U0, Outputs = U1> + 'static>(
+    &self,
+    audio_node: An<T>,
+    duration: f64,
+    fade_in: f64,
+    fade_out: f64,
+  ) {
+    let mut backend = self.0.lock().unwrap();
+    backend.done = backend.sequencer.time() + duration;
+    backend.sequencer.push_relative(
+      0.0,
+      duration,
+      Fade::default(),
+      fade_in,
+      fade_out,
+      Box::new(audio_node >> split::<U2>()),
+    );
+  }
+
+  pub(crate) fn sequence_indefinite<T: AudioNode<Inputs = U0, Outputs = U1> + 'static>(
+    &self,
+    audio_node: An<T>,
+  ) {
+    self.sequence(audio_node, f64::INFINITY, 0.0, 0.0);
   }
 }
 
 impl Source for Tap {
   fn channels(&self) -> u16 {
-    self.0.lock().unwrap().channels
+    Self::CHANNELS
   }
 
   fn current_span_len(&self) -> Option<usize> {
@@ -131,29 +121,24 @@ impl Iterator for Tap {
   }
 }
 
-impl Iterator for Inner {
+impl Iterator for Backend {
   type Item = f32;
 
   fn next(&mut self) -> Option<Self::Item> {
-    if self.sample.is_multiple_of(self.channels.into()) {
+    if self.sample.is_multiple_of(Tap::CHANNELS.into()) {
       self.active.append(&mut self.pending);
     }
 
-    if self
-      .sample
-      .is_multiple_of(fundsp::MAX_BUFFER_SIZE.into_u64() * u64::from(self.channels))
-    {
+    if self.sample.is_multiple_of(MAX_BUFFER_SIZE.into_u64() * 2) {
       self.sequencer.process(
-        fundsp::MAX_BUFFER_SIZE,
+        MAX_BUFFER_SIZE,
         &BufferRef::empty(),
         &mut self.buffer.buffer_mut(),
       );
     }
 
-    let channel = self.sample.into_usize() % self.channels.into_usize();
-    let sample = self.sample.into_usize() / self.channels.into_usize() % self.channels.into_usize();
-
-    // dbg!((channel, sample));
+    let channel = self.sample.into_usize() % usize::from(Tap::CHANNELS);
+    let sample = (self.sample.into_usize() / usize::from(Tap::CHANNELS)) % MAX_BUFFER_SIZE;
 
     let mut sum = self.buffer.at_f32(channel, sample);
 

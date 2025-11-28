@@ -127,10 +127,7 @@ impl App {
       sink.set_volume(volume);
     }
 
-    let tap = Tap::new(
-      output_stream.config().channel_count(),
-      output_stream.config().sample_rate(),
-    );
+    let tap = Tap::new(output_stream.config().sample_rate());
 
     let input = if options.input {
       let input_device = host
@@ -230,10 +227,9 @@ impl App {
           Key::Character(c) => match c.as_str() {
             "1" => self.patch = Patch::Sine,
             "2" => self.patch = Patch::Saw,
-            "3" => self.patch = Patch::SineNew,
             _ => {
               if let Some(semitones) = Self::semitones(c) {
-                self.patch.add(semitones, &self.tap);
+                self.patch.sequence(semitones, &self.tap);
               }
             }
           },
@@ -433,13 +429,13 @@ impl App {
       }
     }
 
-    let (done, sound) = if let Some(input) = &self.input {
-      (false, input.drain())
+    let sound = if let Some(input) = &self.input {
+      input.drain()
     } else {
-      (self.tap.is_empty(), self.tap.drain())
+      self.tap.drain()
     };
 
-    self.analyzer.update(&sound, done, &self.state);
+    self.analyzer.update(&sound, false, &self.state);
 
     let now = Instant::now();
     let elapsed = now - self.last;
