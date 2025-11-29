@@ -508,7 +508,7 @@ impl App {
       .context(error::AudioSupportedStreamConfig)?;
 
     Ok(SupportedStreamConfig::new(
-      config.channels().min(channels),
+      channels,
       config.max_sample_rate(),
       *config.buffer_size(),
       config.sample_format(),
