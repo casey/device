@@ -163,6 +163,89 @@ fn open_audio_file(path: &Utf8Path) -> Result<Decoder<BufReader<File>>> {
   Ok(source)
 }
 
+fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
+  use {
+    fundsp::wave::{Wave, WavePlayer},
+    rubato::{FftFixedIn, Resampler},
+  };
+
+  let mut wave = Wave::load(path).unwrap();
+
+  dbg!(wave.channels());
+  dbg!(wave.sample_rate());
+
+  let mut resampler = rubato::FftFixedIn::<f32>::new(
+    wave.sample_rate() as usize,
+    48_000,
+    1024,
+    2,
+    wave.channels(),
+  )
+  .unwrap();
+
+  // (0..wave.channels()).map(|channel| wave.channel(channel).chunks(1024))
+  // iterater of iterator of chunks
+
+  let mut output_buffer = resampler.output_buffer_allocate(true);
+  let mut input_buffer = resampler.input_buffer_allocate(true);
+
+  let mut output_channels = vec![Vec::<f32>::new(); wave.channels()];
+
+  // todo:
+  // - deal with partial chunks
+  // - deal with delay
+  // - deal with there still being chunks in the resampler
+
+  for chunk in 0.. {
+    let start = chunk * 1024;
+    let end = start + 1024;
+
+    if wave.len() == start {
+      break;
+    } else if wave.len() < end {
+      let samples = wave.len() - start;
+
+      for channel in 0..wave.channels() {
+        input_buffer[channel][0..samples]
+          .copy_from_slice(&wave.channel(channel)[start..start + samples]);
+        input_buffer[channel].truncate(samples);
+      }
+
+      let (input, output) = resampler
+        .process_partial_into_buffer(Some(&input_buffer), &mut output_buffer, None)
+        .unwrap();
+
+      for channel in 0..wave.channels() {
+        output_channels[channel].extend(&output_buffer[channel][0..output]);
+      }
+
+      break;
+    } else {
+      for channel in 0..wave.channels() {
+        input_buffer[channel][0..1024].copy_from_slice(&wave.channel(channel)[start..end]);
+      }
+
+      let (input, output) = resampler
+        .process_into_buffer(&input_buffer, &mut output_buffer, None)
+        .unwrap();
+
+      assert_eq!(input, 1024);
+
+      for channel in 0..wave.channels() {
+        output_channels[channel].extend(&output_buffer[channel][0..output]);
+      }
+    }
+  }
+
+  let mut output_wave = Wave::new(0, 48_000.0);
+
+  for channel in 0..wave.channels() {
+    output_wave.push_channel(&output_channels[channel]);
+  }
+
+  Ok(output_wave)
+}
+
 fn main() {
   env_logger::init();
 

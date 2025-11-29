@@ -28,6 +28,20 @@ struct Backend {
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
+  pub(crate) fn sequence_wave(&self, wave: fundsp::wave::Wave) {
+    // todo: set correct time
+    let wave = Arc::new(wave);
+    if wave.channels() == 0 {
+    } else if wave.channels() == 1 {
+      let mono = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
+      self.sequence_indefinite(An(mono) >> split::<U2>());
+    } else {
+      let l = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
+      let r = fundsp::wave::WavePlayer::new(&wave, 1, 0, wave.len(), None);
+      self.sequence_indefinite(An(l) | An(r));
+    }
+  }
+
   pub(crate) fn add<T: Source + Send + 'static>(&self, source: T) {
     let mut backend = self.0.lock().unwrap();
     let sample_rate = backend.sample_rate;
@@ -51,7 +65,7 @@ impl Tap {
     let backend = self.0.lock().unwrap();
     backend.active.is_empty()
       && backend.pending.is_empty()
-      && backend.done >= backend.sequencer.time()
+      && backend.sequencer.time() >= backend.done
   }
 
   pub(crate) fn new(sample_rate: u32) -> Self {
@@ -69,7 +83,7 @@ impl Tap {
     })))
   }
 
-  pub(crate) fn sequence<T: AudioNode<Inputs = U0, Outputs = U1> + 'static>(
+  pub(crate) fn sequence<T: AudioNode<Inputs = U0, Outputs = U2> + 'static>(
     &self,
     audio_node: An<T>,
     duration: f64,
@@ -84,11 +98,11 @@ impl Tap {
       Fade::default(),
       fade_in,
       fade_out,
-      Box::new(audio_node >> split::<U2>()),
+      Box::new(audio_node),
     );
   }
 
-  pub(crate) fn sequence_indefinite<T: AudioNode<Inputs = U0, Outputs = U1> + 'static>(
+  pub(crate) fn sequence_indefinite<T: AudioNode<Inputs = U0, Outputs = U2> + 'static>(
     &self,
     audio_node: An<T>,
   ) {

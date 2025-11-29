@@ -55,7 +55,9 @@ pub(crate) struct Options {
 impl Options {
   pub(crate) fn add_source(&self, config: &Config, tap: &Tap) -> Result {
     if let Some(song) = &self.song {
-      tap.add(open_audio_file(&config.find_song(song)?)?);
+      eprintln!("finding {song}");
+      let wave = open_audio_file_fundsp(&config.find_song(song)?).unwrap();
+      tap.sequence_wave(wave);
     } else if let Some(score) = self.score {
       score.sequence(tap);
     } else if let Some(track) = &self.track {
