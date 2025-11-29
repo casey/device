@@ -51,7 +51,7 @@ impl Tap {
     Ok(stream)
   }
 
-  pub(crate) fn drain(&mut self) -> Sound {
+  pub(crate) fn drain(&self) -> Sound {
     Sound {
       channels: Self::CHANNELS,
       sample_rate: self.sample_rate,
