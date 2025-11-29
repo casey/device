@@ -29,8 +29,8 @@ impl Sound {
     let mut writer = WavWriter::create(
       path,
       WavSpec {
-        channels: first.map_or(DEFAULT_CHANNEL_COUNT, |first| first.channels),
-        sample_rate: first.map_or(DEFAULT_SAMPLE_RATE, |first| first.sample_rate),
+        channels: first.map_or(2, |first| first.channels),
+        sample_rate: first.map_or(48_000, |first| first.sample_rate),
         bits_per_sample: 32,
         sample_format: hound::SampleFormat::Float,
       },

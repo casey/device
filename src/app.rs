@@ -91,6 +91,7 @@ impl App {
         .supported_output_configs()
         .context(error::AudioSupportedStreamConfigs)?,
       Tap::CHANNELS,
+      Tap::CHANNELS,
     )?;
 
     let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
@@ -139,6 +140,7 @@ impl App {
           .supported_input_configs()
           .context(error::AudioSupportedStreamConfigs)?,
         1,
+        2,
       )?;
 
       Some(Input::new(input_device, stream_config)?)
@@ -498,17 +500,18 @@ impl App {
 
   fn select_stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
-    channels: u16,
+    min_channels: u16,
+    max_channels: u16,
   ) -> Result<SupportedStreamConfig> {
     let config = configs
       .filter(|config| {
-        config.channels() >= channels && config.sample_format() == cpal::SampleFormat::F32
+        config.channels() >= min_channels && config.sample_format() == cpal::SampleFormat::F32
       })
       .max_by_key(SupportedStreamConfigRange::max_sample_rate)
       .context(error::AudioSupportedStreamConfig)?;
 
     Ok(SupportedStreamConfig::new(
-      channels,
+      config.channels().clamp(min_channels, max_channels),
       config.max_sample_rate(),
       *config.buffer_size(),
       config.sample_format(),
