@@ -139,7 +139,6 @@ impl App {
 
       Some(Input::new(input_device, stream_config)?)
     } else {
-      // sink.append(tap.clone());
       None
     };
 
@@ -623,7 +622,9 @@ impl ApplicationHandler for App {
 
       self.last = Instant::now();
 
-      self.tap.play();
+      if self.input.is_none() {
+        self.tap.play();
+      }
     }
   }
 
