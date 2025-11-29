@@ -21,7 +21,7 @@ struct Backend {
   pending: Vec<Box<dyn Source + Send>>,
   sample: u64,
   sample_rate: u32,
-  samples: Vec<f32>,
+  samples: VecDeque<f32>,
   sequencer: Sequencer,
 }
 
@@ -54,10 +54,11 @@ impl Tap {
 
   pub(crate) fn drain(&mut self) -> Sound {
     let mut backend = self.0.lock().unwrap();
+    let samples = backend.samples.len() - backend.samples.len() % Self::CHANNELS.into_usize();
     Sound {
       channels: Self::CHANNELS,
       sample_rate: backend.sample_rate,
-      samples: mem::take(&mut backend.samples),
+      samples: backend.samples.drain(0..samples).collect(),
     }
   }
 
@@ -78,7 +79,7 @@ impl Tap {
       pending: Vec::new(),
       sample: 0,
       sample_rate,
-      samples: Vec::new(),
+      samples: VecDeque::new(),
       sequencer,
     })))
   }
@@ -161,7 +162,7 @@ impl Iterator for Backend {
       .active
       .retain_mut(|source| source.next().inspect(|sample| sum += sample).is_some());
 
-    self.samples.push(sum);
+    self.samples.push_back(sum);
 
     self.sample += 1;
 
