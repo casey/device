@@ -39,10 +39,8 @@ where
 pub(crate) struct Tap(Arc<Mutex<Backend>>);
 
 struct Backend {
-  active: Vec<Box<dyn Source + Send>>,
   buffer: BufferVec,
   done: f64,
-  pending: Vec<Box<dyn Source + Send>>,
   sample: u64,
   sample_rate: u32,
   samples: VecDeque<f32>,
@@ -64,9 +62,7 @@ impl Tap {
 
   pub(crate) fn is_done(&self) -> bool {
     let backend = self.0.lock().unwrap();
-    backend.active.is_empty()
-      && backend.pending.is_empty()
-      && backend.sequencer.time() >= backend.done
+    backend.sequencer.time() >= backend.done
   }
 
   // todo:
@@ -154,15 +150,17 @@ impl Tap {
     let mut sequencer = Sequencer::new(false, Self::CHANNELS.into());
     sequencer.set_sample_rate(sample_rate.into());
     Self(Arc::new(Mutex::new(Backend {
-      active: Vec::new(),
       buffer: BufferVec::new(2),
       done: 0.0,
-      pending: Vec::new(),
       sample: 0,
       sample_rate,
       samples: VecDeque::new(),
       sequencer,
     })))
+  }
+
+  pub(crate) fn sample_rate(&self) -> u32 {
+    self.0.lock().unwrap().sample_rate
   }
 
   pub(crate) fn sequence<T>(&self, node: An<T>, duration: f64, fade_in: f64, fade_out: f64)
@@ -202,63 +200,34 @@ impl Tap {
       self.sequence(An(left) | An(right), duration, 0.0, 0.0);
     }
   }
-}
 
-impl Source for Tap {
-  fn channels(&self) -> u16 {
-    Self::CHANNELS
-  }
-
-  fn current_span_len(&self) -> Option<usize> {
-    None
-  }
-
-  fn sample_rate(&self) -> u32 {
-    self.0.lock().unwrap().sample_rate
-  }
-
-  fn total_duration(&self) -> Option<std::time::Duration> {
-    None
+  pub(crate) fn write(&self, buffer: &mut [f32]) {
+    self.0.lock().unwrap().write(buffer);
   }
 }
 
-impl Iterator for Tap {
-  type Item = f32;
+impl Backend {
+  fn write(&mut self, buffer: &mut [f32]) {
+    for x in buffer {
+      if self
+        .sample
+        .is_multiple_of(MAX_BUFFER_SIZE.into_u64() * u64::from(Tap::CHANNELS))
+      {
+        self.sequencer.process(
+          MAX_BUFFER_SIZE,
+          &BufferRef::empty(),
+          &mut self.buffer.buffer_mut(),
+        );
+      }
 
-  fn next(&mut self) -> Option<Self::Item> {
-    self.0.lock().unwrap().next()
-  }
-}
+      let channel = self.sample.into_usize() % Tap::CHANNELS.into_usize();
+      let sample = (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE;
 
-impl Iterator for Backend {
-  type Item = f32;
+      *x = self.buffer.at_f32(channel, sample);
 
-  fn next(&mut self) -> Option<Self::Item> {
-    if self.sample.is_multiple_of(Tap::CHANNELS.into()) {
-      self.active.append(&mut self.pending);
+      self.samples.push_back(*x);
+
+      self.sample += 1;
     }
-
-    if self.sample.is_multiple_of(MAX_BUFFER_SIZE.into_u64() * 2) {
-      self.sequencer.process(
-        MAX_BUFFER_SIZE,
-        &BufferRef::empty(),
-        &mut self.buffer.buffer_mut(),
-      );
-    }
-
-    let channel = self.sample.into_usize() % Tap::CHANNELS.into_usize();
-    let sample = (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE;
-
-    let mut sum = self.buffer.at_f32(channel, sample);
-
-    self
-      .active
-      .retain_mut(|source| source.next().inspect(|sample| sum += sample).is_some());
-
-    self.samples.push_back(sum);
-
-    self.sample += 1;
-
-    Some(sum)
   }
 }

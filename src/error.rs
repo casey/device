@@ -25,7 +25,7 @@ pub(crate) enum Error {
   #[snafu(display("failed to get default audio output stream"))]
   AudioBuildOutputStream {
     backtrace: Option<Backtrace>,
-    source: rodio::StreamError,
+    source: cpal::BuildStreamError,
   },
   #[snafu(display("failed to get default audio input device"))]
   AudioDefaultInputDevice { backtrace: Option<Backtrace> },

@@ -17,12 +17,12 @@ pub(crate) struct App {
   makro: Vec<(Key, bool)>,
   options: Options,
   #[allow(unused)]
-  output_stream: OutputStream,
+  output_stream: cpal::Stream,
   patch: Patch,
   play: bool,
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
-  sink: Sink,
+  // sink: Sink,
   state: State,
   tap: Tap,
   window: Option<Arc<Window>>,
@@ -59,7 +59,7 @@ impl App {
   }
 
   fn exit(&mut self) -> Result {
-    self.sink.stop();
+    // self.sink.stop();
 
     if let Some(renderer) = &self.renderer {
       renderer.poll()?;
@@ -87,7 +87,7 @@ impl App {
       .default_output_device()
       .context(error::AudioDefaultOutputDevice)?;
 
-    let stream_config = Self::select_stream_config(
+    let supported_stream_config = Self::select_stream_config(
       output_device
         .supported_output_configs()
         .context(error::AudioSupportedStreamConfigs)?,
@@ -95,41 +95,52 @@ impl App {
       Tap::CHANNELS,
     )?;
 
-    let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
-      .context(error::AudioBuildOutputStream)?
-      .with_supported_config(&stream_config)
-      .with_buffer_size(match stream_config.buffer_size() {
-        cpal::SupportedBufferSize::Range { min, max } => {
-          cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
-        }
-        cpal::SupportedBufferSize::Unknown => cpal::BufferSize::Default,
-      })
-      .with_error_callback(|err| eprintln!("output stream error: {err}"))
-      .open_stream()
+    let mut stream_config = supported_stream_config.config();
+    stream_config.buffer_size = match supported_stream_config.buffer_size() {
+      cpal::SupportedBufferSize::Range { min, max } => {
+        cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
+      }
+      cpal::SupportedBufferSize::Unknown => cpal::BufferSize::Default,
+    };
+
+    let tap = Tap::new(stream_config.sample_rate.0);
+
+    let output_stream = output_device
+      .build_output_stream(
+        &stream_config,
+        {
+          let tap = tap.clone();
+          move |data: &mut [f32], _info| {
+            tap.write(data);
+          }
+        },
+        |err| eprintln!("output stream error: {err}"),
+        None,
+      )
       .context(error::AudioBuildOutputStream)?;
 
+    // todo: create shared stream implementation
     log::info!(
-      "output stream opened: {}x{}x{}x{}",
-      output_stream.config().sample_rate(),
-      output_stream.config().channel_count(),
-      output_stream.config().sample_format(),
-      match output_stream.config().buffer_size() {
+      "output stream opened: {}x{}x{}",
+      stream_config.sample_rate.0,
+      stream_config.channels,
+      match stream_config.buffer_size {
         cpal::BufferSize::Default => display("default"),
-        cpal::BufferSize::Fixed(n) => display(*n),
+        cpal::BufferSize::Fixed(n) => display(n),
       }
     );
 
-    output_stream.log_on_drop(false);
+    // output_stream.log_on_drop(false);
 
-    let sink = Sink::connect_new(output_stream.mixer());
+    // let sink = Sink::connect_new(output_stream.mixer());
 
-    sink.pause();
+    // sink.pause();
 
-    if let Some(volume) = options.volume {
-      sink.set_volume(volume);
-    }
+    // if let Some(volume) = options.volume {
+    //   sink.set_volume(volume);
+    // }
 
-    let tap = Tap::new(output_stream.config().sample_rate());
+    // let tap = Tap::new(output_stream.config().sample_rate());
 
     let input = if options.input {
       let input_device = host
@@ -146,7 +157,7 @@ impl App {
 
       Some(Input::new(input_device, stream_config)?)
     } else {
-      sink.append(tap.clone());
+      // sink.append(tap.clone());
       None
     };
 
@@ -183,7 +194,7 @@ impl App {
       play: false,
       recorder,
       renderer: None,
-      sink,
+      // sink,
       state,
       tap,
       window: None,
@@ -638,7 +649,7 @@ impl ApplicationHandler for App {
 
       self.last = Instant::now();
 
-      self.sink.play();
+      // self.sink.play();
     }
   }
 

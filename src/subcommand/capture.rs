@@ -78,8 +78,9 @@ impl Capture {
 
       done = tap.is_done();
 
-      for _ in 0..spf * u32::from(tap.channels()) {
-        tap.next();
+      for _ in 0..spf * u32::from(Tap::CHANNELS) {
+        // todo: fixme
+        // tap.next();
       }
 
       let sound = tap.drain();
