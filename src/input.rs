@@ -17,7 +17,7 @@ impl Input {
   }
 
   pub(crate) fn new(
-    device: rodio::Device,
+    device: cpal::Device,
     supported_stream_config: SupportedStreamConfig,
   ) -> Result<Self> {
     let mut stream_config = supported_stream_config.config();
