@@ -8,6 +8,7 @@ use {
     combinator::An,
     prelude::{U0, U1, U2, split},
     sequencer::{Fade, Sequencer},
+    wave::{Wave, WavePlayer},
   },
 };
 
@@ -106,17 +107,17 @@ impl Tap {
     self.sequence(audio_node, f64::INFINITY, 0.0, 0.0);
   }
 
-  pub(crate) fn sequence_wave(&self, wave: fundsp::wave::Wave) {
+  pub(crate) fn sequence_wave(&self, wave: Wave) {
     // todo: set correct time
     let wave = Arc::new(wave);
     let duration = wave.duration();
     if wave.channels() == 0 {
     } else if wave.channels() == 1 {
-      let mono = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
+      let mono = WavePlayer::new(&wave, 0, 0, wave.len(), None);
       self.sequence(An(mono), duration, 0.0, 0.0);
     } else {
-      let left = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
-      let right = fundsp::wave::WavePlayer::new(&wave, 1, 0, wave.len(), None);
+      let left = WavePlayer::new(&wave, 0, 0, wave.len(), None);
+      let right = WavePlayer::new(&wave, 1, 0, wave.len(), None);
       self.sequence(An(left) | An(right), duration, 0.0, 0.0);
     }
   }
