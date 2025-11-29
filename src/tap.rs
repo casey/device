@@ -64,6 +64,12 @@ impl Tap {
   }
 
   pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Arc<Wave>> {
+    fn extend(output_channels: &mut [Vec<f32>], output_buffer: &[Vec<f32>], frames: usize) {
+      for (channel, output_channel) in output_channels.iter_mut().enumerate() {
+        output_channel.extend_from_slice(&output_buffer[channel][..frames]);
+      }
+    }
+
     let mut input = Wave::load(path).context(error::WaveLoad)?;
 
     if input.is_empty() {
@@ -115,20 +121,15 @@ impl Tap {
         *channel = &channel[consumed..];
       }
 
-      for (output_channel, output_buffer) in output_channels.iter_mut().zip(output_buffer.iter()) {
-        output_channel.extend_from_slice(&output_buffer[..produced]);
-      }
+      extend(&mut output_channels, &output_buffer, produced);
     }
 
     if !input_buffer[0].is_empty() {
-      // todo: avoid process_partial
       let (_consumed, produced) = resampler
         .process_partial_into_buffer(Some(&input_buffer), &mut output_buffer, None)
         .context(error::WaveResample)?;
 
-      for (output_channel, output_buffer) in output_channels.iter_mut().zip(output_buffer.iter()) {
-        output_channel.extend_from_slice(&output_buffer[..produced]);
-      }
+      extend(&mut output_channels, &output_buffer, produced);
     }
 
     while output_channels[0].len() < new_length + delay {
@@ -136,9 +137,7 @@ impl Tap {
         .process_partial_into_buffer(None::<&[&[f32]]>, &mut output_buffer, None)
         .context(error::WaveResample)?;
 
-      for (output_channel, output_buffer) in output_channels.iter_mut().zip(output_buffer.iter()) {
-        output_channel.extend_from_slice(&output_buffer[..produced]);
-      }
+      extend(&mut output_channels, &output_buffer, produced);
     }
 
     log::info!("resampled {path} in {:.2}", start.elapsed().as_secs_f64());
@@ -146,7 +145,7 @@ impl Tap {
     let mut output = Wave::new(0, self.sample_rate as f64);
 
     for channel in output_channels {
-      output.push_channel(&channel[delay..delay + new_length]);
+      output.push_channel(&channel[delay..new_length + delay]);
     }
 
     Ok(Arc::new(output))
