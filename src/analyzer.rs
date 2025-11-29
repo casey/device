@@ -42,7 +42,7 @@ impl Analyzer {
         self.samples.extend(sound.channel(channel));
       } else {
         self.samples.extend(sound.downmix());
-      };
+      }
       self
         .samples
         .drain(..self.samples.len().saturating_sub(128).min(old));

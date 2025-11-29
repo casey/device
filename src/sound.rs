@@ -8,18 +8,18 @@ pub(crate) struct Sound {
 }
 
 impl Sound {
-  pub(crate) fn downmix(&self) -> impl Iterator<Item = f32> {
-    self
-      .samples
-      .chunks(self.channels.into())
-      .map(|chunk| chunk.iter().sum::<f32>() / self.channels as f32)
-  }
-
   pub(crate) fn channel(&self, channel: u16) -> impl Iterator<Item = f32> {
     self
       .samples
       .chunks(self.channels.into())
       .map(move |chunk| chunk[channel.into_usize()])
+  }
+
+  pub(crate) fn downmix(&self) -> impl Iterator<Item = f32> {
+    self
+      .samples
+      .chunks(self.channels.into())
+      .map(|chunk| chunk.iter().sum::<f32>() / self.channels as f32)
   }
 
   pub(crate) fn duration_micros(&self) -> u128 {

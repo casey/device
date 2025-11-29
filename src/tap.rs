@@ -6,7 +6,7 @@ use {
     audiounit::AudioUnit,
     buffer::{BufferRef, BufferVec},
     combinator::An,
-    prelude::{U0, U1, U2, split},
+    prelude::{U0, U2, split},
     sequencer::{Fade, Sequencer},
   },
 };
@@ -27,30 +27,6 @@ struct Backend {
 
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
-
-  pub(crate) fn sequence_wave(&self, wave: fundsp::wave::Wave) {
-    // todo: set correct time
-    let wave = Arc::new(wave);
-    if wave.channels() == 0 {
-    } else if wave.channels() == 1 {
-      let mono = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
-      self.sequence_indefinite(An(mono) >> split::<U2>());
-    } else {
-      let l = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
-      let r = fundsp::wave::WavePlayer::new(&wave, 1, 0, wave.len(), None);
-      self.sequence_indefinite(An(l) | An(r));
-    }
-  }
-
-  pub(crate) fn add<T: Source + Send + 'static>(&self, source: T) {
-    let mut backend = self.0.lock().unwrap();
-    let sample_rate = backend.sample_rate;
-    backend.pending.push(Box::new(UniformSourceIterator::new(
-      source,
-      Self::CHANNELS,
-      sample_rate,
-    )));
-  }
 
   pub(crate) fn drain(&mut self) -> Sound {
     let mut backend = self.0.lock().unwrap();
@@ -108,6 +84,20 @@ impl Tap {
     audio_node: An<T>,
   ) {
     self.sequence(audio_node, f64::INFINITY, 0.0, 0.0);
+  }
+
+  pub(crate) fn sequence_wave(&self, wave: fundsp::wave::Wave) {
+    // todo: set correct time
+    let wave = Arc::new(wave);
+    if wave.channels() == 0 {
+    } else if wave.channels() == 1 {
+      let mono = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
+      self.sequence_indefinite(An(mono) >> split::<U2>());
+    } else {
+      let l = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
+      let r = fundsp::wave::WavePlayer::new(&wave, 1, 0, wave.len(), None);
+      self.sequence_indefinite(An(l) | An(r));
+    }
   }
 }
 

@@ -104,12 +104,6 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: wgpu::SurfaceError,
   },
-  #[snafu(display("failed to open audio file"))]
-  DecoderOpen {
-    backtrace: Option<Backtrace>,
-    path: Utf8PathBuf,
-    source: rodio::decoder::DecoderError,
-  },
   #[snafu(display("failed to get default config"))]
   DefaultConfig { backtrace: Option<Backtrace> },
   #[snafu(display("failed to build event loop"))]

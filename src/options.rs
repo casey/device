@@ -61,7 +61,8 @@ impl Options {
     } else if let Some(score) = self.score {
       score.sequence(tap);
     } else if let Some(track) = &self.track {
-      tap.add(open_audio_file(track)?);
+      let wave = open_audio_file_fundsp(track).unwrap();
+      tap.sequence_wave(wave);
     } else if let Some(program) = self.program {
       program.add_source(config, tap)?;
     }

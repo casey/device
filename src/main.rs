@@ -18,13 +18,12 @@ use {
   parley::{FontContext, LayoutContext},
   regex::{Regex, RegexBuilder},
   rodio::{
-    Decoder, OutputStream, Sink, Source,
+    OutputStream, Sink, Source,
     cpal::{
       self, SampleFormat, StreamConfig, SupportedBufferSize, SupportedStreamConfig,
       SupportedStreamConfigRange,
       traits::{DeviceTrait, HostTrait, StreamTrait},
     },
-    source::UniformSourceIterator,
   },
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
@@ -156,25 +155,23 @@ fn pad(i: usize, alignment: usize) -> usize {
   (i + alignment - 1) & !(alignment - 1)
 }
 
-fn open_audio_file(path: &Utf8Path) -> Result<Decoder<BufReader<File>>> {
-  let file = File::open(path).context(error::FilesystemIo { path })?;
-  let reader = BufReader::new(file);
-  let source = Decoder::new(reader).context(error::DecoderOpen { path })?;
-  Ok(source)
-}
-
 fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
   use {
-    fundsp::wave::{Wave, WavePlayer},
+    fundsp::wave::Wave,
     rubato::{FftFixedIn, Resampler},
   };
 
   let mut wave = Wave::load(path).unwrap();
 
+  for channel in Tap::CHANNELS.into_usize()..wave.channels() {
+    wave.remove_channel(channel);
+  }
+
   dbg!(wave.channels());
   dbg!(wave.sample_rate());
 
-  let mut resampler = rubato::FftFixedIn::<f32>::new(
+  #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+  let mut resampler = FftFixedIn::<f32>::new(
     wave.sample_rate() as usize,
     96_000,
     1024,
@@ -192,26 +189,25 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
   let mut output_channels = vec![Vec::<f32>::new(); wave.channels()];
 
   // todo:
-  // - deal with partial chunks
   // - deal with delay
   // - deal with there still being chunks in the resampler
 
   for chunk in 0.. {
     let start = chunk * 1024;
     let end = start + 1024;
+    let remaining = wave.len() - start;
 
-    if wave.len() == start {
+    if remaining == 0 {
       break;
-    } else if wave.len() < end {
+    } else if remaining < 1024 {
       let samples = wave.len() - start;
 
-      for channel in 0..wave.channels() {
-        input_buffer[channel][0..samples]
-          .copy_from_slice(&wave.channel(channel)[start..start + samples]);
-        input_buffer[channel].truncate(samples);
+      for (channel, buffer) in input_buffer.iter_mut().enumerate() {
+        buffer[0..samples].copy_from_slice(&wave.channel(channel)[start..start + samples]);
+        buffer.truncate(samples);
       }
 
-      let (input, output) = resampler
+      let (_input, output) = resampler
         .process_partial_into_buffer(Some(&input_buffer), &mut output_buffer, None)
         .unwrap();
 
@@ -220,27 +216,27 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
       }
 
       break;
-    } else {
-      for channel in 0..wave.channels() {
-        input_buffer[channel][0..1024].copy_from_slice(&wave.channel(channel)[start..end]);
-      }
+    }
 
-      let (input, output) = resampler
-        .process_into_buffer(&input_buffer, &mut output_buffer, None)
-        .unwrap();
+    for (channel, buffer) in input_buffer.iter_mut().enumerate() {
+      buffer[0..1024].copy_from_slice(&wave.channel(channel)[start..end]);
+    }
 
-      assert_eq!(input, 1024);
+    let (input, output) = resampler
+      .process_into_buffer(&input_buffer, &mut output_buffer, None)
+      .unwrap();
 
-      for channel in 0..wave.channels() {
-        output_channels[channel].extend(&output_buffer[channel][0..output]);
-      }
+    assert_eq!(input, 1024);
+
+    for channel in 0..wave.channels() {
+      output_channels[channel].extend(&output_buffer[channel][0..output]);
     }
   }
 
   let mut output_wave = Wave::new(0, 96_000.0);
 
-  for channel in 0..wave.channels() {
-    output_wave.push_channel(&output_channels[channel]);
+  for channel in output_channels {
+    output_wave.push_channel(&channel);
   }
 
   Ok(output_wave)

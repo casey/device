@@ -13,6 +13,8 @@ pub(crate) enum Score {
   WhiteNoise,
 }
 
+// todo: get rid of these fucking splits
+
 impl Score {
   pub(crate) fn sequence(self, tap: &Tap) {
     match self {
