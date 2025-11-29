@@ -109,14 +109,15 @@ impl Tap {
   pub(crate) fn sequence_wave(&self, wave: fundsp::wave::Wave) {
     // todo: set correct time
     let wave = Arc::new(wave);
+    let duration = wave.duration();
     if wave.channels() == 0 {
     } else if wave.channels() == 1 {
       let mono = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
-      self.sequence_indefinite(An(mono));
+      self.sequence(An(mono), duration, 0.0, 0.0);
     } else {
-      let l = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
-      let r = fundsp::wave::WavePlayer::new(&wave, 1, 0, wave.len(), None);
-      self.sequence_indefinite(An(l) | An(r));
+      let left = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
+      let right = fundsp::wave::WavePlayer::new(&wave, 1, 0, wave.len(), None);
+      self.sequence(An(left) | An(right), duration, 0.0, 0.0);
     }
   }
 }
