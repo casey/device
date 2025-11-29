@@ -138,8 +138,8 @@ impl Iterator for Backend {
       );
     }
 
-    let channel = self.sample.into_usize() % usize::from(Tap::CHANNELS);
-    let sample = (self.sample.into_usize() / usize::from(Tap::CHANNELS)) % MAX_BUFFER_SIZE;
+    let channel = self.sample.into_usize() % Tap::CHANNELS.into_usize();
+    let sample = (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE;
 
     let mut sum = self.buffer.at_f32(channel, sample);
 
