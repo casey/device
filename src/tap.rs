@@ -141,7 +141,7 @@ impl Tap {
       }
     }
 
-    let mut output_wave = Wave::new(0, 96_000.0);
+    let mut output_wave = Wave::new(0, sample_rate as f64);
 
     for channel in output_channels {
       output_wave.push_channel(&channel);
