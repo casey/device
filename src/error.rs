@@ -251,6 +251,21 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
+  #[snafu(display("failed to load audio track"))]
+  TrackLoad {
+    backtrace: Option<Backtrace>,
+    source: symphonia::core::errors::Error,
+  },
+  #[snafu(display("failed to resample audio"))]
+  TrackResample {
+    backtrace: Option<Backtrace>,
+    source: rubato::ResampleError,
+  },
+  #[snafu(display("failed to resample audio"))]
+  TrackResamplerConstruction {
+    backtrace: Option<Backtrace>,
+    source: rubato::ResamplerConstructionError,
+  },
   #[snafu(display("default texture format {texture_format:?} not supported"))]
   UnsupportedTextureFormat {
     backtrace: Option<Backtrace>,

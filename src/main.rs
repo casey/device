@@ -161,7 +161,7 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
     rubato::{FftFixedIn, Resampler},
   };
 
-  let mut wave = Wave::load(path).unwrap();
+  let mut wave = Wave::load(path).context(error::TrackLoad)?;
 
   for channel in Tap::CHANNELS.into_usize()..wave.channels() {
     wave.remove_channel(channel);
@@ -178,10 +178,7 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
     2,
     wave.channels(),
   )
-  .unwrap();
-
-  // (0..wave.channels()).map(|channel| wave.channel(channel).chunks(1024))
-  // iterater of iterator of chunks
+  .context(error::TrackResamplerConstruction)?;
 
   let mut output_buffer = resampler.output_buffer_allocate(true);
   let mut input_buffer = resampler.input_buffer_allocate(true);
@@ -209,7 +206,7 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
 
       let (_input, output) = resampler
         .process_partial_into_buffer(Some(&input_buffer), &mut output_buffer, None)
-        .unwrap();
+        .context(error::TrackResample)?;
 
       for channel in 0..wave.channels() {
         output_channels[channel].extend(&output_buffer[channel][0..output]);
@@ -224,7 +221,7 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
 
     let (input, output) = resampler
       .process_into_buffer(&input_buffer, &mut output_buffer, None)
-      .unwrap();
+      .context(error::TrackResample)?;
 
     assert_eq!(input, 1024);
 
