@@ -3,12 +3,12 @@ use {
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, config::Config,
     controller::Controller, error::Error, event::Event, field::Field, filter::Filter,
     format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
-    into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
-    message::Message, options::Options, parameter::Parameter, patch::Patch, program::Program,
-    recorder::Recorder, renderer::Renderer, scene::Scene, score::Score, shared::Shared,
-    sound::Sound, state::State, stream_config_display::StreamConfigDisplay, subcommand::Subcommand,
-    tally::Tally, tap::Tap, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling,
-    uniforms::Uniforms,
+    into_stereo::IntoStereo, into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize,
+    into_utf8_path::IntoUtf8Path, message::Message, options::Options, parameter::Parameter,
+    patch::Patch, program::Program, recorder::Recorder, renderer::Renderer, scene::Scene,
+    score::Score, shared::Shared, sound::Sound, state::State,
+    stream_config_display::StreamConfigDisplay, subcommand::Subcommand, tally::Tally, tap::Tap,
+    target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -94,6 +94,7 @@ mod frame;
 mod hub;
 mod image;
 mod input;
+mod into_stereo;
 mod into_u128;
 mod into_u64;
 mod into_usize;

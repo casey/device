@@ -6,34 +6,12 @@ use {
     audiounit::AudioUnit,
     buffer::{BufferRef, BufferVec},
     combinator::An,
-    prelude::{U0, U1, U2, split},
+    prelude::U0,
     sequencer::{Fade, Sequencer},
     wave::{Wave, WavePlayer},
   },
   rubato::{FftFixedIn, Resampler},
 };
-
-pub(crate) trait IntoStereo<Outputs> {
-  fn into_stereo(self) -> Box<dyn AudioUnit>;
-}
-
-impl<T> IntoStereo<U1> for T
-where
-  T: AudioNode<Inputs = U0, Outputs = U1> + 'static,
-{
-  fn into_stereo(self) -> Box<dyn AudioUnit> {
-    Box::new(An(self) >> split::<U2>())
-  }
-}
-
-impl<T> IntoStereo<U2> for T
-where
-  T: AudioNode<Inputs = U0, Outputs = U2> + 'static,
-{
-  fn into_stereo(self) -> Box<dyn AudioUnit> {
-    Box::new(An(self))
-  }
-}
 
 #[derive(Clone)]
 pub(crate) struct Tap(Arc<Mutex<Backend>>);
@@ -182,7 +160,7 @@ impl Tap {
       Fade::default(),
       fade_in,
       fade_out,
-      node.0.into_stereo(), // Box<dyn AudioUnit>
+      node.0.into_stereo(),
     );
   }
 
@@ -194,10 +172,14 @@ impl Tap {
   }
 
   pub(crate) fn sequence_wave(&self, wave: Wave) {
+    if wave.channels() == 0 {
+      return;
+    }
+
     let wave = Arc::new(wave);
     let duration = wave.duration();
-    if wave.channels() == 0 {
-    } else if wave.channels() == 1 {
+
+    if wave.channels() == 1 {
       let mono = WavePlayer::new(&wave, 0, 0, wave.len(), None);
       self.sequence(An(mono), duration, 0.0, 0.0);
     } else {
