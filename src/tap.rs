@@ -34,7 +34,7 @@ impl Tap {
 
     let stream = output_device
       .build_output_stream(
-        &stream_config,
+        stream_config,
         move |data: &mut [f32], _info| {
           backend.lock().unwrap().write(data);
         },
@@ -45,7 +45,7 @@ impl Tap {
 
     log::info!(
       "output stream opened: {}",
-      StreamConfigDisplay(&stream_config),
+      StreamConfigDisplay(stream_config),
     );
 
     Ok(stream)
