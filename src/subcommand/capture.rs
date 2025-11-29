@@ -68,7 +68,7 @@ impl Capture {
 
     let mut media = Vec::new();
 
-    let mut buffer = vec![0.0; spf.into_usize() * Tap::CHANNELS.into_usize()];
+    let mut samples = vec![0.0; spf.into_usize() * Tap::CHANNELS.into_usize()];
 
     let mut done = false;
     for frame in 0.. {
@@ -80,7 +80,7 @@ impl Capture {
 
       done = tap.is_done();
 
-      tap.write(&mut buffer);
+      tap.write(&mut samples);
 
       let sound = tap.drain();
       analyzer.update(&sound, done, &state);
