@@ -8,19 +8,19 @@ pub(crate) struct Sound {
 }
 
 impl Sound {
+  pub(crate) fn downmix(&self) -> impl Iterator<Item = f32> {
+    self
+      .samples
+      .chunks(self.channels.into())
+      .map(|chunk| chunk.iter().sum::<f32>() / self.channels as f32)
+  }
+
   pub(crate) fn duration_micros(&self) -> u128 {
     if self.channels == 0 || self.sample_rate == 0 {
       return 0;
     }
     self.samples.len().into_u128() / u128::from(self.channels) * 1_000_000
       / u128::from(self.sample_rate)
-  }
-
-  pub(crate) fn downmix(&self) -> impl Iterator<Item = f32> {
-    self
-      .samples
-      .chunks(self.channels.into())
-      .map(|chunk| chunk.iter().sum::<f32>() / self.channels as f32)
   }
 
   pub(crate) fn save<'a>(path: &Utf8Path, mut sounds: impl Iterator<Item = &'a Sound>) -> Result {
