@@ -17,12 +17,11 @@ pub(crate) struct App {
   makro: Vec<(Key, bool)>,
   options: Options,
   #[allow(unused)]
-  output_stream: cpal::Stream,
+  output: cpal::Stream,
   patch: Patch,
   play: bool,
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
-  // sink: Sink,
   state: State,
   tap: Tap,
   window: Option<Arc<Window>>,
@@ -105,7 +104,7 @@ impl App {
 
     let tap = Tap::new(stream_config.sample_rate.0);
 
-    let output_stream = output_device
+    let output = output_device
       .build_output_stream(
         &stream_config,
         {
@@ -124,15 +123,7 @@ impl App {
       StreamConfigDisplay(&stream_config),
     );
 
-    // let sink = Sink::connect_new(output_stream.mixer());
-
     tap.pause();
-
-    // if let Some(volume) = options.volume {
-    //   sink.set_volume(volume);
-    // }
-
-    // let tap = Tap::new(output_stream.config().sample_rate());
 
     let input = if options.input {
       let input_device = host
@@ -181,12 +172,11 @@ impl App {
       macro_recording: None,
       makro: Vec::new(),
       options,
-      output_stream,
+      output,
       patch: Patch::default(),
       play: false,
       recorder,
       renderer: None,
-      // sink,
       state,
       tap,
       window: None,

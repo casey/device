@@ -40,8 +40,6 @@ pub(crate) struct Options {
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
   pub(crate) verbose: bool,
-  #[arg(long)]
-  pub(crate) volume: Option<f32>,
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) vw: Option<f32>,
   #[arg(allow_hyphen_values = true, long)]
