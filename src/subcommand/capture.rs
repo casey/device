@@ -68,6 +68,8 @@ impl Capture {
 
     let mut media = Vec::new();
 
+    let mut buffer = vec![0.0; spf.into_usize() * Tap::CHANNELS.into_usize()];
+
     let mut done = false;
     for frame in 0.. {
       if frames.map_or(done, |frames| frame == frames) {
@@ -78,10 +80,7 @@ impl Capture {
 
       done = tap.is_done();
 
-      for _ in 0..spf * u32::from(Tap::CHANNELS) {
-        // todo: fixme
-        // tap.next();
-      }
+      tap.write(&mut buffer);
 
       let sound = tap.drain();
       analyzer.update(&sound, done, &state, None);
