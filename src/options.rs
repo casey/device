@@ -53,13 +53,12 @@ pub(crate) struct Options {
 impl Options {
   pub(crate) fn add_source(&self, config: &Config, tap: &Tap) -> Result {
     if let Some(song) = &self.song {
-      eprintln!("finding {song}");
-      let wave = tap.load_wave(&config.find_song(song)?).unwrap();
+      let wave = tap.load_wave(&config.find_song(song)?)?;
       tap.sequence_wave(wave);
     } else if let Some(score) = self.score {
       score.sequence(tap);
     } else if let Some(track) = &self.track {
-      let wave = tap.load_wave(track).unwrap();
+      let wave = tap.load_wave(track)?;
       tap.sequence_wave(wave);
     } else if let Some(program) = self.program {
       program.add_source(config, tap)?;
