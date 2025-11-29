@@ -22,14 +22,6 @@ pub(crate) struct Tap {
   sequencer: Sequencer,
 }
 
-pub(crate) struct Backend {
-  buffer: BufferVec,
-  paused: Arc<AtomicBool>,
-  sample: u64,
-  samples: Vec<f32>,
-  sequencer_backend: SequencerBackend,
-}
-
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
@@ -195,6 +187,14 @@ impl Tap {
       self.sequence(An(left) | An(right), duration, 0.0, 0.0);
     }
   }
+}
+
+pub(crate) struct Backend {
+  buffer: BufferVec,
+  paused: Arc<AtomicBool>,
+  sample: u64,
+  samples: Vec<f32>,
+  sequencer_backend: SequencerBackend,
 }
 
 impl Backend {
