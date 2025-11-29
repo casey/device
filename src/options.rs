@@ -51,7 +51,7 @@ pub(crate) struct Options {
 }
 
 impl Options {
-  pub(crate) fn add_source(&self, config: &Config, tap: &Tap) -> Result {
+  pub(crate) fn add_source(&self, config: &Config, tap: &mut Tap) -> Result {
     if let Some(song) = &self.song {
       let wave = tap.load_wave(&config.find_song(song)?)?;
       tap.sequence_wave(&wave);

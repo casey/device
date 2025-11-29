@@ -35,7 +35,7 @@ impl Capture {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
     let mut tap = Tap::new(DEFAULT_SAMPLE_RATE);
 
-    options.add_source(&config, &tap)?;
+    options.add_source(&config, &mut tap)?;
 
     let mut analyzer = Analyzer::new();
 

@@ -101,7 +101,7 @@ impl App {
       SupportedBufferSize::Unknown => BufferSize::Default,
     };
 
-    let tap = Tap::new(stream_config.sample_rate.0);
+    let mut tap = Tap::new(stream_config.sample_rate.0);
 
     let output = output_device
       .build_output_stream(
@@ -142,7 +142,7 @@ impl App {
       None
     };
 
-    options.add_source(&config, &tap)?;
+    options.add_source(&config, &mut tap)?;
 
     let recorder = record
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
@@ -223,7 +223,7 @@ impl App {
             "2" => self.patch = Patch::Saw,
             _ => {
               if let Some(semitones) = Self::semitones(c) {
-                self.patch.sequence(semitones, &self.tap);
+                self.patch.sequence(semitones, &mut self.tap);
               }
             }
           },

@@ -7,6 +7,7 @@ use {
     buffer::{BufferRef, BufferVec},
     combinator::An,
     prelude::U0,
+    realseq::SequencerBackend,
     sequencer::{Fade, Sequencer},
     wave::{Wave, WavePlayer},
   },
@@ -14,23 +15,26 @@ use {
 };
 
 #[derive(Clone)]
-pub(crate) struct Tap(Arc<Mutex<Backend>>);
+pub(crate) struct Tap {
+  backend: Arc<Mutex<Backend>>,
+  done: f64,
+  sequencer: Sequencer,
+}
 
 struct Backend {
   buffer: BufferVec,
-  done: f64,
   paused: bool,
   sample: u64,
   sample_rate: u32,
   samples: Vec<f32>,
-  sequencer: Sequencer,
+  sequencer: SequencerBackend,
 }
 
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
   pub(crate) fn drain(&mut self) -> Sound {
-    let mut backend = self.0.lock().unwrap();
+    let mut backend = self.backend.lock().unwrap();
     Sound {
       channels: Self::CHANNELS,
       sample_rate: backend.sample_rate,
@@ -39,21 +43,12 @@ impl Tap {
   }
 
   pub(crate) fn is_done(&self) -> bool {
-    let backend = self.0.lock().unwrap();
-    backend.sequencer.time() >= backend.done
-  }
-
-  pub(crate) fn pause(&self) {
-    self.0.lock().unwrap().paused = true;
-  }
-
-  pub(crate) fn play(&self) {
-    self.0.lock().unwrap().paused = false;
+    self.sequencer.time() >= self.done
   }
 
   pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Arc<Wave>> {
     const CHUNK: usize = 1024;
-    let sample_rate = self.0.lock().unwrap().sample_rate;
+    let sample_rate = self.backend.lock().unwrap().sample_rate;
 
     let mut wave = Wave::load(path).context(error::WaveLoad)?;
 
@@ -129,29 +124,40 @@ impl Tap {
   pub(crate) fn new(sample_rate: u32) -> Self {
     let mut sequencer = Sequencer::new(false, Self::CHANNELS.into());
     sequencer.set_sample_rate(sample_rate.into());
-    Self(Arc::new(Mutex::new(Backend {
-      buffer: BufferVec::new(Self::CHANNELS.into()),
+    let backend = sequencer.backend();
+    Self {
       done: 0.0,
-      sample: 0,
-      sample_rate,
-      samples: Vec::new(),
       sequencer,
-      paused: false,
-    })))
+      backend: Arc::new(Mutex::new(Backend {
+        buffer: BufferVec::new(Self::CHANNELS.into()),
+        sample: 0,
+        sample_rate,
+        samples: Vec::new(),
+        sequencer: backend,
+        paused: false,
+      })),
+    }
+  }
+
+  pub(crate) fn pause(&self) {
+    self.backend.lock().unwrap().paused = true;
+  }
+
+  pub(crate) fn play(&self) {
+    self.backend.lock().unwrap().paused = false;
   }
 
   pub(crate) fn sample_rate(&self) -> u32 {
-    self.0.lock().unwrap().sample_rate
+    self.backend.lock().unwrap().sample_rate
   }
 
-  pub(crate) fn sequence<T>(&self, node: An<T>, duration: f64, fade_in: f64, fade_out: f64)
+  pub(crate) fn sequence<T>(&mut self, node: An<T>, duration: f64, fade_in: f64, fade_out: f64)
   where
     T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
   {
-    let mut backend = self.0.lock().unwrap();
-    backend.done = backend.sequencer.time() + duration;
+    self.done = self.sequencer.time() + duration;
 
-    backend.sequencer.push_relative(
+    self.sequencer.push_relative(
       0.0,
       duration,
       Fade::default(),
@@ -161,14 +167,14 @@ impl Tap {
     );
   }
 
-  pub(crate) fn sequence_indefinite<T>(&self, audio_node: An<T>)
+  pub(crate) fn sequence_indefinite<T>(&mut self, audio_node: An<T>)
   where
     T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
   {
     self.sequence(audio_node, f64::INFINITY, 0.0, 0.0);
   }
 
-  pub(crate) fn sequence_wave(&self, wave: &Arc<Wave>) {
+  pub(crate) fn sequence_wave(&mut self, wave: &Arc<Wave>) {
     if wave.channels() == 0 {
       return;
     }
@@ -186,7 +192,7 @@ impl Tap {
   }
 
   pub(crate) fn write(&self, buffer: &mut [f32]) {
-    self.0.lock().unwrap().write(buffer);
+    self.backend.lock().unwrap().write(buffer);
   }
 }
 

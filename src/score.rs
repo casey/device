@@ -14,7 +14,7 @@ pub(crate) enum Score {
 }
 
 impl Score {
-  pub(crate) fn sequence(self, tap: &Tap) {
+  pub(crate) fn sequence(self, tap: &mut Tap) {
     match self {
       Self::BusySignal => tap.sequence_indefinite(
         (sine_hz(480.0) + sine_hz(620.0)) * lfo(|t| if t % 1.0 < 0.5 { 1.0 } else { 0.0 }) * 0.25,

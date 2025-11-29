@@ -9,7 +9,7 @@ pub(crate) enum Program {
 }
 
 impl Program {
-  pub(crate) fn add_source(self, config: &Config, tap: &Tap) -> Result {
+  pub(crate) fn add_source(self, config: &Config, tap: &mut Tap) -> Result {
     match self {
       Self::Hello => {
         let wave = tap.load_wave(&config.find_song("old generic boss")?)?;
