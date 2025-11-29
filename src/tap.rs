@@ -1,13 +1,14 @@
-use super::*;
-
-use fundsp::{
-  MAX_BUFFER_SIZE,
-  audionode::AudioNode,
-  audiounit::AudioUnit,
-  buffer::{BufferRef, BufferVec},
-  combinator::An,
-  prelude::{U0, U1, U2, split},
-  sequencer::{Fade, Sequencer},
+use {
+  super::*,
+  fundsp::{
+    MAX_BUFFER_SIZE,
+    audionode::AudioNode,
+    audiounit::AudioUnit,
+    buffer::{BufferRef, BufferVec},
+    combinator::An,
+    prelude::{U0, U1, U2, split},
+    sequencer::{Fade, Sequencer},
+  },
 };
 
 #[derive(Clone)]
