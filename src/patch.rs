@@ -1,4 +1,7 @@
-use super::*;
+use {
+  super::*,
+  fundsp::hacker32::{saw_hz, sine_hz},
+};
 
 #[derive(Clone, Copy, Default)]
 pub(crate) enum Patch {
@@ -8,26 +11,11 @@ pub(crate) enum Patch {
 }
 
 impl Patch {
-  pub(crate) fn add(self, semitones: u8, mixer: &Tap) {
+  pub(crate) fn sequence(self, semitones: u8, tap: &Tap) {
     let frequency = 261.63 * 2.0f32.powf(semitones as f32 / 12.0);
-
     match self {
-      Self::Saw => {
-        mixer.add(
-          voice::Saw { frequency }
-            .envelope(0.001, 0.1, 0.2, 0.1)
-            .gain(0.25)
-            .emitter(),
-        );
-      }
-      Self::Sine => {
-        mixer.add(
-          voice::Sine { frequency }
-            .envelope(0.001, 0.1, 0.2, 0.1)
-            .gain(0.25)
-            .emitter(),
-        );
-      }
+      Self::Saw => tap.sequence(saw_hz(frequency) * 0.25, 0.3, 0.05, 0.05),
+      Self::Sine => tap.sequence(sine_hz(frequency) * 0.25, 0.3, 0.05, 0.05),
     }
   }
 }

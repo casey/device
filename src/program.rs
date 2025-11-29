@@ -12,8 +12,8 @@ impl Program {
   pub(crate) fn add_source(self, config: &Config, tap: &Tap) -> Result {
     match self {
       Self::Hello => tap.add(open_audio_file(&config.find_song("old generic boss")?)?),
-      Self::Busy => tap.add(Score::BusySignal.source()),
-      Self::Noise => tap.add(Score::BrownNoise.source()),
+      Self::Busy => Score::BusySignal.sequence(tap),
+      Self::Noise => Score::BrownNoise.sequence(tap),
     }
     Ok(())
   }

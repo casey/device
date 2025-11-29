@@ -57,7 +57,7 @@ impl Options {
     if let Some(song) = &self.song {
       tap.add(open_audio_file(&config.find_song(song)?)?);
     } else if let Some(score) = self.score {
-      tap.add(score.source());
+      score.sequence(tap);
     } else if let Some(track) = &self.track {
       tap.add(open_audio_file(track)?);
     } else if let Some(program) = self.program {

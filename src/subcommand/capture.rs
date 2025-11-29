@@ -1,5 +1,9 @@
 use super::*;
 
+const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
+
+const DEFAULT_SAMPLE_RATE: u32 = 48_000;
+
 const PROGRESS_CHARS: &str = "█▉▊▋▌▍▎▏ ";
 
 const TICK_CHARS: &str = concat!(
@@ -29,7 +33,7 @@ pub(crate) struct Capture {
 
 impl Capture {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
-    let mut tap = Tap::new(DEFAULT_CHANNEL_COUNT, DEFAULT_SAMPLE_RATE);
+    let mut tap = Tap::new(DEFAULT_SAMPLE_RATE);
 
     options.add_source(&config, &tap)?;
 
@@ -72,7 +76,7 @@ impl Capture {
 
       progress.inc(1);
 
-      done = tap.is_empty();
+      done = tap.is_done();
 
       for _ in 0..spf * u32::from(tap.channels()) {
         tap.next();

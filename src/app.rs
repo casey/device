@@ -90,6 +90,8 @@ impl App {
       output_device
         .supported_output_configs()
         .context(error::AudioSupportedStreamConfigs)?,
+      Tap::CHANNELS,
+      Tap::CHANNELS,
     )?;
 
     let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
@@ -126,10 +128,7 @@ impl App {
       sink.set_volume(volume);
     }
 
-    let tap = Tap::new(
-      output_stream.config().channel_count(),
-      output_stream.config().sample_rate(),
-    );
+    let tap = Tap::new(output_stream.config().sample_rate());
 
     let input = if options.input {
       let input_device = host
@@ -140,6 +139,8 @@ impl App {
         input_device
           .supported_input_configs()
           .context(error::AudioSupportedStreamConfigs)?,
+        1,
+        2,
       )?;
 
       Some(Input::new(input_device, stream_config)?)
@@ -230,7 +231,7 @@ impl App {
             "2" => self.patch = Patch::Saw,
             _ => {
               if let Some(semitones) = Self::semitones(c) {
-                self.patch.add(semitones, &self.tap);
+                self.patch.sequence(semitones, &self.tap);
               }
             }
           },
@@ -430,13 +431,17 @@ impl App {
       }
     }
 
-    let (done, sound) = if let Some(input) = &self.input {
-      (false, input.drain())
+    let sound = if let Some(input) = &self.input {
+      input.drain()
     } else {
-      (self.tap.is_empty(), self.tap.drain())
+      self.tap.drain()
     };
 
-    self.analyzer.update(&sound, done, &self.state);
+    self.analyzer.update(
+      &sound,
+      self.input.is_none() && self.tap.is_done(),
+      &self.state,
+    );
 
     let now = Instant::now();
     let elapsed = now - self.last;
@@ -495,14 +500,18 @@ impl App {
 
   fn select_stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
+    min_channels: u16,
+    max_channels: u16,
   ) -> Result<SupportedStreamConfig> {
     let config = configs
-      .filter(|config| config.sample_format() == cpal::SampleFormat::F32)
+      .filter(|config| {
+        config.channels() >= min_channels && config.sample_format() == cpal::SampleFormat::F32
+      })
       .max_by_key(SupportedStreamConfigRange::max_sample_rate)
       .context(error::AudioSupportedStreamConfig)?;
 
     Ok(SupportedStreamConfig::new(
-      config.channels().min(2),
+      config.channels().clamp(min_channels, max_channels),
       config.max_sample_rate(),
       *config.buffer_size(),
       config.sample_format(),

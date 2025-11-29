@@ -1,13 +1,13 @@
 use {
   self::{
     analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, config::Config,
-    controller::Controller, emitter::Emitter, error::Error, event::Event, field::Field,
-    filter::Filter, format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
+    controller::Controller, error::Error, event::Event, field::Field, filter::Filter,
+    format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
     into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
     message::Message, options::Options, parameter::Parameter, patch::Patch, program::Program,
     recorder::Recorder, renderer::Renderer, scene::Scene, score::Score, shared::Shared,
     sound::Sound, state::State, subcommand::Subcommand, tally::Tally, tap::Tap, target::Target,
-    templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms, voice::Voice,
+    templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -16,7 +16,6 @@ use {
   indicatif::{ProgressBar, ProgressStyle},
   nalgebra::Vector2,
   parley::{FontContext, LayoutContext},
-  rand::{Rng, SeedableRng, distr::Uniform, rngs::SmallRng},
   regex::{Regex, RegexBuilder},
   rodio::{
     Decoder, OutputStream, Sink, Source,
@@ -31,7 +30,6 @@ use {
   serde::Deserialize,
   snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu},
   std::{
-    array,
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     collections::VecDeque,
@@ -89,7 +87,6 @@ mod arguments;
 mod bindings;
 mod config;
 mod controller;
-mod emitter;
 mod error;
 mod event;
 mod field;
@@ -124,7 +121,6 @@ mod templates;
 mod text;
 mod tiling;
 mod uniforms;
-mod voice;
 
 const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
@@ -132,10 +128,7 @@ const MIB: usize = KIB << 10;
 const AUDIO: &str = "audio.wav";
 const COLOR_CHANNELS: u32 = 4;
 const DEFAULT_BUFFER_SIZE: u32 = 128;
-const DEFAULT_CHANNEL_COUNT: u16 = 2;
-const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
-const DEFAULT_SAMPLE_RATE: u32 = 48_000;
 const FONT: &str = "Helvetica Neue";
 const RECORDING: &str = "recording.mp4";
 

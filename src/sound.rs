@@ -8,6 +8,13 @@ pub(crate) struct Sound {
 }
 
 impl Sound {
+  pub(crate) fn downmix(&self) -> impl Iterator<Item = f32> {
+    self
+      .samples
+      .chunks(self.channels.into())
+      .map(|chunk| chunk.iter().sum::<f32>() / self.channels as f32)
+  }
+
   pub(crate) fn duration_micros(&self) -> u128 {
     if self.channels == 0 || self.sample_rate == 0 {
       return 0;
@@ -22,8 +29,8 @@ impl Sound {
     let mut writer = WavWriter::create(
       path,
       WavSpec {
-        channels: first.map_or(DEFAULT_CHANNEL_COUNT, |first| first.channels),
-        sample_rate: first.map_or(DEFAULT_SAMPLE_RATE, |first| first.sample_rate),
+        channels: first.map_or(2, |first| first.channels),
+        sample_rate: first.map_or(48_000, |first| first.sample_rate),
         bits_per_sample: 32,
         sample_format: hound::SampleFormat::Float,
       },

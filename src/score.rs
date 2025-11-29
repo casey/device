@@ -1,4 +1,7 @@
-use super::*;
+use {
+  super::*,
+  fundsp::hacker32::{brown, constant, lfo, pink, ramp_hz, shape_fn, sine_hz, white},
+};
 
 #[derive(Clone, Copy, ValueEnum)]
 pub(crate) enum Score {
@@ -11,34 +14,27 @@ pub(crate) enum Score {
 }
 
 impl Score {
-  pub(crate) fn source(self) -> Box<dyn Source + Send> {
+  pub(crate) fn sequence(self, tap: &Tap) {
     match self {
-      Self::BrownNoise => voice::BrownNoise::new().gain(0.125).source(),
-      Self::BusySignal => voice::Cycle {
-        inner: voice::Gate {
-          after: 0.5,
-          inner: voice::Sum::new()
-            .add(voice::Sine { frequency: 480.0 })
-            .add(voice::Sine { frequency: 620.0 }),
-        },
-        period: 1.0,
+      Self::BusySignal => tap.sequence_indefinite(
+        (sine_hz(480.0) + sine_hz(620.0)) * lfo(|t| if t % 1.0 < 0.5 { 1.0 } else { 0.0 }) * 0.25,
+      ),
+      Self::BrownNoise => {
+        tap.sequence_indefinite(brown() * 0.25);
       }
-      .gain(0.25)
-      .source(),
-      Self::ClickTrack => voice::Cycle {
-        period: 2.0 / 3.0,
-        inner: voice::Envelope {
-          attack: 0.001,
-          decay: 0.02,
-          sustain: 0.000,
-          release: 0.002,
-          inner: voice::BrownNoise::new(),
-        },
+
+      Self::ClickTrack => tap.sequence_indefinite(
+        (ramp_hz(2.0 / 3.0) >> shape_fn(|x: f32| if x < 0.010 { 1.0 } else { 0.0 }))
+          * brown()
+          * 0.5,
+      ),
+      Self::PinkNoise => {
+        tap.sequence_indefinite(pink() * 0.25);
       }
-      .source(),
-      Self::PinkNoise => voice::PinkNoise::new().gain(0.125).source(),
-      Self::Silence => voice::Silence.source(),
-      Self::WhiteNoise => voice::WhiteNoise::new().gain(0.125).source(),
+      Self::Silence => tap.sequence_indefinite(constant(0.0)),
+      Self::WhiteNoise => {
+        tap.sequence_indefinite(white() * 0.25);
+      }
     }
   }
 }

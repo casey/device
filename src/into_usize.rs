@@ -2,7 +2,19 @@ pub(crate) trait IntoUsize {
   fn into_usize(self) -> usize;
 }
 
+impl IntoUsize for u16 {
+  fn into_usize(self) -> usize {
+    self.into()
+  }
+}
+
 impl IntoUsize for u32 {
+  fn into_usize(self) -> usize {
+    self.try_into().unwrap()
+  }
+}
+
+impl IntoUsize for u64 {
   fn into_usize(self) -> usize {
     self.try_into().unwrap()
   }
@@ -13,7 +25,17 @@ mod tests {
   use super::*;
 
   #[test]
+  fn u16_into_usize() {
+    u16::MAX.into_usize();
+  }
+
+  #[test]
   fn u32_into_usize() {
     u32::MAX.into_usize();
+  }
+
+  #[test]
+  fn u64_into_usize() {
+    u64::MAX.into_usize();
   }
 }
