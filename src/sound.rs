@@ -42,17 +42,17 @@ impl Sound {
         sample_format: hound::SampleFormat::Float,
       },
     )
-    .context(error::WavCreate { path })?;
+    .context(error::WaveCreate { path })?;
 
     for sound in first.into_iter().chain(sounds) {
       for sample in &sound.samples {
         writer
           .write_sample(*sample)
-          .context(error::WavWrite { path })?;
+          .context(error::WaveWrite { path })?;
       }
     }
 
-    writer.finalize().context(error::WavFinalize { path })?;
+    writer.finalize().context(error::WaveFinalize { path })?;
 
     Ok(())
   }

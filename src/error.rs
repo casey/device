@@ -256,20 +256,14 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     texture_format: TextureFormat,
   },
-  #[snafu(display("failed to create wav writer"))]
-  WavCreate {
+  #[snafu(display("failed to create wave writer"))]
+  WaveCreate {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
     source: hound::Error,
   },
-  #[snafu(display("failed to finalize wav writer"))]
-  WavFinalize {
-    backtrace: Option<Backtrace>,
-    path: Utf8PathBuf,
-    source: hound::Error,
-  },
-  #[snafu(display("failed to write wav samples"))]
-  WavWrite {
+  #[snafu(display("failed to finalize wave writer"))]
+  WaveFinalize {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
     source: hound::Error,
@@ -288,6 +282,12 @@ pub(crate) enum Error {
   WaveResamplerConstruction {
     backtrace: Option<Backtrace>,
     source: rubato::ResamplerConstructionError,
+  },
+  #[snafu(display("failed to write wave samples"))]
+  WaveWrite {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: hound::Error,
   },
 }
 
