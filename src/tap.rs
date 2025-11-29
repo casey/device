@@ -175,7 +175,6 @@ impl Tap {
     T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
   {
     self.done = self.sequencer.time() + duration;
-
     self.sequencer.push_relative(
       0.0,
       duration,
@@ -184,13 +183,6 @@ impl Tap {
       fade_out,
       node.0.into_stereo(),
     );
-  }
-
-  pub(crate) fn sequence_indefinite<T>(&mut self, audio_node: An<T>)
-  where
-    T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
-  {
-    self.sequence(audio_node, f64::INFINITY, 0.0, 0.0);
   }
 
   pub(crate) fn sequence_wave(&mut self, wave: &Arc<Wave>) {
