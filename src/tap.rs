@@ -208,7 +208,7 @@ impl Tap {
 
 impl Backend {
   fn write(&mut self, buffer: &mut [f32]) {
-    for x in buffer {
+    for sample in buffer {
       if self
         .sample
         .is_multiple_of(MAX_BUFFER_SIZE.into_u64() * u64::from(Tap::CHANNELS))
@@ -220,12 +220,12 @@ impl Backend {
         );
       }
 
-      let channel = self.sample.into_usize() % Tap::CHANNELS.into_usize();
-      let sample = (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE;
+      *sample = self.buffer.at_f32(
+        self.sample.into_usize() % Tap::CHANNELS.into_usize(),
+        (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE,
+      );
 
-      *x = self.buffer.at_f32(channel, sample);
-
-      self.samples.push_back(*x);
+      self.samples.push_back(*sample);
 
       self.sample += 1;
     }
