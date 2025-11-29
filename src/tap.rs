@@ -10,6 +10,7 @@ use {
     sequencer::{Fade, Sequencer},
     wave::{Wave, WavePlayer},
   },
+  rubato::{FftFixedIn, Resampler},
 };
 
 pub(crate) trait IntoStereo<Outputs> {
@@ -66,6 +67,87 @@ impl Tap {
     backend.active.is_empty()
       && backend.pending.is_empty()
       && backend.sequencer.time() >= backend.done
+  }
+
+  // todo:
+  // - deal with delay
+  // - deal with there still being chunks in the resampler
+  pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Wave> {
+    const CHUNK: usize = 1024;
+    let sample_rate = self.0.lock().unwrap().sample_rate;
+
+    let mut wave = Wave::load(path).context(error::WaveLoad)?;
+
+    for channel in Self::CHANNELS.into_usize()..wave.channels() {
+      wave.remove_channel(channel);
+    }
+
+    dbg!(wave.channels());
+    dbg!(wave.sample_rate());
+
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+    let mut resampler = FftFixedIn::<f32>::new(
+      wave.sample_rate() as usize,
+      sample_rate.into_usize(),
+      CHUNK,
+      2,
+      wave.channels(),
+    )
+    .context(error::WaveResamplerConstruction)?;
+
+    let mut output_buffer = resampler.output_buffer_allocate(true);
+    let mut input_buffer = resampler.input_buffer_allocate(true);
+
+    let mut output_channels = vec![Vec::<f32>::new(); wave.channels()];
+
+    for chunk in 0.. {
+      let start = chunk * CHUNK;
+      let end = start + CHUNK;
+      let remaining = wave.len() - start;
+
+      if remaining == 0 {
+        break;
+      } else if remaining < CHUNK {
+        let samples = wave.len() - start;
+
+        for (channel, buffer) in input_buffer.iter_mut().enumerate() {
+          buffer[0..samples].copy_from_slice(&wave.channel(channel)[start..start + samples]);
+          buffer.truncate(samples);
+        }
+
+        let (_input, output) = resampler
+          .process_partial_into_buffer(Some(&input_buffer), &mut output_buffer, None)
+          .context(error::WaveResample)?;
+
+        for channel in 0..wave.channels() {
+          output_channels[channel].extend(&output_buffer[channel][0..output]);
+        }
+
+        break;
+      }
+
+      for (channel, buffer) in input_buffer.iter_mut().enumerate() {
+        buffer[0..CHUNK].copy_from_slice(&wave.channel(channel)[start..end]);
+      }
+
+      let (input, output) = resampler
+        .process_into_buffer(&input_buffer, &mut output_buffer, None)
+        .context(error::WaveResample)?;
+
+      assert_eq!(input, CHUNK);
+
+      for channel in 0..wave.channels() {
+        output_channels[channel].extend(&output_buffer[channel][0..output]);
+      }
+    }
+
+    let mut output_wave = Wave::new(0, 96_000.0);
+
+    for channel in output_channels {
+      output_wave.push_channel(&channel);
+    }
+
+    Ok(output_wave)
   }
 
   pub(crate) fn new(sample_rate: u32) -> Self {
