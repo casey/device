@@ -6,10 +6,32 @@ use {
     audiounit::AudioUnit,
     buffer::{BufferRef, BufferVec},
     combinator::An,
-    prelude::{U0, U2, split},
+    prelude::{U0, U1, U2, split},
     sequencer::{Fade, Sequencer},
   },
 };
+
+pub(crate) trait IntoStereo<Out> {
+  fn into_stereo(self) -> Box<dyn AudioUnit>;
+}
+
+impl<T> IntoStereo<U1> for T
+where
+  T: AudioNode<Inputs = U0, Outputs = U1> + 'static,
+{
+  fn into_stereo(self) -> Box<dyn AudioUnit> {
+    Box::new(An(self) >> split::<U2>())
+  }
+}
+
+impl<T> IntoStereo<U2> for T
+where
+  T: AudioNode<Inputs = U0, Outputs = U2> + 'static,
+{
+  fn into_stereo(self) -> Box<dyn AudioUnit> {
+    Box::new(An(self))
+  }
+}
 
 #[derive(Clone)]
 pub(crate) struct Tap(Arc<Mutex<Backend>>);
@@ -60,29 +82,27 @@ impl Tap {
     })))
   }
 
-  pub(crate) fn sequence<T: AudioNode<Inputs = U0, Outputs = U2> + 'static>(
-    &self,
-    audio_node: An<T>,
-    duration: f64,
-    fade_in: f64,
-    fade_out: f64,
-  ) {
+  pub(crate) fn sequence<T>(&self, node: An<T>, duration: f64, fade_in: f64, fade_out: f64)
+  where
+    T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
+  {
     let mut backend = self.0.lock().unwrap();
     backend.done = backend.sequencer.time() + duration;
+
     backend.sequencer.push_relative(
       0.0,
       duration,
       Fade::default(),
       fade_in,
       fade_out,
-      Box::new(audio_node),
+      node.0.into_stereo(), // Box<dyn AudioUnit>
     );
   }
 
-  pub(crate) fn sequence_indefinite<T: AudioNode<Inputs = U0, Outputs = U2> + 'static>(
-    &self,
-    audio_node: An<T>,
-  ) {
+  pub(crate) fn sequence_indefinite<T>(&self, audio_node: An<T>)
+  where
+    T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
+  {
     self.sequence(audio_node, f64::INFINITY, 0.0, 0.0);
   }
 
@@ -92,7 +112,7 @@ impl Tap {
     if wave.channels() == 0 {
     } else if wave.channels() == 1 {
       let mono = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
-      self.sequence_indefinite(An(mono) >> split::<U2>());
+      self.sequence_indefinite(An(mono));
     } else {
       let l = fundsp::wave::WavePlayer::new(&wave, 0, 0, wave.len(), None);
       let r = fundsp::wave::WavePlayer::new(&wave, 1, 0, wave.len(), None);
