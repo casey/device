@@ -161,6 +161,8 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
     rubato::{FftFixedIn, Resampler},
   };
 
+  const CHUNK: usize = 1024;
+
   let mut wave = Wave::load(path).context(error::TrackLoad)?;
 
   for channel in Tap::CHANNELS.into_usize()..wave.channels() {
@@ -174,7 +176,7 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
   let mut resampler = FftFixedIn::<f32>::new(
     wave.sample_rate() as usize,
     96_000,
-    1024,
+    CHUNK,
     2,
     wave.channels(),
   )
@@ -190,13 +192,13 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
   // - deal with there still being chunks in the resampler
 
   for chunk in 0.. {
-    let start = chunk * 1024;
-    let end = start + 1024;
+    let start = chunk * CHUNK;
+    let end = start + CHUNK;
     let remaining = wave.len() - start;
 
     if remaining == 0 {
       break;
-    } else if remaining < 1024 {
+    } else if remaining < CHUNK {
       let samples = wave.len() - start;
 
       for (channel, buffer) in input_buffer.iter_mut().enumerate() {
@@ -216,14 +218,14 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
     }
 
     for (channel, buffer) in input_buffer.iter_mut().enumerate() {
-      buffer[0..1024].copy_from_slice(&wave.channel(channel)[start..end]);
+      buffer[0..CHUNK].copy_from_slice(&wave.channel(channel)[start..end]);
     }
 
     let (input, output) = resampler
       .process_into_buffer(&input_buffer, &mut output_buffer, None)
       .context(error::TrackResample)?;
 
-    assert_eq!(input, 1024);
+    assert_eq!(input, CHUNK);
 
     for channel in 0..wave.channels() {
       output_channels[channel].extend(&output_buffer[channel][0..output]);
