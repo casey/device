@@ -80,7 +80,7 @@ impl Capture {
 
       done = tap.is_done();
 
-      tap.write(&mut samples);
+      tap.backend().lock().unwrap().write(&mut samples);
 
       let sound = tap.drain();
       analyzer.update(&sound, done, &state);

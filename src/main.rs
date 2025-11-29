@@ -39,7 +39,11 @@ use {
     ops::{Add, AddAssign, SubAssign},
     process::{self, Command, ExitStatus, Stdio},
     str::FromStr,
-    sync::{Arc, Mutex, mpsc},
+    sync::{
+      Arc, Mutex,
+      atomic::{self, AtomicBool},
+      mpsc,
+    },
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
   },

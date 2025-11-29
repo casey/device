@@ -14,31 +14,34 @@ use {
   rubato::{FftFixedIn, Resampler},
 };
 
-#[derive(Clone)]
 pub(crate) struct Tap {
   backend: Arc<Mutex<Backend>>,
   done: f64,
+  paused: Arc<AtomicBool>,
+  sample_rate: u32,
   sequencer: Sequencer,
 }
 
-struct Backend {
+pub(crate) struct Backend {
   buffer: BufferVec,
-  paused: bool,
+  paused: Arc<AtomicBool>,
   sample: u64,
-  sample_rate: u32,
   samples: Vec<f32>,
-  sequencer: SequencerBackend,
+  sequencer_backend: SequencerBackend,
 }
 
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
+  pub(crate) fn backend(&self) -> &Arc<Mutex<Backend>> {
+    &self.backend
+  }
+
   pub(crate) fn drain(&mut self) -> Sound {
-    let mut backend = self.backend.lock().unwrap();
     Sound {
       channels: Self::CHANNELS,
-      sample_rate: backend.sample_rate,
-      samples: backend.samples.drain(..).collect(),
+      sample_rate: self.sample_rate,
+      samples: self.backend.lock().unwrap().samples.drain(..).collect(),
     }
   }
 
@@ -48,7 +51,7 @@ impl Tap {
 
   pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Arc<Wave>> {
     const CHUNK: usize = 1024;
-    let sample_rate = self.backend.lock().unwrap().sample_rate;
+    let sample_rate = self.sample_rate;
 
     let mut wave = Wave::load(path).context(error::WaveLoad)?;
 
@@ -124,31 +127,33 @@ impl Tap {
   pub(crate) fn new(sample_rate: u32) -> Self {
     let mut sequencer = Sequencer::new(false, Self::CHANNELS.into());
     sequencer.set_sample_rate(sample_rate.into());
-    let backend = sequencer.backend();
+    let sequencer_backend = sequencer.backend();
+    let paused = Arc::new(AtomicBool::new(false));
     Self {
-      done: 0.0,
-      sequencer,
       backend: Arc::new(Mutex::new(Backend {
         buffer: BufferVec::new(Self::CHANNELS.into()),
+        paused: paused.clone(),
         sample: 0,
-        sample_rate,
         samples: Vec::new(),
-        sequencer: backend,
-        paused: false,
+        sequencer_backend,
       })),
+      done: 0.0,
+      paused,
+      sample_rate,
+      sequencer,
     }
   }
 
   pub(crate) fn pause(&self) {
-    self.backend.lock().unwrap().paused = true;
+    self.paused.store(true, atomic::Ordering::Relaxed);
   }
 
   pub(crate) fn play(&self) {
-    self.backend.lock().unwrap().paused = false;
+    self.paused.store(false, atomic::Ordering::Relaxed);
   }
 
   pub(crate) fn sample_rate(&self) -> u32 {
-    self.backend.lock().unwrap().sample_rate
+    self.sample_rate
   }
 
   pub(crate) fn sequence<T>(&mut self, node: An<T>, duration: f64, fade_in: f64, fade_out: f64)
@@ -190,15 +195,11 @@ impl Tap {
       self.sequence(An(left) | An(right), duration, 0.0, 0.0);
     }
   }
-
-  pub(crate) fn write(&self, buffer: &mut [f32]) {
-    self.backend.lock().unwrap().write(buffer);
-  }
 }
 
 impl Backend {
-  fn write(&mut self, buffer: &mut [f32]) {
-    if self.paused {
+  pub(crate) fn write(&mut self, buffer: &mut [f32]) {
+    if self.paused.load(atomic::Ordering::Relaxed) {
       buffer.fill(0.0);
       return;
     }
@@ -208,7 +209,7 @@ impl Backend {
         .sample
         .is_multiple_of(MAX_BUFFER_SIZE.into_u64() * u64::from(Tap::CHANNELS))
       {
-        self.sequencer.process(
+        self.sequencer_backend.process(
           MAX_BUFFER_SIZE,
           &BufferRef::empty(),
           &mut self.buffer.buffer_mut(),

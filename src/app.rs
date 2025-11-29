@@ -103,14 +103,12 @@ impl App {
 
     let mut tap = Tap::new(stream_config.sample_rate.0);
 
+    let backend = tap.backend().clone();
     let output = output_device
       .build_output_stream(
         &stream_config,
-        {
-          let tap = tap.clone();
-          move |data: &mut [f32], _info| {
-            tap.write(data);
-          }
+        move |data: &mut [f32], _info| {
+          backend.lock().unwrap().write(data);
         },
         |err| eprintln!("output stream error: {err}"),
         None,
