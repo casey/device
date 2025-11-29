@@ -25,8 +25,30 @@ pub(crate) struct Tap {
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
-  pub(crate) fn backend(&self) -> &Arc<Mutex<Backend>> {
-    &self.backend
+  pub(crate) fn build_output_stream(
+    &self,
+    output_device: &cpal::Device,
+    stream_config: &StreamConfig,
+  ) -> Result<Stream> {
+    let backend = self.backend.clone();
+
+    let stream = output_device
+      .build_output_stream(
+        &stream_config,
+        move |data: &mut [f32], _info| {
+          backend.lock().unwrap().write(data);
+        },
+        |err| eprintln!("output stream error: {err}"),
+        None,
+      )
+      .context(error::AudioBuildOutputStream)?;
+
+    log::info!(
+      "output stream opened: {}",
+      StreamConfigDisplay(&stream_config),
+    );
+
+    Ok(stream)
   }
 
   pub(crate) fn drain(&mut self) -> Sound {
@@ -187,9 +209,13 @@ impl Tap {
       self.sequence(An(left) | An(right), duration, 0.0, 0.0);
     }
   }
+
+  pub(crate) fn write(&self, buffer: &mut [f32]) {
+    self.backend.lock().unwrap().write(buffer);
+  }
 }
 
-pub(crate) struct Backend {
+struct Backend {
   buffer: BufferVec,
   paused: Arc<AtomicBool>,
   sample: u64,
@@ -198,7 +224,7 @@ pub(crate) struct Backend {
 }
 
 impl Backend {
-  pub(crate) fn write(&mut self, buffer: &mut [f32]) {
+  fn write(&mut self, buffer: &mut [f32]) {
     if self.paused.load(atomic::Ordering::Relaxed) {
       buffer.fill(0.0);
       return;
