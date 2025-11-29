@@ -1,4 +1,9 @@
-use fundsp::hacker32::{An, AudioNode, AudioUnit, U0, U1, U2, split};
+use fundsp::{
+  audionode::AudioNode,
+  audiounit::AudioUnit,
+  combinator::An,
+  prelude::{U0, U1, U2, split},
+};
 
 pub(crate) trait IntoStereo<Outputs> {
   fn into_stereo(self) -> Box<dyn AudioUnit>;
