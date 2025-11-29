@@ -43,7 +43,7 @@ struct Backend {
   done: f64,
   sample: u64,
   sample_rate: u32,
-  samples: VecDeque<f32>,
+  samples: Vec<f32>,
   sequencer: Sequencer,
 }
 
@@ -52,11 +52,10 @@ impl Tap {
 
   pub(crate) fn drain(&mut self) -> Sound {
     let mut backend = self.0.lock().unwrap();
-    let samples = backend.samples.len() - backend.samples.len() % Self::CHANNELS.into_usize();
     Sound {
       channels: Self::CHANNELS,
       sample_rate: backend.sample_rate,
-      samples: backend.samples.drain(0..samples).collect(),
+      samples: backend.samples.drain(..).collect(),
     }
   }
 
@@ -77,9 +76,6 @@ impl Tap {
     for channel in Self::CHANNELS.into_usize()..wave.channels() {
       wave.remove_channel(channel);
     }
-
-    dbg!(wave.channels());
-    dbg!(wave.sample_rate());
 
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     let mut resampler = FftFixedIn::<f32>::new(
@@ -154,7 +150,7 @@ impl Tap {
       done: 0.0,
       sample: 0,
       sample_rate,
-      samples: VecDeque::new(),
+      samples: Vec::new(),
       sequencer,
     })))
   }
@@ -225,7 +221,7 @@ impl Backend {
         (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE,
       );
 
-      self.samples.push_back(*sample);
+      self.samples.push(*sample);
 
       self.sample += 1;
     }
