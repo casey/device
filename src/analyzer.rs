@@ -33,12 +33,16 @@ impl Analyzer {
     &self.samples
   }
 
-  pub(crate) fn update(&mut self, sound: &Sound, done: bool, state: &State) {
+  pub(crate) fn update(&mut self, sound: &Sound, done: bool, state: &State, channel: Option<u16>) {
     if done {
       self.samples.clear();
     } else {
       let old = self.samples.len();
-      self.samples.extend(sound.downmix());
+      if let Some(channel) = channel {
+        self.samples.extend(sound.channel(channel));
+      } else {
+        self.samples.extend(sound.downmix());
+      };
       self
         .samples
         .drain(..self.samples.len().saturating_sub(128).min(old));

@@ -176,7 +176,7 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
 
   let mut resampler = rubato::FftFixedIn::<f32>::new(
     wave.sample_rate() as usize,
-    48_000,
+    96_000,
     1024,
     2,
     wave.channels(),
@@ -237,7 +237,7 @@ fn open_audio_file_fundsp(path: &Utf8Path) -> Result<fundsp::wave::Wave> {
     }
   }
 
-  let mut output_wave = Wave::new(0, 48_000.0);
+  let mut output_wave = Wave::new(0, 96_000.0);
 
   for channel in 0..wave.channels() {
     output_wave.push_channel(&output_channels[channel]);
