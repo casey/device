@@ -3,7 +3,7 @@ use super::*;
 pub(crate) struct Input {
   queue: Arc<Mutex<Vec<f32>>>,
   #[allow(unused)]
-  stream: cpal::Stream,
+  stream: Stream,
   stream_config: StreamConfig,
 }
 
@@ -24,9 +24,9 @@ impl Input {
 
     stream_config.buffer_size = match supported_stream_config.buffer_size() {
       SupportedBufferSize::Range { min, max } => {
-        cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
+        BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
       }
-      SupportedBufferSize::Unknown => cpal::BufferSize::Default,
+      SupportedBufferSize::Unknown => BufferSize::Default,
     };
 
     let queue = Arc::new(Mutex::new(Vec::new()));

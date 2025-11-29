@@ -10,8 +10,8 @@ impl Display for StreamConfigDisplay<'_> {
       self.0.sample_rate.0,
       self.0.channels,
       match self.0.buffer_size {
-        cpal::BufferSize::Default => display("default"),
-        cpal::BufferSize::Fixed(n) => display(n),
+        BufferSize::Default => display("default"),
+        BufferSize::Fixed(n) => display(n),
       }
     )
   }

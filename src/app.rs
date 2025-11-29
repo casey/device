@@ -16,7 +16,7 @@ pub(crate) struct App {
   makro: Vec<(Key, bool)>,
   options: Options,
   #[allow(unused)]
-  output: cpal::Stream,
+  output: Stream,
   patch: Patch,
   play: bool,
   recorder: Option<Arc<Mutex<Recorder>>>,
@@ -95,10 +95,10 @@ impl App {
 
     let mut stream_config = supported_stream_config.config();
     stream_config.buffer_size = match supported_stream_config.buffer_size() {
-      cpal::SupportedBufferSize::Range { min, max } => {
-        cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
+      SupportedBufferSize::Range { min, max } => {
+        BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
       }
-      cpal::SupportedBufferSize::Unknown => cpal::BufferSize::Default,
+      SupportedBufferSize::Unknown => BufferSize::Default,
     };
 
     let tap = Tap::new(stream_config.sample_rate.0);

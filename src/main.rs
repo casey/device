@@ -14,8 +14,8 @@ use {
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
   cpal::{
-    self, SampleFormat, StreamConfig, SupportedBufferSize, SupportedStreamConfig,
-    SupportedStreamConfigRange,
+    self, BufferSize, SampleFormat, Stream, StreamConfig, SupportedBufferSize,
+    SupportedStreamConfig, SupportedStreamConfigRange,
     traits::{DeviceTrait, HostTrait, StreamTrait},
   },
   hound::{WavSpec, WavWriter},
