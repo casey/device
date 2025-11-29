@@ -54,9 +54,6 @@ hello: (program "hello")
 busy: (program "busy")
 noise: (program "noise")
 
-half-day:
-  cargo run --release -- --song 'half day closing' run
-
 curtains:
   cargo run --release -- --song 'curtains closing' run
 
