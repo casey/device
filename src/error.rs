@@ -283,6 +283,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: rubato::ResamplerConstructionError,
   },
+  #[snafu(display("wave has fractional sample rate: {sample_rate}"))]
+  WaveSampleRate {
+    backtrace: Option<Backtrace>,
+    sample_rate: f64,
+  },
   #[snafu(display("failed to write wave samples"))]
   WaveWrite {
     backtrace: Option<Backtrace>,
