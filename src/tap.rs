@@ -51,9 +51,6 @@ impl Tap {
     self.0.lock().unwrap().paused = false;
   }
 
-  // todo:
-  // - deal with delay
-  // - deal with there still being chunks in the resampler
   pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Arc<Wave>> {
     const CHUNK: usize = 1024;
     let sample_rate = self.0.lock().unwrap().sample_rate;
