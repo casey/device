@@ -435,7 +435,11 @@ impl App {
       self.tap.drain()
     };
 
-    self.analyzer.update(&sound, false, &self.state);
+    self.analyzer.update(
+      &sound,
+      self.input.is_none() && self.tap.is_done(),
+      &self.state,
+    );
 
     let now = Instant::now();
     let elapsed = now - self.last;
