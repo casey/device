@@ -8,13 +8,6 @@ pub(crate) struct Sound {
 }
 
 impl Sound {
-  pub(crate) fn channel(&self, channel: u16) -> impl Iterator<Item = f32> {
-    self
-      .samples
-      .chunks(self.channels.into())
-      .map(move |chunk| chunk[channel.into_usize()])
-  }
-
   pub(crate) fn downmix(&self) -> impl Iterator<Item = f32> {
     self
       .samples

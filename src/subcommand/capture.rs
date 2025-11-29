@@ -83,7 +83,7 @@ impl Capture {
       tap.write(&mut buffer);
 
       let sound = tap.drain();
-      analyzer.update(&sound, done, &state, None);
+      analyzer.update(&sound, done, &state);
       renderer.render(&analyzer, &state, Instant::now())?;
 
       let tx = tx.clone();

@@ -2,7 +2,6 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
-  analyzer_channel: Option<u16>,
   capture_rx: mpsc::Receiver<Result>,
   capture_tx: mpsc::Sender<Result>,
   captures_pending: u64,
@@ -158,7 +157,6 @@ impl App {
 
     Ok(Self {
       analyzer: Analyzer::new(),
-      analyzer_channel: None,
       capture_rx,
       capture_tx,
       captures_pending: 0,
@@ -321,11 +319,6 @@ impl App {
             wrap: self.state.wrap,
             ..default()
           }),
-          "y" => match self.analyzer_channel {
-            None => self.analyzer_channel = Some(0),
-            Some(0) => self.analyzer_channel = Some(1),
-            _ => self.analyzer_channel = None,
-          },
           "z" => self.state.filters.push(Filter {
             position: Mat3f::new_scaling(2.0),
             wrap: self.state.wrap,
@@ -441,7 +434,6 @@ impl App {
       &sound,
       self.input.is_none() && self.tap.is_done(),
       &self.state,
-      self.analyzer_channel,
     );
 
     let now = Instant::now();
