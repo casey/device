@@ -57,7 +57,7 @@ impl App {
   }
 
   fn exit(&mut self) -> Result {
-    // self.sink.stop();
+    self.tap.pause();
 
     if let Some(renderer) = &self.renderer {
       renderer.poll()?;
