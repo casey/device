@@ -6,8 +6,9 @@ use {
     into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize, into_utf8_path::IntoUtf8Path,
     message::Message, options::Options, parameter::Parameter, patch::Patch, program::Program,
     recorder::Recorder, renderer::Renderer, scene::Scene, score::Score, shared::Shared,
-    sound::Sound, state::State, subcommand::Subcommand, tally::Tally, tap::Tap, target::Target,
-    templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms,
+    sound::Sound, state::State, stream_config_display::StreamConfigDisplay, subcommand::Subcommand,
+    tally::Tally, tap::Tap, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling,
+    uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -109,6 +110,7 @@ mod score;
 mod shared;
 mod sound;
 mod state;
+mod stream_config_display;
 mod subcommand;
 mod tally;
 mod tap;

@@ -41,6 +41,7 @@ pub(crate) struct Tap(Arc<Mutex<Backend>>);
 struct Backend {
   buffer: BufferVec,
   done: f64,
+  paused: bool,
   sample: u64,
   sample_rate: u32,
   samples: Vec<f32>,
@@ -62,6 +63,14 @@ impl Tap {
   pub(crate) fn is_done(&self) -> bool {
     let backend = self.0.lock().unwrap();
     backend.sequencer.time() >= backend.done
+  }
+
+  pub(crate) fn pause(&self) {
+    self.0.lock().unwrap().paused = true;
+  }
+
+  pub(crate) fn play(&self) {
+    self.0.lock().unwrap().paused = false;
   }
 
   // todo:
@@ -146,12 +155,13 @@ impl Tap {
     let mut sequencer = Sequencer::new(false, Self::CHANNELS.into());
     sequencer.set_sample_rate(sample_rate.into());
     Self(Arc::new(Mutex::new(Backend {
-      buffer: BufferVec::new(2),
+      buffer: BufferVec::new(Self::CHANNELS.into()),
       done: 0.0,
       sample: 0,
       sample_rate,
       samples: Vec::new(),
       sequencer,
+      paused: false,
     })))
   }
 
@@ -204,6 +214,11 @@ impl Tap {
 
 impl Backend {
   fn write(&mut self, buffer: &mut [f32]) {
+    if self.paused {
+      buffer.fill(0.0);
+      return;
+    }
+
     for sample in buffer {
       if self
         .sample

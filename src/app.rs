@@ -119,22 +119,14 @@ impl App {
       )
       .context(error::AudioBuildOutputStream)?;
 
-    // todo: create shared stream implementation
     log::info!(
-      "output stream opened: {}x{}x{}",
-      stream_config.sample_rate.0,
-      stream_config.channels,
-      match stream_config.buffer_size {
-        cpal::BufferSize::Default => display("default"),
-        cpal::BufferSize::Fixed(n) => display(n),
-      }
+      "output stream opened: {}",
+      StreamConfigDisplay(&stream_config),
     );
-
-    // output_stream.log_on_drop(false);
 
     // let sink = Sink::connect_new(output_stream.mixer());
 
-    // sink.pause();
+    tap.pause();
 
     // if let Some(volume) = options.volume {
     //   sink.set_volume(volume);
@@ -649,7 +641,7 @@ impl ApplicationHandler for App {
 
       self.last = Instant::now();
 
-      // self.sink.play();
+      self.tap.play();
     }
   }
 

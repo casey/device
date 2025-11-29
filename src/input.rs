@@ -50,13 +50,8 @@ impl Input {
     stream.play().context(error::AudioPlayStream)?;
 
     log::info!(
-      "input stream opened: {}x{}x{}",
-      stream_config.sample_rate.0,
-      stream_config.channels,
-      match stream_config.buffer_size {
-        cpal::BufferSize::Default => display("default"),
-        cpal::BufferSize::Fixed(n) => display(n),
-      }
+      "input stream opened: {}",
+      StreamConfigDisplay(&stream_config),
     );
 
     Ok(Self {
