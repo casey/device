@@ -65,7 +65,6 @@ impl Tap {
 
   pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Arc<Wave>> {
     const CHUNK: usize = 1024;
-    let sample_rate = self.sample_rate;
 
     let mut wave = Wave::load(path).context(error::WaveLoad)?;
 
@@ -76,7 +75,7 @@ impl Tap {
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     let mut resampler = FftFixedIn::<f32>::new(
       wave.sample_rate() as usize,
-      sample_rate.into_usize(),
+      self.sample_rate.into_usize(),
       CHUNK,
       2,
       wave.channels(),
@@ -129,7 +128,7 @@ impl Tap {
       }
     }
 
-    let mut output_wave = Wave::new(0, sample_rate as f64);
+    let mut output_wave = Wave::new(0, self.sample_rate as f64);
 
     for channel in output_channels {
       output_wave.push_channel(&channel);
