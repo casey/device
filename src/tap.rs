@@ -54,7 +54,7 @@ impl Tap {
   // todo:
   // - deal with delay
   // - deal with there still being chunks in the resampler
-  pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Wave> {
+  pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Arc<Wave>> {
     const CHUNK: usize = 1024;
     let sample_rate = self.0.lock().unwrap().sample_rate;
 
@@ -126,7 +126,7 @@ impl Tap {
       output_wave.push_channel(&channel);
     }
 
-    Ok(output_wave)
+    Ok(Arc::new(output_wave))
   }
 
   pub(crate) fn new(sample_rate: u32) -> Self {
@@ -171,20 +171,19 @@ impl Tap {
     self.sequence(audio_node, f64::INFINITY, 0.0, 0.0);
   }
 
-  pub(crate) fn sequence_wave(&self, wave: Wave) {
+  pub(crate) fn sequence_wave(&self, wave: &Arc<Wave>) {
     if wave.channels() == 0 {
       return;
     }
 
-    let wave = Arc::new(wave);
     let duration = wave.duration();
 
     if wave.channels() == 1 {
-      let mono = WavePlayer::new(&wave, 0, 0, wave.len(), None);
+      let mono = WavePlayer::new(wave, 0, 0, wave.len(), None);
       self.sequence(An(mono), duration, 0.0, 0.0);
     } else {
-      let left = WavePlayer::new(&wave, 0, 0, wave.len(), None);
-      let right = WavePlayer::new(&wave, 1, 0, wave.len(), None);
+      let left = WavePlayer::new(wave, 0, 0, wave.len(), None);
+      let right = WavePlayer::new(wave, 1, 0, wave.len(), None);
       self.sequence(An(left) | An(right), duration, 0.0, 0.0);
     }
   }

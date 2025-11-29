@@ -13,7 +13,7 @@ impl Program {
     match self {
       Self::Hello => {
         let wave = tap.load_wave(&config.find_song("old generic boss")?)?;
-        tap.sequence_wave(wave);
+        tap.sequence_wave(&wave);
       }
       Self::Busy => Score::BusySignal.sequence(tap),
       Self::Noise => Score::BrownNoise.sequence(tap),
