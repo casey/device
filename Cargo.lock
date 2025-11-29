@@ -735,7 +735,6 @@ dependencies = [
  "serde_yaml",
  "snafu",
  "strum",
- "symphonia",
  "tabled",
  "tempfile",
  "vello",

@@ -254,7 +254,7 @@ pub(crate) enum Error {
   #[snafu(display("failed to load audio track"))]
   TrackLoad {
     backtrace: Option<Backtrace>,
-    source: symphonia::core::errors::Error,
+    source: fundsp::read::WaveError,
   },
   #[snafu(display("failed to resample audio"))]
   TrackResample {

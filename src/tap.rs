@@ -108,7 +108,6 @@ impl Tap {
   }
 
   pub(crate) fn sequence_wave(&self, wave: Wave) {
-    // todo: set correct time
     let wave = Arc::new(wave);
     let duration = wave.duration();
     if wave.channels() == 0 {
