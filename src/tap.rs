@@ -11,7 +11,7 @@ use {
   },
 };
 
-pub(crate) trait IntoStereo<Out> {
+pub(crate) trait IntoStereo<Outputs> {
   fn into_stereo(self) -> Box<dyn AudioUnit>;
 }
 
