@@ -175,13 +175,11 @@ impl App {
         }
         Key::Named(NamedKey::Enter) => {
           let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-
           if let Some(function) = self.functions.get(command.as_str()) {
             function.call(&mut self.state);
           } else {
             eprintln!("unknown command: {command}");
           }
-
           self.command = None;
         }
         Key::Named(NamedKey::Tab) => {
