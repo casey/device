@@ -9,6 +9,7 @@ pub(crate) struct App {
   config: Config,
   deadline: Instant,
   errors: Vec<Error>,
+  functions: BTreeMap<&'static str, Function>,
   hub: Hub,
   input: Option<Input>,
   last: Instant,
@@ -144,6 +145,7 @@ impl App {
       config,
       deadline: now,
       errors: Vec::new(),
+      functions: Function::map(),
       hub: Hub::new()?,
       input,
       last: now,
@@ -173,24 +175,28 @@ impl App {
         }
         Key::Named(NamedKey::Enter) => {
           let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-          match command.as_str() {
-            "left" => self.state.filters.push(Filter {
-              color: invert_color(),
-              field: Field::Left,
-              wrap: self.state.wrap,
-              ..default()
-            }),
-            "right" => self.state.filters.push(Filter {
-              color: invert_color(),
-              field: Field::Right,
-              wrap: self.state.wrap,
-              ..default()
-            }),
-            "spread" => self.state.spread = !self.state.spread,
-            "status" => self.state.status = !self.state.status,
-            _ => eprintln!("unknown command: {command}"),
+          if let Some(function) = self.functions.get(command.as_str()) {
+            function.call(&mut self.state);
+          } else {
+            eprintln!("unknown command: {command}");
           }
           self.command = None;
+        }
+        Key::Named(NamedKey::Tab) => {
+          let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
+          if let Some(suffix) = self
+            .functions
+            .range(prefix.as_str()..)
+            .next()
+            .and_then(|(name, _function)| name.strip_prefix(&prefix))
+          {
+            if !suffix.is_empty() {
+              eprintln!("completion: {suffix}");
+              command.push(suffix.into());
+            }
+          } else {
+            eprintln!("no completion found for: {prefix}");
+          }
         }
         _ => {}
       }
