@@ -21,21 +21,30 @@ pub(crate) struct Tap {
   sample_rate: u32,
   sequencer: Sequencer,
   stream: Option<Stream>,
+  time: f64,
 }
 
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
-  pub(crate) fn drain(&self) -> Sound {
+  pub(crate) fn drain(&mut self) -> Sound {
+    let samples = self
+      .backend
+      .lock()
+      .unwrap()
+      .samples
+      .drain(..)
+      .collect::<Vec<f32>>();
+    self.time += samples.len() as f64 / self.sample_rate as f64;
     Sound {
       channels: Self::CHANNELS,
       sample_rate: self.sample_rate,
-      samples: self.backend.lock().unwrap().samples.drain(..).collect(),
+      samples,
     }
   }
 
   pub(crate) fn is_done(&self) -> bool {
-    self.sequencer.time() >= self.done
+    self.time >= self.done
   }
 
   pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Arc<Wave>> {
@@ -110,6 +119,7 @@ impl Tap {
       sample_rate,
       sequencer,
       stream: None,
+      time: 0.0,
     }
   }
 
