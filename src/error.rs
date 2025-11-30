@@ -278,7 +278,7 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: rubato::ResampleError,
   },
-  #[snafu(display("failed to resample audio"))]
+  #[snafu(display("failed to construct audio resampler"))]
   WaveResamplerConstruction {
     backtrace: Option<Backtrace>,
     source: rubato::ResamplerConstructionError,
