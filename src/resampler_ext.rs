@@ -9,6 +9,7 @@ pub(crate) trait ResamplerExt<T> {
   ) -> rubato::ResampleResult<Vec<Vec<T>>>;
 }
 
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 impl<T: Sample, R: Resampler<T>> ResamplerExt<T> for R {
   fn process_all<V: AsRef<[T]>>(
     &mut self,
