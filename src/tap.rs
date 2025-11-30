@@ -35,7 +35,7 @@ impl Tap {
       .samples
       .drain(..)
       .collect::<Vec<f32>>();
-    self.time += samples.len() as f64 / self.sample_rate as f64;
+    self.time += (samples.len() / Self::CHANNELS.into_usize()) as f64 / self.sample_rate as f64;
     Sound {
       channels: Self::CHANNELS,
       sample_rate: self.sample_rate,
