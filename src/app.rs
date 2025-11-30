@@ -6,10 +6,10 @@ pub(crate) struct App {
   capture_tx: mpsc::Sender<Result>,
   captures_pending: u64,
   command: Option<Vec<String>>,
+  commands: BTreeMap<&'static str, Command>,
   config: Config,
   deadline: Instant,
   errors: Vec<Error>,
-  functions: BTreeMap<&'static str, Function>,
   hub: Hub,
   input: Option<Input>,
   last: Instant,
@@ -142,10 +142,10 @@ impl App {
       capture_tx,
       captures_pending: 0,
       command: None,
+      commands: Command::map(),
       config,
       deadline: now,
       errors: Vec::new(),
-      functions: Function::map(),
       hub: Hub::new()?,
       input,
       last: now,
@@ -175,8 +175,8 @@ impl App {
         }
         Key::Named(NamedKey::Enter) => {
           let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-          if let Some(function) = self.functions.get(command.as_str()) {
-            function.call(&mut self.state);
+          if let Some(command) = self.commands.get(command.as_str()) {
+            command.call(&mut self.state);
           } else {
             eprintln!("unknown command: {command}");
           }
@@ -185,7 +185,7 @@ impl App {
         Key::Named(NamedKey::Tab) => {
           let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
           if let Some(suffix) = self
-            .functions
+            .commands
             .range(prefix.as_str()..)
             .next()
             .and_then(|(name, _function)| name.strip_prefix(&prefix))
