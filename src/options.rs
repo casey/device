@@ -40,8 +40,6 @@ pub(crate) struct Options {
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
   pub(crate) verbose: bool,
-  #[arg(long)]
-  pub(crate) volume: Option<f32>,
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) vw: Option<f32>,
   #[arg(allow_hyphen_values = true, long)]
@@ -53,13 +51,15 @@ pub(crate) struct Options {
 }
 
 impl Options {
-  pub(crate) fn add_source(&self, config: &Config, tap: &Tap) -> Result {
+  pub(crate) fn add_source(&self, config: &Config, tap: &mut Tap) -> Result {
     if let Some(song) = &self.song {
-      tap.add(open_audio_file(&config.find_song(song)?)?);
+      let wave = tap.load_wave(&config.find_song(song)?)?;
+      tap.sequence_wave(&wave);
     } else if let Some(score) = self.score {
       score.sequence(tap);
     } else if let Some(track) = &self.track {
-      tap.add(open_audio_file(track)?);
+      let wave = tap.load_wave(track)?;
+      tap.sequence_wave(&wave);
     } else if let Some(program) = self.program {
       program.add_source(config, tap)?;
     }

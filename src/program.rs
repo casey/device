@@ -9,9 +9,12 @@ pub(crate) enum Program {
 }
 
 impl Program {
-  pub(crate) fn add_source(self, config: &Config, tap: &Tap) -> Result {
+  pub(crate) fn add_source(self, config: &Config, tap: &mut Tap) -> Result {
     match self {
-      Self::Hello => tap.add(open_audio_file(&config.find_song("old generic boss")?)?),
+      Self::Hello => {
+        let wave = tap.load_wave(&config.find_song("old generic boss")?)?;
+        tap.sequence_wave(&wave);
+      }
       Self::Busy => Score::BusySignal.sequence(tap),
       Self::Noise => Score::BrownNoise.sequence(tap),
     }

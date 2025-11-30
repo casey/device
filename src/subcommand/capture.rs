@@ -35,7 +35,7 @@ impl Capture {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
     let mut tap = Tap::new(DEFAULT_SAMPLE_RATE);
 
-    options.add_source(&config, &tap)?;
+    options.add_source(&config, &mut tap)?;
 
     let mut analyzer = Analyzer::new();
 
@@ -68,6 +68,8 @@ impl Capture {
 
     let mut media = Vec::new();
 
+    let mut samples = vec![0.0; spf.into_usize() * Tap::CHANNELS.into_usize()];
+
     let mut done = false;
     for frame in 0.. {
       if frames.map_or(done, |frames| frame == frames) {
@@ -78,9 +80,7 @@ impl Capture {
 
       done = tap.is_done();
 
-      for _ in 0..spf * u32::from(tap.channels()) {
-        tap.next();
-      }
+      tap.write(&mut samples);
 
       let sound = tap.drain();
       analyzer.update(&sound, done, &state);

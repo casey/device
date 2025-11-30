@@ -15,13 +15,10 @@ pub(crate) struct App {
   macro_recording: Option<Vec<(Key, bool)>>,
   makro: Vec<(Key, bool)>,
   options: Options,
-  #[allow(unused)]
-  output_stream: OutputStream,
   patch: Patch,
   play: bool,
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
-  sink: Sink,
   state: State,
   tap: Tap,
   window: Option<Arc<Window>>,
@@ -58,7 +55,7 @@ impl App {
   }
 
   fn exit(&mut self) -> Result {
-    self.sink.stop();
+    self.tap.pause();
 
     if let Some(renderer) = &self.renderer {
       renderer.poll()?;
@@ -86,7 +83,7 @@ impl App {
       .default_output_device()
       .context(error::AudioDefaultOutputDevice)?;
 
-    let stream_config = Self::select_stream_config(
+    let supported_stream_config = Self::select_stream_config(
       output_device
         .supported_output_configs()
         .context(error::AudioSupportedStreamConfigs)?,
@@ -94,41 +91,19 @@ impl App {
       Tap::CHANNELS,
     )?;
 
-    let mut output_stream = rodio::OutputStreamBuilder::from_device(output_device)
-      .context(error::AudioBuildOutputStream)?
-      .with_supported_config(&stream_config)
-      .with_buffer_size(match stream_config.buffer_size() {
-        cpal::SupportedBufferSize::Range { min, max } => {
-          cpal::BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
-        }
-        cpal::SupportedBufferSize::Unknown => cpal::BufferSize::Default,
-      })
-      .with_error_callback(|err| eprintln!("output stream error: {err}"))
-      .open_stream()
-      .context(error::AudioBuildOutputStream)?;
-
-    log::info!(
-      "output stream opened: {}x{}x{}x{}",
-      output_stream.config().sample_rate(),
-      output_stream.config().channel_count(),
-      output_stream.config().sample_format(),
-      match output_stream.config().buffer_size() {
-        cpal::BufferSize::Default => display("default"),
-        cpal::BufferSize::Fixed(n) => display(*n),
+    let mut stream_config = supported_stream_config.config();
+    stream_config.buffer_size = match supported_stream_config.buffer_size() {
+      SupportedBufferSize::Range { min, max } => {
+        BufferSize::Fixed(DEFAULT_BUFFER_SIZE.clamp(*min, *max))
       }
-    );
+      SupportedBufferSize::Unknown => BufferSize::Default,
+    };
 
-    output_stream.log_on_drop(false);
+    let mut tap = Tap::new(stream_config.sample_rate.0);
 
-    let sink = Sink::connect_new(output_stream.mixer());
+    tap.pause();
 
-    sink.pause();
-
-    if let Some(volume) = options.volume {
-      sink.set_volume(volume);
-    }
-
-    let tap = Tap::new(output_stream.config().sample_rate());
+    tap.stream(&output_device, &stream_config)?;
 
     let input = if options.input {
       let input_device = host
@@ -145,11 +120,10 @@ impl App {
 
       Some(Input::new(input_device, stream_config)?)
     } else {
-      sink.append(tap.clone());
       None
     };
 
-    options.add_source(&config, &tap)?;
+    options.add_source(&config, &mut tap)?;
 
     let recorder = record
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
@@ -176,12 +150,10 @@ impl App {
       macro_recording: None,
       makro: Vec::new(),
       options,
-      output_stream,
       patch: Patch::default(),
       play: false,
       recorder,
       renderer: None,
-      sink,
       state,
       tap,
       window: None,
@@ -231,7 +203,7 @@ impl App {
             "2" => self.patch = Patch::Saw,
             _ => {
               if let Some(semitones) = Self::semitones(c) {
-                self.patch.sequence(semitones, &self.tap);
+                self.patch.sequence(semitones, &mut self.tap);
               }
             }
           },
@@ -630,7 +602,9 @@ impl ApplicationHandler for App {
 
       self.last = Instant::now();
 
-      self.sink.play();
+      if self.input.is_none() {
+        self.tap.play();
+      }
     }
   }
 

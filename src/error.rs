@@ -25,7 +25,7 @@ pub(crate) enum Error {
   #[snafu(display("failed to get default audio output stream"))]
   AudioBuildOutputStream {
     backtrace: Option<Backtrace>,
-    source: rodio::StreamError,
+    source: cpal::BuildStreamError,
   },
   #[snafu(display("failed to get default audio input device"))]
   AudioDefaultInputDevice { backtrace: Option<Backtrace> },
@@ -103,12 +103,6 @@ pub(crate) enum Error {
   CurrentTexture {
     backtrace: Option<Backtrace>,
     source: wgpu::SurfaceError,
-  },
-  #[snafu(display("failed to open audio file"))]
-  DecoderOpen {
-    backtrace: Option<Backtrace>,
-    path: Utf8PathBuf,
-    source: rodio::decoder::DecoderError,
   },
   #[snafu(display("failed to get default config"))]
   DefaultConfig { backtrace: Option<Backtrace> },
@@ -262,20 +256,40 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     texture_format: TextureFormat,
   },
-  #[snafu(display("failed to create wav writer"))]
-  WavCreate {
+  #[snafu(display("failed to create wave writer"))]
+  WaveCreate {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
     source: hound::Error,
   },
-  #[snafu(display("failed to finalize wav writer"))]
-  WavFinalize {
+  #[snafu(display("failed to finalize wave writer"))]
+  WaveFinalize {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
     source: hound::Error,
   },
-  #[snafu(display("failed to write wav samples"))]
-  WavWrite {
+  #[snafu(display("failed to load audio track"))]
+  WaveLoad {
+    backtrace: Option<Backtrace>,
+    source: fundsp::read::WaveError,
+  },
+  #[snafu(display("failed to resample audio"))]
+  WaveResample {
+    backtrace: Option<Backtrace>,
+    source: rubato::ResampleError,
+  },
+  #[snafu(display("failed to construct audio resampler"))]
+  WaveResamplerConstruction {
+    backtrace: Option<Backtrace>,
+    source: rubato::ResamplerConstructionError,
+  },
+  #[snafu(display("wave has fractional sample rate: {sample_rate}"))]
+  WaveSampleRate {
+    backtrace: Option<Backtrace>,
+    sample_rate: f64,
+  },
+  #[snafu(display("failed to write wave samples"))]
+  WaveWrite {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
     source: hound::Error,
