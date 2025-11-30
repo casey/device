@@ -9,24 +9,6 @@ impl From<fn(&mut State)> for Function {
     Function::Nullary(function)
   }
 }
-// match command.as_str() {
-//   "left" => self.state.filters.push(Filter {
-//     color: invert_color(),
-//     field: Field::Left,
-//     wrap: self.state.wrap,
-//     ..default()
-//   }),
-//   "right" => self.state.filters.push(Filter {
-//     color: invert_color(),
-//     field: Field::Right,
-//     wrap: self.state.wrap,
-//     ..default()
-//   }),
-//   "spread" => self.state.spread = !self.state.spread,
-//   "status" => self.state.status = !self.state.status,
-//   _ => eprintln!("unknown command: {command}"),
-// }
-// self.command = None;
 
 impl Function {
   pub(crate) fn call(&self, state: &mut State) {
