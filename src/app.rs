@@ -15,8 +15,6 @@ pub(crate) struct App {
   macro_recording: Option<Vec<(Key, bool)>>,
   makro: Vec<(Key, bool)>,
   options: Options,
-  #[allow(unused)]
-  output: Stream,
   patch: Patch,
   play: bool,
   recorder: Option<Arc<Mutex<Recorder>>>,
@@ -105,7 +103,7 @@ impl App {
 
     tap.pause();
 
-    let output = tap.build_output_stream(&output_device, &stream_config)?;
+    tap.stream(&output_device, &stream_config)?;
 
     let input = if options.input {
       let input_device = host
@@ -152,7 +150,6 @@ impl App {
       macro_recording: None,
       makro: Vec::new(),
       options,
-      output,
       patch: Patch::default(),
       play: false,
       recorder,

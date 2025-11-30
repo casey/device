@@ -20,36 +20,11 @@ pub(crate) struct Tap {
   paused: Arc<AtomicBool>,
   sample_rate: u32,
   sequencer: Sequencer,
+  stream: Option<Stream>,
 }
 
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
-
-  pub(crate) fn build_output_stream(
-    &self,
-    output_device: &cpal::Device,
-    stream_config: &StreamConfig,
-  ) -> Result<Stream> {
-    let backend = self.backend.clone();
-
-    let stream = output_device
-      .build_output_stream(
-        stream_config,
-        move |data: &mut [f32], _info| {
-          backend.lock().unwrap().write(data);
-        },
-        |err| eprintln!("output stream error: {err}"),
-        None,
-      )
-      .context(error::AudioBuildOutputStream)?;
-
-    log::info!(
-      "output stream opened: {}",
-      StreamConfigDisplay(stream_config),
-    );
-
-    Ok(stream)
-  }
 
   pub(crate) fn drain(&self) -> Sound {
     Sound {
@@ -134,6 +109,7 @@ impl Tap {
       paused,
       sample_rate,
       sequencer,
+      stream: None,
     }
   }
 
@@ -179,6 +155,36 @@ impl Tap {
       let right = WavePlayer::new(wave, 1, 0, wave.len(), None);
       self.sequence(An(left) | An(right), duration, 0.0, 0.0);
     }
+  }
+
+  pub(crate) fn stream(
+    &mut self,
+    output_device: &cpal::Device,
+    stream_config: &StreamConfig,
+  ) -> Result {
+    let backend = self.backend.clone();
+
+    self.stream = None;
+
+    let stream = output_device
+      .build_output_stream(
+        stream_config,
+        move |data: &mut [f32], _info| {
+          backend.lock().unwrap().write(data);
+        },
+        |err| eprintln!("output stream error: {err}"),
+        None,
+      )
+      .context(error::AudioBuildOutputStream)?;
+
+    self.stream = Some(stream);
+
+    log::info!(
+      "output stream opened: {}",
+      StreamConfigDisplay(stream_config),
+    );
+
+    Ok(())
   }
 
   pub(crate) fn write(&self, buffer: &mut [f32]) {
