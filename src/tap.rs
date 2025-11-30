@@ -69,15 +69,15 @@ impl Tap {
     )
     .context(error::WaveResamplerConstruction)?;
 
-    let resample_ratio = self.sample_rate as f64 / sample_rate as f64;
+    let input_channels = (0..input.channels())
+      .map(|channel| input.channel(channel).as_slice())
+      .collect::<Vec<&[f32]>>();
 
     let output_channels = resampler
       .process_all(
-        &(0..input.channels())
-          .map(|channel| input.channel(channel).as_slice())
-          .collect::<Vec<&[f32]>>(),
+        &input_channels,
         None,
-        resample_ratio,
+        self.sample_rate as f64 / sample_rate as f64,
       )
       .context(error::WaveResample)?;
 
