@@ -54,7 +54,7 @@ impl Tap {
       return Ok(Arc::new(Wave::new(1, self.sample_rate as f64)));
     }
 
-    for channel in Self::CHANNELS.into_usize()..input.channels() {
+    for channel in (Self::CHANNELS.into_usize()..input.channels()).rev() {
       input.remove_channel(channel);
     }
 
