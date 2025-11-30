@@ -67,6 +67,10 @@ impl Tap {
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     let sample_rate = sample_rate as usize;
 
+    if sample_rate == self.sample_rate.into_usize() {
+      return Ok(Arc::new(input));
+    }
+
     let start = Instant::now();
 
     let mut resampler = FftFixedIn::<f32>::new(
