@@ -6,7 +6,7 @@ pub(crate) enum Function {
 
 impl From<fn(&mut State)> for Function {
   fn from(function: fn(&mut State)) -> Self {
-    Function::Nullary(function)
+    Self::Nullary(function)
   }
 }
 
@@ -19,10 +19,10 @@ impl Function {
 
   pub(crate) fn map() -> BTreeMap<&'static str, Function> {
     let mut map = BTreeMap::new();
-    map.insert("left", Function::Nullary(left));
-    map.insert("right", Function::Nullary(right));
-    map.insert("spread", Function::Nullary(spread));
-    map.insert("status", Function::Nullary(status));
+    map.insert("left", Self::Nullary(left));
+    map.insert("right", Self::Nullary(right));
+    map.insert("spread", Self::Nullary(spread));
+    map.insert("status", Self::Nullary(status));
     map
   }
 }
