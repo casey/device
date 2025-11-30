@@ -184,15 +184,18 @@ impl App {
         }
         Key::Named(NamedKey::Tab) => {
           let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
-          if let Some((name, _function)) = self.functions.range(prefix.as_str()..).next() {
-            if let Some(suffix) = name.strip_prefix(&prefix) {
-              if !suffix.is_empty() {
-                eprintln!("complation: {suffix}");
-                command.push(suffix.into());
-              }
-            } else {
-              eprintln!("no completion found for: {prefix}");
+          if let Some(suffix) = self
+            .functions
+            .range(prefix.as_str()..)
+            .next()
+            .and_then(|(name, _function)| name.strip_prefix(&prefix))
+          {
+            if !suffix.is_empty() {
+              eprintln!("completion: {suffix}");
+              command.push(suffix.into());
             }
+          } else {
+            eprintln!("no completion found for: {prefix}");
           }
         }
         _ => {}
