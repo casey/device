@@ -90,7 +90,7 @@ impl Tap {
       )
       .context(error::WaveResample)?;
 
-    log::info!("resampled {path} in {:.2}", start.elapsed().as_secs_f64());
+    log::info!("resampled {path} in {:.2}", start.elapsed().as_secs_f32());
 
     let mut output = Wave::new(0, self.sample_rate as f64);
 
