@@ -188,7 +188,7 @@ impl App {
             .commands
             .range(prefix.as_str()..)
             .next()
-            .and_then(|(name, _function)| name.strip_prefix(&prefix))
+            .and_then(|(name, _command)| name.strip_prefix(&prefix))
           {
             if !suffix.is_empty() {
               eprintln!("completion: {suffix}");
