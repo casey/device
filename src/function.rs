@@ -39,7 +39,7 @@ fn left(state: &mut State) {
 fn right(state: &mut State) {
   state.filters.push(Filter {
     color: invert_color(),
-    field: Field::Left,
+    field: Field::Right,
     wrap: state.wrap,
     ..default()
   });
