@@ -1,23 +1,23 @@
 use super::*;
 
-pub(crate) enum Function {
+pub(crate) enum Command {
   Nullary(fn(&mut State)),
 }
 
-impl From<fn(&mut State)> for Function {
+impl From<fn(&mut State)> for Command {
   fn from(function: fn(&mut State)) -> Self {
     Self::Nullary(function)
   }
 }
 
-impl Function {
+impl Command {
   pub(crate) fn call(&self, state: &mut State) {
     match self {
       Self::Nullary(function) => function(state),
     }
   }
 
-  pub(crate) fn map() -> BTreeMap<&'static str, Function> {
+  pub(crate) fn map() -> BTreeMap<&'static str, Command> {
     let mut map = BTreeMap::new();
     map.insert("left", Self::Nullary(left));
     map.insert("right", Self::Nullary(right));
