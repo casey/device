@@ -16,6 +16,7 @@ pub(crate) struct Renderer {
   non_filtering_sampler: Sampler,
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
+  pipeline_layout: PipelineLayout,
   queue: Queue,
   render_pipeline: RenderPipeline,
   resolution: NonZeroU32,
@@ -469,6 +470,7 @@ impl Renderer {
       non_filtering_sampler,
       overlay_renderer,
       overlay_scene: vello::Scene::new(),
+      pipeline_layout,
       queue,
       render_pipeline,
       resolution,
@@ -491,6 +493,42 @@ impl Renderer {
       .poll(wgpu::PollType::Wait)
       .map(|_poll_status| ())
       .context(error::RenderPoll)
+  }
+
+  pub(crate) fn reload_shader(&mut self) -> Result {
+    let boilerplate = fs::read_to_string("templates/shader.wgsl").unwrap();
+    let wgsl = ShaderWgsl.reload(&boilerplate).unwrap().to_string();
+    let shader = self.device.create_shader_module(ShaderModuleDescriptor {
+      label: label!(),
+      source: ShaderSource::Wgsl(wgsl.into()),
+    });
+
+    // todo: deduplicate render pipeline and shader construction
+    self.render_pipeline = self
+      .device
+      .create_render_pipeline(&RenderPipelineDescriptor {
+        cache: None,
+        depth_stencil: None,
+        fragment: Some(FragmentState {
+          compilation_options: PipelineCompilationOptions::default(),
+          entry_point: Some("fragment"),
+          module: &shader,
+          targets: &[Some(TextureFormat::from(self.format).into())],
+        }),
+        label: label!(),
+        layout: Some(&self.pipeline_layout),
+        multisample: MultisampleState::default(),
+        multiview: None,
+        primitive: PrimitiveState::default(),
+        vertex: VertexState {
+          buffers: &[],
+          compilation_options: PipelineCompilationOptions::default(),
+          entry_point: Some("vertex"),
+          module: &shader,
+        },
+      });
+
+    Ok(())
   }
 
   pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {

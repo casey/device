@@ -270,9 +270,16 @@ dependencies = [
 [[package]]
 name = "boilerplate"
 version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff9f82b3395618a18fdb7b586fe5cfac0c07af07d0aab300ff3dd64e4f3ec949"
 dependencies = [
+ "boilerplate-macros",
+ "boilerplate-parser",
+]
+
+[[package]]
+name = "boilerplate-macros"
+version = "0.0.0"
+dependencies = [
+ "boilerplate-parser",
  "darling",
  "mime",
  "new_mime_guess",
@@ -280,6 +287,10 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "boilerplate-parser"
+version = "0.0.0"
 
 [[package]]
 name = "bumpalo"
@@ -659,9 +670,9 @@ checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 
 [[package]]
 name = "darling"
-version = "0.20.11"
+version = "0.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc7f46116c46ff9ab3eb1597a45688b6715c6e628b5c133e288e709a29bcb4ee"
+checksum = "9cdf337090841a411e2a7f3deb9187445851f91b309c0c0a29e05f74a00a48c0"
 dependencies = [
  "darling_core",
  "darling_macro",
@@ -669,9 +680,9 @@ dependencies = [
 
 [[package]]
 name = "darling_core"
-version = "0.20.11"
+version = "0.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d00b9596d185e565c2207a0b01f8bd1a135483d02d9b7b0a54b11da8d53412e"
+checksum = "1247195ecd7e3c85f83c8d2a366e4210d588e802133e1e355180a9870b517ea4"
 dependencies = [
  "fnv",
  "ident_case",
@@ -683,9 +694,9 @@ dependencies = [
 
 [[package]]
 name = "darling_macro"
-version = "0.20.11"
+version = "0.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc34b93ccb385b40dc71c6fceac4b2ad23662c7eeb248cf10d529b7e055b6ead"
+checksum = "d38308df82d1080de0afee5d069fa14b0326a88c14f15c5ccda35b4a6c414c81"
 dependencies = [
  "darling_core",
  "quote",
