@@ -341,11 +341,6 @@ impl Renderer {
 
     device.on_uncaptured_error(Box::new(move |error| tx.send(error).unwrap()));
 
-    let shader = device.create_shader_module(ShaderModuleDescriptor {
-      label: label!(),
-      source: ShaderSource::Wgsl(ShaderWgsl.to_string().into()),
-    });
-
     let uniform_buffer_size = {
       let mut buffer = vec![0; MIB];
       u32::try_from(Uniforms::default().write(&mut buffer)).unwrap()
@@ -387,27 +382,8 @@ impl Renderer {
       push_constant_ranges: &[],
     });
 
-    let render_pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
-      cache: None,
-      depth_stencil: None,
-      fragment: Some(FragmentState {
-        compilation_options: PipelineCompilationOptions::default(),
-        entry_point: Some("fragment"),
-        module: &shader,
-        targets: &[Some(TextureFormat::from(format).into())],
-      }),
-      label: label!(),
-      layout: Some(&pipeline_layout),
-      multisample: MultisampleState::default(),
-      multiview: None,
-      primitive: PrimitiveState::default(),
-      vertex: VertexState {
-        buffers: &[],
-        compilation_options: PipelineCompilationOptions::default(),
-        entry_point: Some("vertex"),
-        module: &shader,
-      },
-    });
+    let render_pipeline =
+      Self::create_render_pipeline(&device, &pipeline_layout, format, &ShaderWgsl.to_string());
 
     let samples = device
       .create_texture(&TextureDescriptor {
@@ -496,39 +472,51 @@ impl Renderer {
   }
 
   pub(crate) fn reload_shader(&mut self) -> Result {
-    let boilerplate = fs::read_to_string("templates/shader.wgsl").unwrap();
-    let wgsl = ShaderWgsl.reload(&boilerplate).unwrap().to_string();
-    let shader = self.device.create_shader_module(ShaderModuleDescriptor {
-      label: label!(),
-      source: ShaderSource::Wgsl(wgsl.into()),
-    });
+    dbg!(ShaderWgsl::PATH);
 
-    // todo: deduplicate render pipeline and shader construction
-    self.render_pipeline = self
-      .device
-      .create_render_pipeline(&RenderPipelineDescriptor {
-        cache: None,
-        depth_stencil: None,
-        fragment: Some(FragmentState {
-          compilation_options: PipelineCompilationOptions::default(),
-          entry_point: Some("fragment"),
-          module: &shader,
-          targets: &[Some(TextureFormat::from(self.format).into())],
-        }),
-        label: label!(),
-        layout: Some(&self.pipeline_layout),
-        multisample: MultisampleState::default(),
-        multiview: None,
-        primitive: PrimitiveState::default(),
-        vertex: VertexState {
-          buffers: &[],
-          compilation_options: PipelineCompilationOptions::default(),
-          entry_point: Some("vertex"),
-          module: &shader,
-        },
-      });
+    let shader = ShaderWgsl
+      .reload_from_path()
+      .context(error::ShaderReload)?
+      .to_string();
+
+    self.render_pipeline =
+      Self::create_render_pipeline(&self.device, &self.pipeline_layout, self.format, &shader);
 
     Ok(())
+  }
+
+  fn create_render_pipeline(
+    device: &wgpu::Device,
+    pipeline_layout: &PipelineLayout,
+    format: Format,
+    shader: &str,
+  ) -> RenderPipeline {
+    let shader = device.create_shader_module(ShaderModuleDescriptor {
+      label: label!(),
+      source: ShaderSource::Wgsl(shader.into()),
+    });
+
+    device.create_render_pipeline(&RenderPipelineDescriptor {
+      cache: None,
+      depth_stencil: None,
+      fragment: Some(FragmentState {
+        compilation_options: PipelineCompilationOptions::default(),
+        entry_point: Some("fragment"),
+        module: &shader,
+        targets: &[Some(TextureFormat::from(format).into())],
+      }),
+      label: label!(),
+      layout: Some(pipeline_layout),
+      multisample: MultisampleState::default(),
+      multiview: None,
+      primitive: PrimitiveState::default(),
+      vertex: VertexState {
+        buffers: &[],
+        compilation_options: PipelineCompilationOptions::default(),
+        entry_point: Some("vertex"),
+        module: &shader,
+      },
+    })
   }
 
   pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {
