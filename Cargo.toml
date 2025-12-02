@@ -10,7 +10,7 @@ license = "CC0-1.0"
 repository = "https://github.com/casey/device"
 
 [dependencies]
-boilerplate = { version = "1.0.1", path = "../boilerplate", features = ["reload"]}
+boilerplate = { version = "1.1.0", features = ["reload"]}
 camino = { version = "1.2.1", features = ["serde1"] }
 clap = { version = "4.5.21", features = ["derive"] }
 cpal = { version = "0.16.0", features = ["audio_thread_priority"] }

@@ -472,8 +472,6 @@ impl Renderer {
   }
 
   pub(crate) fn reload_shader(&mut self) -> Result {
-    dbg!(ShaderWgsl::PATH);
-
     let shader = ShaderWgsl
       .reload_from_path()
       .context(error::ShaderReload)?
