@@ -283,6 +283,11 @@ impl App {
             }
             capture = false;
           }
+          "R" => {
+            if let Err(err) = self.renderer.as_mut().unwrap().reload_shader() {
+              eprintln!("failed to reload shader: {err}");
+            }
+          }
           "r" => {
             self.state.repeat = !self.state.repeat;
           }
