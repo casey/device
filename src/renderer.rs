@@ -888,7 +888,7 @@ impl Renderer {
         .ranged_builder(&mut self.font_context, &text.string, 1.0, true);
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontStack(FontStack::List(Cow::Borrowed(&[
-      FontFamily::Named(FONT.into()),
+      FontFamily::Named("Helvetica Neue".into()),
       FontFamily::Generic(GenericFamily::SansSerif),
       FontFamily::Named("Zapf Dingbats".into()),
       FontFamily::Named("Last Resort".into()),
