@@ -74,7 +74,8 @@ impl Scene {
 
         let mut state = State::default()
           .rotate_color(Axis::Green, 0.1 * TAU)
-          .rotate_position(0.1 * TAU);
+          .rotate_position(0.1 * TAU)
+          .spread(true);
 
         for _ in 0..20 {
           state.filter.field = *fields.choose(rng).unwrap();
