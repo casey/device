@@ -37,11 +37,11 @@ impl Field {
     match self {
       Self::All => 'A',
       Self::Bottom => 'B',
-      Self::Circle => 'C',
+      Self::Circle => '●',
       Self::Cross => '✚',
       Self::Frequencies => 'F',
       Self::Left => 'L',
-      Self::None => ' ',
+      Self::None => '□',
       Self::Right => 'R',
       Self::Samples => 'S',
       Self::Square => '■',
