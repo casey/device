@@ -1,42 +1,49 @@
+%% let mut next = 0;
+%% let mut binding = || {
+%%   let binding = next;
+%%   next += 1;
+%%   binding
+%% };
+
 @group(0)
-@binding(0)
+@binding({{ binding() }})
 var back: texture_2d<f32>;
 
 @group(0)
-@binding(1)
+@binding({{ binding() }})
 var filtering_sampler: sampler;
 
 @group(0)
-@binding(2)
+@binding({{ binding() }})
 var frequencies: texture_1d<f32>;
 
 @group(0)
-@binding(3)
+@binding({{ binding() }})
 var front: texture_2d<f32>;
 
 @group(0)
-@binding(4)
+@binding({{ binding() }})
 var non_filtering_sampler: sampler;
 
 @group(0)
-@binding(5)
+@binding({{ binding() }})
 var samples: texture_1d<f32>;
 
 @group(0)
-@binding(6)
+@binding({{ binding() }})
 var<uniform> uniforms: Uniforms;
 
-const ERROR = vec4(0.0, 1.0, 0.0, 1.0);
-const TRANSPARENT = vec4(0.0, 0.0, 0.0, 0.0);
+const ERROR = vec4f(0, 1, 0, 1);
+const TRANSPARENT = vec4f(0, 0, 0, 0);
 
 %% for field in Field::iter() {
-const {{ field.constant() }}: u32 = {{ field as u32 }};
+const {{ field.constant() }}: u32 = {{ field.number() }};
 %% }
 
 const VERTICES = array(
-  vec2(-1.0, -1.0),
-  vec2(-1.0, 3.0),
-  vec2(3.0, -1.0),
+  vec2f(-1, -1),
+  vec2f(-1, 3),
+  vec2f(3, -1),
 );
 
 struct Uniforms {

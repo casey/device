@@ -55,4 +55,8 @@ impl Field {
   pub(crate) fn name(self) -> &'static str {
     self.into()
   }
+
+  pub(crate) fn number(self) -> u32 {
+    self as u32
+  }
 }
