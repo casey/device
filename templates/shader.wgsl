@@ -37,7 +37,7 @@ const ERROR = vec4f(0, 1, 0, 1);
 const TRANSPARENT = vec4f(0, 0, 0, 0);
 
 %% for field in Field::iter() {
-const {{ field.constant() }}: u32 = {{ field as u32 }};
+const {{ field.constant() }}: u32 = {{ field.number() }};
 %% }
 
 const VERTICES = array(
