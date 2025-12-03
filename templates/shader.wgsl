@@ -78,6 +78,10 @@ fn field_circle(p: vec2f) -> bool {
   return length(p) < 0.5 * coefficient();
 }
 
+fn field_cross(p: vec2f) -> bool {
+  return min(abs(p.x), abs(p.y)) < 0.2 * coefficient();
+}
+
 fn field_frequencies(p: vec2f) -> bool {
   let x = (p.x + 1) * 0.5 * uniforms.frequency_range;
   let level = textureSample(frequencies, non_filtering_sampler, x).x * uniforms.gain;
@@ -100,6 +104,10 @@ fn field_samples(p: vec2f) -> bool {
   let x = (p.x + 1) * 0.5 * uniforms.sample_range;
   let level = textureSample(samples, non_filtering_sampler, x).x * uniforms.gain;
   return level < p.y;
+}
+
+fn field_square(p: vec2f) -> bool {
+  return max(abs(p.x), abs(p.y)) < 0.5 * coefficient();
 }
 
 fn field_top(p: vec2f) -> bool {
