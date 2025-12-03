@@ -890,6 +890,7 @@ impl Renderer {
     builder.push_default(StyleProperty::FontStack(FontStack::List(Cow::Borrowed(&[
       FontFamily::Named(FONT.into()),
       FontFamily::Generic(GenericFamily::SansSerif),
+      FontFamily::Named("Zapf Dingbats".into()),
       FontFamily::Named("Last Resort".into()),
     ]))));
     builder.push_default(StyleProperty::FontWeight(FontWeight::LIGHT));
