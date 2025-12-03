@@ -14,6 +14,7 @@ pub(crate) enum Field {
   Samples,
   Square,
   Top,
+  Triangle,
   X,
 }
 
@@ -46,6 +47,7 @@ impl Field {
       Self::Samples => 'S',
       Self::Square => '■',
       Self::Top => 'T',
+      Self::Triangle => '▲',
       Self::X => 'X',
     }
   }

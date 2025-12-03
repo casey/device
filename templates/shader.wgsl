@@ -114,6 +114,12 @@ fn field_top(p: vec2f) -> bool {
   return p.y + 1 < coefficient();
 }
 
+fn field_triangle(p: vec2f) -> bool {
+  return tan(radians(60)) * p.x - 0.5 < p.y
+    && tan(radians(-60)) * p.x - 0.5 < p.y
+    && p.y < 0.25;
+}
+
 fn field_x(p: vec2f) -> bool {
   let pixel = 2.0 / min(uniforms.resolution.x, uniforms.resolution.y);
   return abs(abs(p.x) - abs(p.y)) < sqrt(2) * 0.25 * coefficient() - 0.5 * pixel;

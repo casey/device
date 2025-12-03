@@ -168,6 +168,12 @@ impl State {
     }
   }
 
+  #[cfg(test)]
+  pub(crate) fn triangle(mut self) -> Self {
+    self.filter.field = Field::Triangle;
+    self
+  }
+
   pub(crate) fn vz(mut self, vz: f32) -> Self {
     self.velocity.z = vz;
     self
