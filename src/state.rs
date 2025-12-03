@@ -60,6 +60,12 @@ impl State {
     self
   }
 
+  #[cfg(test)]
+  pub(crate) fn cross(mut self) -> Self {
+    self.filter.field = Field::Cross;
+    self
+  }
+
   pub(crate) fn db(mut self, db: f32) -> Self {
     self.db = db;
     self
@@ -113,6 +119,12 @@ impl State {
 
   pub(crate) fn scale(mut self, n: f32) -> Self {
     self.filter.position *= Mat3f::new_scaling(n);
+    self
+  }
+
+  #[cfg(test)]
+  pub(crate) fn square(mut self) -> Self {
+    self.filter.field = Field::Square;
     self
   }
 

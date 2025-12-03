@@ -888,8 +888,9 @@ impl Renderer {
         .ranged_builder(&mut self.font_context, &text.string, 1.0, true);
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontStack(FontStack::List(Cow::Borrowed(&[
-      FontFamily::Named(FONT.into()),
+      FontFamily::Named("Helvetica Neue".into()),
       FontFamily::Generic(GenericFamily::SansSerif),
+      FontFamily::Named("Zapf Dingbats".into()),
       FontFamily::Named("Last Resort".into()),
     ]))));
     builder.push_default(StyleProperty::FontWeight(FontWeight::LIGHT));
@@ -1351,6 +1352,23 @@ mod tests {
         .scale(2.0)
         .times(2)
         .interpolate(true),
+    );
+  }
+
+  #[test]
+  #[ignore]
+  fn cross() {
+    case("cross", 256, 256, State::default().invert().cross().push());
+  }
+
+  #[test]
+  #[ignore]
+  fn square() {
+    case(
+      "square",
+      256,
+      256,
+      State::default().invert().square().push(),
     );
   }
 

@@ -135,7 +135,6 @@ const AUDIO: &str = "audio.wav";
 const COLOR_CHANNELS: u32 = 4;
 const DEFAULT_BUFFER_SIZE: u32 = 128;
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
-const FONT: &str = "Helvetica Neue";
 const RECORDING: &str = "recording.mp4";
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;

@@ -19,12 +19,23 @@ impl Command {
 
   pub(crate) fn map() -> BTreeMap<&'static str, Command> {
     let mut map = BTreeMap::new();
+    map.insert("cross", Self::Nullary(cross));
     map.insert("left", Self::Nullary(left));
     map.insert("right", Self::Nullary(right));
     map.insert("spread", Self::Nullary(spread));
+    map.insert("square", Self::Nullary(square));
     map.insert("status", Self::Nullary(status));
     map
   }
+}
+
+fn cross(state: &mut State) {
+  state.filters.push(Filter {
+    color: invert_color(),
+    field: Field::Cross,
+    wrap: state.wrap,
+    ..default()
+  });
 }
 
 fn left(state: &mut State) {
@@ -47,6 +58,15 @@ fn right(state: &mut State) {
 
 fn spread(state: &mut State) {
   state.spread ^= true;
+}
+
+fn square(state: &mut State) {
+  state.filters.push(Filter {
+    color: invert_color(),
+    field: Field::Square,
+    wrap: state.wrap,
+    ..default()
+  });
 }
 
 fn status(state: &mut State) {
