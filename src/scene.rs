@@ -14,12 +14,13 @@ pub(crate) enum Scene {
   RedX,
   Rip,
   Samples,
+  Starburst,
   Top,
   X,
 }
 
 impl Scene {
-  pub(crate) fn state(self) -> State {
+  pub(crate) fn state(self, rng: &mut SmallRng) -> State {
     match self {
       Self::All => State::default().invert().all().push(),
       Self::Bottom => State::default().invert().bottom().push(),
@@ -43,6 +44,7 @@ impl Scene {
         .scale(2.0)
         .times(8),
       Self::Middle => State::default().invert().top().push().bottom().push(),
+      // todo: turn off repeat
       Self::Noise => State::default()
         .invert()
         .x()
@@ -60,6 +62,36 @@ impl Scene {
       Self::Rip => State::default().invert().top().push().samples().push(),
       Self::Top => State::default().invert().top().push(),
       Self::Samples => State::default().invert().samples().push(),
+      Self::Starburst => {
+        let fields = [
+          Field::All,
+          Field::Circle,
+          Field::Cross,
+          Field::Square,
+          Field::Top,
+          Field::X,
+        ];
+
+        let mut state = State::default()
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .rotate_position(0.1 * TAU);
+
+        for _ in 0..20 {
+          state.filter.field = *fields.choose(rng).unwrap();
+          state = state.push();
+        }
+
+        state = state
+          .rotate_color(Axis::Blue, 0.1 * TAU)
+          .rotate_position(0.2 * TAU);
+
+        for _ in 0..10 {
+          state.filter.field = *fields.choose(rng).unwrap();
+          state = state.push();
+        }
+
+        state
+      }
       Self::X => State::default().invert().x().push(),
     }
   }

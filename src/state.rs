@@ -112,6 +112,22 @@ impl State {
     self
   }
 
+  pub(crate) fn rotate_position(mut self, angle: f32) -> Self {
+    self.filter.position = Mat3f::new_rotation(-angle);
+    self
+  }
+
+  pub(crate) fn rotate_color(mut self, axis: Axis, angle: f32) -> Self {
+    self.filter.color = Mat4f::from_scaled_axis(
+      match axis {
+        Axis::Red => Vec3f::new(1.0, 0.0, 0.0),
+        Axis::Green => Vec3f::new(0.0, 1.0, 0.0),
+        Axis::Blue => Vec3f::new(0.0, 0.0, 1.0),
+      } * angle,
+    );
+    self
+  }
+
   pub(crate) fn samples(mut self) -> Self {
     self.filter.field = Field::Samples;
     self

@@ -39,7 +39,9 @@ impl Capture {
 
     let mut analyzer = Analyzer::new();
 
-    let mut state = options.state();
+    let mut rng = options.rng();
+
+    let mut state = options.state(&mut rng);
 
     let resolution = state.resolution.unwrap_or(DEFAULT_RESOLUTION);
 
