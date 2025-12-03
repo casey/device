@@ -60,6 +60,7 @@ impl State {
     self
   }
 
+  #[cfg(test)]
   pub(crate) fn cross(mut self) -> Self {
     self.filter.field = Field::Cross;
     self
@@ -121,6 +122,7 @@ impl State {
     self
   }
 
+  #[cfg(test)]
   pub(crate) fn square(mut self) -> Self {
     self.filter.field = Field::Square;
     self
