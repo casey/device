@@ -75,10 +75,12 @@ impl Scene {
         let mut state = State::default()
           .rotate_color(Axis::Green, 0.1 * TAU)
           .rotate_position(0.1 * TAU)
+          .base(0.1)
           .spread(true);
 
         for _ in 0..20 {
           state.filter.field = *fields.choose(rng).unwrap();
+          state.filter.base *= 1.1;
           state = state.push();
         }
 
@@ -88,6 +90,7 @@ impl Scene {
 
         for _ in 0..10 {
           state.filter.field = *fields.choose(rng).unwrap();
+          state.filter.base *= 1.1;
           state = state.push();
         }
 
