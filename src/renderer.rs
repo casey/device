@@ -1121,6 +1121,18 @@ impl Renderer {
 mod tests {
   use {super::*, std::sync::LazyLock};
 
+  macro_rules! name {
+    () => {{
+      fn f() {}
+      std::any::type_name_of_val(&f)
+        .rsplit("::")
+        .skip(1)
+        .next()
+        .unwrap()
+        .replace('_', "-")
+    }};
+  }
+
   static RENDERER: LazyLock<Mutex<Renderer>> = LazyLock::new(|| {
     let resolution = 256.try_into().unwrap();
     Mutex::new(
@@ -1133,254 +1145,290 @@ mod tests {
     )
   });
 
-  #[track_caller]
-  fn case(name: &str, width: u32, height: u32, state: State) {
-    let mut renderer = RENDERER.lock().unwrap();
+  struct Baseline {
+    height: Option<u32>,
+    name: String,
+    resolution: Option<u32>,
+    state: State,
+    width: Option<u32>,
+  }
 
-    let width = width.try_into().unwrap();
-    let height = height.try_into().unwrap();
-    renderer.resize(Vector2::new(width, height), width.max(height));
-    renderer
-      .render(&Analyzer::new(), &state, Instant::now())
-      .unwrap();
+  impl Baseline {
+    fn height(mut self, height: u32) -> Self {
+      self.height = Some(height);
+      self
+    }
 
-    let (tx, rx) = mpsc::channel();
+    fn new(name: String) -> Self {
+      Self {
+        height: None,
+        name,
+        resolution: None,
+        state: State::default(),
+        width: None,
+      }
+    }
 
-    let expected = Utf8PathBuf::from(format!("baseline/{name}.png"));
-    let actual = expected.with_extension("test.png");
+    fn resolution(mut self, resolution: u32) -> Self {
+      self.resolution = Some(resolution);
+      self
+    }
 
-    renderer
-      .capture(move |image| {
-        image.save(&actual).unwrap();
-        tx.send(image).unwrap();
-      })
-      .unwrap();
+    #[track_caller]
+    fn run(self) {
+      let mut renderer = RENDERER.lock().unwrap();
 
-    renderer.device.poll(wgpu::PollType::Wait).unwrap();
+      let resolution = self.resolution.unwrap_or(256);
 
-    drop(renderer);
+      let width = self.width.unwrap_or(resolution).try_into().unwrap();
 
-    let actual = rx.recv().unwrap();
+      let height = self.height.unwrap_or(resolution).try_into().unwrap();
 
-    if expected.try_exists().unwrap() {
-      assert!(
-        actual == Image::load(&expected).unwrap(),
-        "baseline image mismatch",
-      );
-    } else {
-      panic!("no baseline image found for {name}");
+      renderer.resize(Vector2::new(width, height), resolution.try_into().unwrap());
+
+      renderer
+        .render(&Analyzer::new(), &self.state, Instant::now())
+        .unwrap();
+
+      let (tx, rx) = mpsc::channel();
+
+      let expected = Utf8PathBuf::from(format!("baseline/{}.png", self.name));
+      let actual = expected.with_extension("test.png");
+
+      renderer
+        .capture(move |image| {
+          image.save(&actual).unwrap();
+          tx.send(image).unwrap();
+        })
+        .unwrap();
+
+      renderer.device.poll(wgpu::PollType::Wait).unwrap();
+
+      drop(renderer);
+
+      let actual = rx.recv().unwrap();
+
+      if expected.try_exists().unwrap() {
+        assert!(
+          actual == Image::load(&expected).unwrap(),
+          "baseline image mismatch",
+        );
+      } else {
+        panic!("no baseline image found for {}", self.name);
+      }
+    }
+
+    fn state(mut self, state: State) -> Self {
+      self.state = state;
+      self
+    }
+
+    fn width(mut self, width: u32) -> Self {
+      self.width = Some(width);
+      self
     }
   }
 
   #[test]
   #[ignore]
   fn circle() {
-    case(
-      "circle",
-      256,
-      256,
-      State::default().invert().circle().push(),
-    );
+    Baseline::new(name!())
+      .state(State::default().invert().circle().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn circle_small_even() {
-    case(
-      "circle-small-even",
-      10,
-      10,
-      State::default().invert().circle().push(),
-    );
+    Baseline::new(name!())
+      .resolution(10)
+      .state(State::default().invert().circle().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn circle_small_odd() {
-    case(
-      "circle-small-odd",
-      9,
-      9,
-      State::default().invert().circle().push(),
-    );
+    Baseline::new(name!())
+      .resolution(9)
+      .state(State::default().invert().circle().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn circle_medium_even() {
-    case(
-      "circle-medium-even",
-      32,
-      32,
-      State::default().invert().circle().push(),
-    );
+    Baseline::new(name!())
+      .resolution(32)
+      .state(State::default().invert().circle().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn circle_medium_odd() {
-    case(
-      "circle-medium-odd",
-      31,
-      31,
-      State::default().invert().circle().push(),
-    );
+    Baseline::new(name!())
+      .resolution(31)
+      .state(State::default().invert().circle().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn default() {
-    case("default", 256, 256, State::default());
+    Baseline::new(name!()).state(State::default()).run();
   }
 
   #[test]
   #[ignore]
   fn left() {
-    case("left", 256, 256, State::default().invert().left().push());
+    Baseline::new(name!())
+      .state(State::default().invert().left().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn x() {
-    case("x", 256, 256, State::default().invert().x().push());
+    Baseline::new(name!())
+      .state(State::default().invert().x().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn x_oblong() {
-    case("x-oblong", 256, 128, State::default().invert().x().push());
+    Baseline::new(name!())
+      .width(256)
+      .height(128)
+      .state(State::default().invert().x().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn x_small_even() {
-    case("x-small-even", 10, 10, State::default().invert().x().push());
+    Baseline::new(name!())
+      .resolution(10)
+      .state(State::default().invert().x().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn x_small_odd() {
-    case("x-small-odd", 9, 9, State::default().invert().x().push());
+    Baseline::new(name!())
+      .resolution(9)
+      .state(State::default().invert().x().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn x_medium_even() {
-    case(
-      "x-medium-even",
-      32,
-      32,
-      State::default().invert().x().push(),
-    );
+    Baseline::new(name!())
+      .resolution(32)
+      .state(State::default().invert().x().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn x_medium_odd() {
-    case("x-medium-odd", 31, 31, State::default().invert().x().push());
+    Baseline::new(name!())
+      .resolution(31)
+      .state(State::default().invert().x().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn tile() {
-    case(
-      "tile",
-      256,
-      256,
-      State::default()
-        .invert()
-        .x()
-        .push()
-        .circle()
-        .push()
-        .x()
-        .push()
-        .circle()
-        .push()
-        .tile(true),
-    );
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .invert()
+          .x()
+          .push()
+          .circle()
+          .push()
+          .x()
+          .push()
+          .circle()
+          .push()
+          .tile(true),
+      )
+      .run();
   }
 
   #[test]
   #[ignore]
   fn circle_scale() {
-    case(
-      "circle-scale",
-      256,
-      256,
-      State::default().invert().circle().scale(2.0).times(2),
-    );
+    Baseline::new(name!())
+      .state(State::default().invert().circle().scale(2.0).times(2))
+      .run();
   }
 
   #[test]
   #[ignore]
   fn x_scale() {
-    case(
-      "x-scale",
-      256,
-      256,
-      State::default().invert().x().scale(2.0).times(2),
-    );
+    Baseline::new(name!())
+      .state(State::default().invert().x().scale(2.0).times(2))
+      .run();
   }
 
   #[test]
   #[ignore]
   fn circle_scale_interpolated() {
-    case(
-      "circle-scale-interpolated",
-      256,
-      256,
-      State::default()
-        .invert()
-        .circle()
-        .scale(2.0)
-        .times(2)
-        .interpolate(true),
-    );
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .invert()
+          .circle()
+          .scale(2.0)
+          .times(2)
+          .interpolate(true),
+      )
+      .run();
   }
 
   #[test]
   #[ignore]
   fn x_scale_interpolated() {
-    case(
-      "x-scale-interpolated",
-      256,
-      256,
-      State::default()
-        .invert()
-        .x()
-        .scale(2.0)
-        .times(2)
-        .interpolate(true),
-    );
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .invert()
+          .x()
+          .scale(2.0)
+          .times(2)
+          .interpolate(true),
+      )
+      .run();
   }
 
   #[test]
   #[ignore]
   fn cross() {
-    case("cross", 256, 256, State::default().invert().cross().push());
+    Baseline::new(name!())
+      .state(State::default().invert().cross().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn square() {
-    case(
-      "square",
-      256,
-      256,
-      State::default().invert().square().push(),
-    );
+    Baseline::new(name!())
+      .state(State::default().invert().square().push())
+      .run();
   }
 
   #[test]
   #[ignore]
   fn triangle() {
-    case(
-      "triangle",
-      256,
-      256,
-      State::default().invert().triangle().push(),
-    );
+    Baseline::new(name!())
+      .state(State::default().invert().triangle().push())
+      .run();
   }
 
   #[test]
