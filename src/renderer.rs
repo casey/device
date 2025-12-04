@@ -622,7 +622,7 @@ impl Renderer {
         interpolate: state.interpolate,
         offset: tiling.offset(i),
         position: filter.position,
-        repeat: filter.repeat,
+        repeat: state.repeat,
         resolution: tiling.resolution(),
         rms: if state.spread {
           rms * (i as f32 + 1.0) / filters as f32
@@ -1412,18 +1412,18 @@ mod tests {
   #[test]
   #[ignore]
   fn repeat_sampling() {
-    case(
-      "repeat_sampling",
-      256,
-      256,
-      State::default()
-        .rotate_color(Axis::Green, 0.1 * TAU)
-        .all()
-        .push()
-        .rotate_position(0.1 * TAU)
-        .x()
-        .push(),
-    );
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .repeat(true)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .all()
+          .push()
+          .rotate_position(0.1 * TAU)
+          .x()
+          .push(),
+      )
+      .run();
   }
 
   #[test]

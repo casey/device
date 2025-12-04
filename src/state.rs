@@ -112,6 +112,11 @@ impl State {
     self
   }
 
+  pub(crate) fn repeat(mut self, repeat: bool) -> Self {
+    self.repeat = repeat;
+    self
+  }
+
   pub(crate) fn rotate_position(mut self, angle: f32) -> Self {
     self.filter.position = Mat3f::new_rotation(-angle);
     self
@@ -138,6 +143,7 @@ impl State {
     self
   }
 
+  #[allow(unused)]
   pub(crate) fn spread(mut self, spread: bool) -> Self {
     self.spread = spread;
     self
