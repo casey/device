@@ -4,7 +4,7 @@ watch +args='lcheck':
   cargo watch --clear --exec '{{args}}'
 
 run *args:
-  cargo run --release -- {{args}}
+  cargo run --release -- "$@"
 
 forbid:
   ./bin/forbid

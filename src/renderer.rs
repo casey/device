@@ -622,7 +622,7 @@ impl Renderer {
         interpolate: state.interpolate,
         offset: tiling.offset(i),
         position: filter.position,
-        repeat: false,
+        repeat: state.repeat,
         resolution: tiling.resolution(),
         rms: if state.spread {
           rms * (i as f32 + 1.0) / filters as f32
@@ -1409,6 +1409,39 @@ mod tests {
 
   #[test]
   #[ignore]
+  fn sampling_repeat_on() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .repeat(true)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .all()
+          .push()
+          .rotate_position(0.1 * TAU)
+          .x()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn sampling_repeat_off() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .all()
+          .push()
+          .rotate_position(0.1 * TAU)
+          .x()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
   fn cross() {
     Baseline::new(name!())
       .state(State::default().invert().cross().push())
@@ -1428,6 +1461,45 @@ mod tests {
   fn triangle() {
     Baseline::new(name!())
       .state(State::default().invert().triangle().push())
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn rotate_red() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .rotate_color(Axis::Red, TAU / 2.0)
+          .all()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn rotate_green() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .rotate_color(Axis::Green, TAU / 2.0)
+          .all()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn rotate_blue() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .rotate_color(Axis::Blue, TAU / 2.0)
+          .all()
+          .push(),
+      )
       .run();
   }
 

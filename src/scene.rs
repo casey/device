@@ -14,6 +14,7 @@ pub(crate) enum Scene {
   RedX,
   Rip,
   Samples,
+  Starburst,
   Top,
   X,
 }
@@ -60,6 +61,39 @@ impl Scene {
       Self::Rip => State::default().invert().top().push().samples().push(),
       Self::Top => State::default().invert().top().push(),
       Self::Samples => State::default().invert().samples().push(),
+      Self::Starburst => {
+        let mut rng = SmallRng::seed_from_u64(0);
+
+        let fields = [
+          Field::All,
+          Field::Circle,
+          Field::Cross,
+          Field::Square,
+          Field::Top,
+          Field::X,
+        ];
+
+        let mut state = State::default()
+          .repeat(true)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .rotate_position(0.1 * TAU);
+
+        for _ in 0..20 {
+          state.filter.field = *fields.choose(&mut rng).unwrap();
+          state = state.push();
+        }
+
+        state = state
+          .rotate_color(Axis::Blue, 0.1 * TAU)
+          .rotate_position(0.2 * TAU);
+
+        for _ in 0..10 {
+          state.filter.field = *fields.choose(&mut rng).unwrap();
+          state = state.push();
+        }
+
+        state
+      }
       Self::X => State::default().invert().x().push(),
     }
   }

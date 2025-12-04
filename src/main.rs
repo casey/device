@@ -1,11 +1,11 @@
 use {
   self::{
-    analyzer::Analyzer, app::App, arguments::Arguments, bindings::Bindings, command::Command,
-    config::Config, controller::Controller, error::Error, event::Event, field::Field,
-    filter::Filter, format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image, input::Input,
-    into_stereo::IntoStereo, into_u64::IntoU64, into_u128::IntoU128, into_usize::IntoUsize,
-    into_utf8_path::IntoUtf8Path, message::Message, options::Options, parameter::Parameter,
-    patch::Patch, program::Program, recorder::Recorder, renderer::Renderer,
+    analyzer::Analyzer, app::App, arguments::Arguments, axis::Axis, bindings::Bindings,
+    command::Command, config::Config, controller::Controller, error::Error, event::Event,
+    field::Field, filter::Filter, format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image,
+    input::Input, into_stereo::IntoStereo, into_u64::IntoU64, into_u128::IntoU128,
+    into_usize::IntoUsize, into_utf8_path::IntoUtf8Path, message::Message, options::Options,
+    parameter::Parameter, patch::Patch, program::Program, recorder::Recorder, renderer::Renderer,
     resampler_ext::ResamplerExt, scene::Scene, score::Score, shared::Shared, sound::Sound,
     state::State, stream_config_display::StreamConfigDisplay, subcommand::Subcommand, tally::Tally,
     tap::Tap, target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling,
@@ -23,6 +23,7 @@ use {
   indicatif::{ProgressBar, ProgressStyle},
   nalgebra::Vector2,
   parley::{FontContext, LayoutContext},
+  rand::{SeedableRng, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
@@ -86,6 +87,7 @@ macro_rules! label {
 mod analyzer;
 mod app;
 mod arguments;
+mod axis;
 mod bindings;
 mod command;
 mod config;
@@ -136,12 +138,14 @@ const COLOR_CHANNELS: u32 = 4;
 const DEFAULT_BUFFER_SIZE: u32 = 128;
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
 const RECORDING: &str = "recording.mp4";
+const TAU: f32 = f32::consts::TAU;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 type Mat3f = nalgebra::Matrix3<f32>;
 type Mat4f = nalgebra::Matrix4<f32>;
 type Vec2f = nalgebra::Vector2<f32>;
+type Vec3f = nalgebra::Vector3<f32>;
 type Vec4f = nalgebra::Vector4<f32>;
 
 fn default<T: Default>() -> T {
