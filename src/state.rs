@@ -120,6 +120,7 @@ impl State {
   pub(crate) fn rotate_color(mut self, axis: Axis, angle: f32) -> Self {
     self.filter.color = Mat4f::from_scaled_axis(
       match axis {
+        #[cfg(test)]
         Axis::Red => Vec3f::new(1.0, 0.0, 0.0),
         Axis::Green => Vec3f::new(0.0, 1.0, 0.0),
         Axis::Blue => Vec3f::new(0.0, 0.0, 1.0),
