@@ -1466,6 +1466,45 @@ mod tests {
 
   #[test]
   #[ignore]
+  fn rotate_red() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .rotate_color(Axis::Red, TAU / 2.0)
+          .all()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn rotate_green() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .rotate_color(Axis::Green, TAU / 2.0)
+          .all()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn rotate_blue() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .rotate_color(Axis::Blue, TAU / 2.0)
+          .all()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
   fn resolution_is_clamped_to_2d_texture_limit() {
     let resolution = 65536.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
