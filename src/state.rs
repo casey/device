@@ -143,12 +143,6 @@ impl State {
     self
   }
 
-  #[allow(unused)]
-  pub(crate) fn spread(mut self, spread: bool) -> Self {
-    self.spread = spread;
-    self
-  }
-
   #[cfg(test)]
   pub(crate) fn square(mut self) -> Self {
     self.filter.field = Field::Square;
