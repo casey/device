@@ -50,11 +50,6 @@ impl State {
     self
   }
 
-  pub(crate) fn base(mut self, base: f32) -> Self {
-    self.filter.base = base;
-    self
-  }
-
   pub(crate) fn bottom(mut self) -> Self {
     self.filter.field = Field::Bottom;
     self
