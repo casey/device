@@ -20,7 +20,7 @@ pub(crate) enum Scene {
 }
 
 impl Scene {
-  pub(crate) fn state(self, rng: &mut SmallRng) -> State {
+  pub(crate) fn state(self) -> State {
     match self {
       Self::All => State::default().invert().all().push(),
       Self::Bottom => State::default().invert().bottom().push(),
@@ -63,6 +63,8 @@ impl Scene {
       Self::Top => State::default().invert().top().push(),
       Self::Samples => State::default().invert().samples().push(),
       Self::Starburst => {
+        let mut rng = SmallRng::seed_from_u64(0);
+
         let fields = [
           Field::All,
           Field::Circle,
@@ -79,7 +81,7 @@ impl Scene {
           .spread(true);
 
         for _ in 0..20 {
-          state.filter.field = *fields.choose(rng).unwrap();
+          state.filter.field = *fields.choose(&mut rng).unwrap();
           state.filter.base *= 1.1;
           state = state.push();
         }
@@ -89,7 +91,7 @@ impl Scene {
           .rotate_position(0.2 * TAU);
 
         for _ in 0..10 {
-          state.filter.field = *fields.choose(rng).unwrap();
+          state.filter.field = *fields.choose(&mut rng).unwrap();
           state.filter.base *= 1.1;
           state = state.push();
         }

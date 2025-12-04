@@ -21,11 +21,11 @@ impl Program {
     Ok(())
   }
 
-  pub(crate) fn state(self, rng: &mut SmallRng) -> State {
+  pub(crate) fn state(self) -> State {
     match self {
-      Self::Hello => Scene::Hello.state(rng),
-      Self::Busy => Scene::Highwaystar.state(rng),
-      Self::Noise => Scene::Noise.state(rng),
+      Self::Hello => Scene::Hello.state(),
+      Self::Busy => Scene::Highwaystar.state(),
+      Self::Noise => Scene::Noise.state(),
     }
   }
 }

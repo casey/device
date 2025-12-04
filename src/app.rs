@@ -130,9 +130,7 @@ impl App {
       .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
       .transpose()?;
 
-    let mut rng = options.rng();
-
-    let state = options.state(&mut rng);
+    let state = options.state();
 
     let (capture_tx, capture_rx) = mpsc::channel();
 

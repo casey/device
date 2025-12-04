@@ -26,8 +26,6 @@ pub(crate) struct Options {
   pub(crate) input: bool,
   #[arg(long)]
   pub(crate) interpolate: Option<bool>,
-  #[arg(default_value_t, long)]
-  pub(crate) seed: u64,
   #[arg(long)]
   pub(crate) program: Option<Program>,
   #[arg(long)]
@@ -69,15 +67,11 @@ impl Options {
     Ok(())
   }
 
-  pub(crate) fn rng(&self) -> SmallRng {
-    SmallRng::seed_from_u64(self.seed)
-  }
-
-  pub(crate) fn state(&self, rng: &mut SmallRng) -> State {
+  pub(crate) fn state(&self) -> State {
     let mut state = if let Some(scene) = self.scene {
-      scene.state(rng)
+      scene.state()
     } else if let Some(program) = self.program {
-      program.state(rng)
+      program.state()
     } else {
       default()
     };
