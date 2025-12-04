@@ -44,7 +44,6 @@ impl Scene {
         .scale(2.0)
         .times(8),
       Self::Middle => State::default().invert().top().push().bottom().push(),
-      // todo: turn off repeat
       Self::Noise => State::default()
         .invert()
         .x()
