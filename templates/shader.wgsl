@@ -48,7 +48,6 @@ const VERTICES = array(
 
 struct Uniforms {
   back_read: u32,
-  base: f32,
   color: mat4x4f,
   coordinates: u32,
   field: u32,
@@ -71,7 +70,7 @@ struct Uniforms {
 }
 
 fn coefficient() -> f32 {
-  return uniforms.base + uniforms.rms / 10 * uniforms.gain;
+  return 1.0 + uniforms.rms / 10 * uniforms.gain;
 }
 
 fn field_all(p: vec2f) -> bool {

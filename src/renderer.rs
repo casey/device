@@ -609,7 +609,6 @@ impl Renderer {
       let i = u32::try_from(i).unwrap();
       uniforms.push(Uniforms {
         back_read: false,
-        base: filter.base,
         color: filter.color,
         coordinates: filter.coordinates,
         field: filter.field,
@@ -640,7 +639,6 @@ impl Renderer {
 
     uniforms.push(Uniforms {
       back_read: tiling.back_read(filter_count),
-      base: 1.0,
       color: Mat4f::identity(),
       coordinates: false,
       field: Field::None,
@@ -664,7 +662,6 @@ impl Renderer {
 
     uniforms.push(Uniforms {
       back_read: true,
-      base: 1.0,
       color: Mat4f::identity(),
       coordinates: false,
       field: Field::None,
@@ -688,7 +685,6 @@ impl Renderer {
 
     uniforms.push(Uniforms {
       back_read: true,
-      base: 1.0,
       color: Mat4f::identity(),
       coordinates: false,
       field: Field::None,
