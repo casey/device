@@ -890,6 +890,7 @@ impl Renderer {
     builder.push_default(StyleProperty::FontStack(FontStack::List(Cow::Borrowed(&[
       FontFamily::Named("Helvetica Neue".into()),
       FontFamily::Generic(GenericFamily::SansSerif),
+      FontFamily::Named("Apple Symbols".into()),
       FontFamily::Named("Zapf Dingbats".into()),
       FontFamily::Named("Last Resort".into()),
     ]))));
