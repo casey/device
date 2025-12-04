@@ -1407,15 +1407,29 @@ mod tests {
       .run();
   }
 
-  // what should be happening?
-
   #[test]
   #[ignore]
-  fn repeat_sampling() {
+  fn sampling_repeat_on() {
     Baseline::new(name!())
       .state(
         State::default()
           .repeat(true)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .all()
+          .push()
+          .rotate_position(0.1 * TAU)
+          .x()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn sampling_repeat_off() {
+    Baseline::new(name!())
+      .state(
+        State::default()
           .rotate_color(Axis::Green, 0.1 * TAU)
           .all()
           .push()

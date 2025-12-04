@@ -75,6 +75,7 @@ impl Scene {
         ];
 
         let mut state = State::default()
+          .repeat(true)
           .rotate_color(Axis::Green, 0.1 * TAU)
           .rotate_position(0.1 * TAU);
 
