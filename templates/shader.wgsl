@@ -183,13 +183,13 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
     }
   }
 
-  // wrap uv coordinates
-  if bool(uniforms.wrap) {
-    transformed = (transformed + 1.0) % 2.0 - 1.0;
-  }
-
   // convert position to uv coordinates
   var uv = (transformed + 1) / 2;
+
+  // wrap uv coordinates
+  if bool(uniforms.wrap) {
+    uv = fract(uv);
+  }
 
   var front_color = TRANSPARENT;
 
