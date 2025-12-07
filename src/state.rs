@@ -61,6 +61,12 @@ impl State {
   }
 
   #[cfg(test)]
+  pub(crate) fn coordinates(mut self, coordinates: bool) -> Self {
+    self.filter.coordinates = coordinates;
+    self
+  }
+
+  #[cfg(test)]
   pub(crate) fn cross(mut self) -> Self {
     self.filter.field = Field::Cross;
     self

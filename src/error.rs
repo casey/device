@@ -221,9 +221,10 @@ pub(crate) enum Error {
     fps: Fps,
     sample_rate: u32,
   },
-  #[snafu(display("failed to reload shader template"))]
+  #[snafu(display("failed to reload shader template from `{path}`"))]
   ShaderReload {
     backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
     source: boilerplate::Error,
   },
   #[snafu(
