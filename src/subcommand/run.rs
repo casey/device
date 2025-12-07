@@ -3,9 +3,9 @@ use super::*;
 #[derive(Default, Parser)]
 pub(crate) struct Run {
   #[arg(long)]
-  record: bool,
-  #[arg(long)]
   present_mode: Option<PresentMode>,
+  #[arg(long)]
+  record: bool,
 }
 
 impl Run {
