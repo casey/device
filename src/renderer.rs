@@ -326,6 +326,7 @@ impl Renderer {
     window: Option<Arc<Window>>,
     size: Vector2<NonZeroU32>,
     resolution: NonZeroU32,
+    format: Option<Format>,
   ) -> Result<Self> {
     let instance = Instance::default();
 
@@ -358,7 +359,16 @@ impl Renderer {
       .context(error::RequestDevice)?;
 
     let (surface, format) = if let Some(surface) = surface {
-      let format = Format::try_from(surface.get_capabilities(&adapter).formats[0])?;
+      let formats = surface.get_capabilities(&adapter).formats;
+
+      let format = if let Some(format) = format {
+        if !formats.iter().any(|supported| *supported == format.into()) {
+          return Err(error::UnsupportedSurfaceFormat { format }.build());
+        }
+        format
+      } else {
+        Format::try_from(formats[0])?
+      };
 
       let mut config = surface
         .get_default_config(&adapter, size.x.get(), size.y.get())
@@ -370,7 +380,7 @@ impl Renderer {
 
       (Some((surface, config)), format)
     } else {
-      (None, Format::default())
+      (None, format.unwrap_or_default())
     };
 
     let (tx, error_channel) = mpsc::channel();
@@ -1143,6 +1153,7 @@ mod tests {
         None,
         Vector2::new(resolution, resolution),
         resolution,
+        None,
       ))
       .unwrap(),
     )
@@ -1511,7 +1522,7 @@ mod tests {
   fn resolution_is_clamped_to_2d_texture_limit() {
     let resolution = 65536.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
-    let mut renderer = pollster::block_on(Renderer::new(None, size, resolution)).unwrap();
+    let mut renderer = pollster::block_on(Renderer::new(None, size, resolution, None)).unwrap();
     renderer.resize(size, resolution);
   }
 
@@ -1522,7 +1533,7 @@ mod tests {
 
     let resolution = 5809.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
-    let mut renderer = pollster::block_on(Renderer::new(None, size, resolution)).unwrap();
+    let mut renderer = pollster::block_on(Renderer::new(None, size, resolution, None)).unwrap();
     renderer.resize(size, resolution);
     renderer
       .render(

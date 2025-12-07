@@ -256,6 +256,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
+  #[snafu(display("Unsupported surface format `{format}`"))]
+  UnsupportedSurfaceFormat {
+    backtrace: Option<Backtrace>,
+    format: Format,
+  },
   #[snafu(display("default texture format {texture_format:?} not supported"))]
   UnsupportedTextureFormat {
     backtrace: Option<Backtrace>,
