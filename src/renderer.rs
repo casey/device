@@ -1,15 +1,5 @@
 use super::*;
 
-// todo:
-// - should I move pipeline functions into module or struct?
-// - tiling should read from filtering sampler?
-//
-// - shaders:
-//   - filter
-//   - tiling compositing
-//   - overlay compositing
-//   - blit to screen
-
 pub(crate) struct Renderer {
   bindings: Option<Bindings>,
   composite_pipeline: Pipeline,
