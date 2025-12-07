@@ -1,7 +1,6 @@
 use super::*;
 
 // todo:
-// - benchmark with vsync off
 // - should I move pipeline functions into module or struct?
 // - tiling should read from filtering sampler?
 //
@@ -36,216 +35,6 @@ pub(crate) struct Renderer {
 }
 
 impl Renderer {
-  fn filter_bind_group(
-    &self,
-    frequencies: &TextureView,
-    input: &TextureView,
-    samples: &TextureView,
-  ) -> BindGroup {
-    let mut next = 0;
-    let mut binding = || {
-      let binding = next;
-      next += 1;
-      binding
-    };
-    self.device.create_bind_group(&BindGroupDescriptor {
-      layout: &self.filter_pipeline.bind_group_layout,
-      entries: &[
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::Sampler(&self.filtering_sampler),
-        },
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::TextureView(frequencies),
-        },
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::TextureView(input),
-        },
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::Sampler(&self.non_filtering_sampler),
-        },
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::TextureView(samples),
-        },
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::Buffer(BufferBinding {
-            buffer: &self.filter_pipeline.uniform_buffer,
-            offset: 0,
-            size: Some(
-              u64::from(self.filter_pipeline.uniform_buffer_size)
-                .try_into()
-                .unwrap(),
-            ),
-          }),
-        },
-      ],
-      label: label!(),
-    })
-  }
-
-  fn composite_bind_group(&self, back: &TextureView, front: &TextureView) -> BindGroup {
-    let mut next = 0;
-    let mut binding = || {
-      let binding = next;
-      next += 1;
-      binding
-    };
-    self.device.create_bind_group(&BindGroupDescriptor {
-      layout: &self.composite_pipeline.bind_group_layout,
-      entries: &[
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::TextureView(back),
-        },
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::TextureView(front),
-        },
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::Sampler(&self.non_filtering_sampler),
-        },
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::Buffer(BufferBinding {
-            buffer: &self.composite_pipeline.uniform_buffer,
-            offset: 0,
-            size: Some(
-              u64::from(self.composite_pipeline.uniform_buffer_size)
-                .try_into()
-                .unwrap(),
-            ),
-          }),
-        },
-      ],
-      label: label!(),
-    })
-  }
-
-  fn filter_bind_group_layout(device: &wgpu::Device, uniform_buffer_size: u32) -> BindGroupLayout {
-    let mut next = 0;
-    let mut binding = || {
-      let binding = next;
-      next += 1;
-      binding
-    };
-    device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-      entries: &[
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Sampler(SamplerBindingType::Filtering),
-          visibility: ShaderStages::FRAGMENT,
-        },
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Texture {
-            multisampled: false,
-            sample_type: TextureSampleType::Float { filterable: false },
-            view_dimension: TextureViewDimension::D1,
-          },
-          visibility: ShaderStages::FRAGMENT,
-        },
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Texture {
-            multisampled: false,
-            sample_type: TextureSampleType::Float { filterable: true },
-            view_dimension: TextureViewDimension::D2,
-          },
-          visibility: ShaderStages::FRAGMENT,
-        },
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
-          visibility: ShaderStages::FRAGMENT,
-        },
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Texture {
-            multisampled: false,
-            sample_type: TextureSampleType::Float { filterable: false },
-            view_dimension: TextureViewDimension::D1,
-          },
-          visibility: ShaderStages::FRAGMENT,
-        },
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Buffer {
-            has_dynamic_offset: true,
-            min_binding_size: Some(u64::from(uniform_buffer_size).try_into().unwrap()),
-            ty: BufferBindingType::Uniform,
-          },
-          visibility: ShaderStages::FRAGMENT,
-        },
-      ],
-      label: label!(),
-    })
-  }
-
-  fn composite_bind_group_layout(
-    device: &wgpu::Device,
-    uniform_buffer_size: u32,
-  ) -> BindGroupLayout {
-    let mut next = 0;
-    let mut binding = || {
-      let binding = next;
-      next += 1;
-      binding
-    };
-    device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-      entries: &[
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Texture {
-            multisampled: false,
-            sample_type: TextureSampleType::Float { filterable: true },
-            view_dimension: TextureViewDimension::D2,
-          },
-          visibility: ShaderStages::FRAGMENT,
-        },
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Texture {
-            multisampled: false,
-            sample_type: TextureSampleType::Float { filterable: true },
-            view_dimension: TextureViewDimension::D2,
-          },
-          visibility: ShaderStages::FRAGMENT,
-        },
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
-          visibility: ShaderStages::FRAGMENT,
-        },
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Buffer {
-            has_dynamic_offset: true,
-            min_binding_size: Some(u64::from(uniform_buffer_size).try_into().unwrap()),
-            ty: BufferBindingType::Uniform,
-          },
-          visibility: ShaderStages::FRAGMENT,
-        },
-      ],
-      label: label!(),
-    })
-  }
-
   fn bindings(&self) -> &Bindings {
     self.bindings.as_ref().unwrap()
   }
@@ -337,6 +126,98 @@ impl Renderer {
     Ok(())
   }
 
+  fn composite_bind_group(&self, back: &TextureView, front: &TextureView) -> BindGroup {
+    let mut next = 0;
+    let mut binding = || {
+      let binding = next;
+      next += 1;
+      binding
+    };
+    self.device.create_bind_group(&BindGroupDescriptor {
+      layout: &self.composite_pipeline.bind_group_layout,
+      entries: &[
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::TextureView(back),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::TextureView(front),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::Sampler(&self.non_filtering_sampler),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::Buffer(BufferBinding {
+            buffer: &self.composite_pipeline.uniform_buffer,
+            offset: 0,
+            size: Some(
+              u64::from(self.composite_pipeline.uniform_buffer_size)
+                .try_into()
+                .unwrap(),
+            ),
+          }),
+        },
+      ],
+      label: label!(),
+    })
+  }
+
+  fn composite_bind_group_layout(
+    device: &wgpu::Device,
+    uniform_buffer_size: u32,
+  ) -> BindGroupLayout {
+    let mut next = 0;
+    let mut binding = || {
+      let binding = next;
+      next += 1;
+      binding
+    };
+    device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+      entries: &[
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Texture {
+            multisampled: false,
+            sample_type: TextureSampleType::Float { filterable: true },
+            view_dimension: TextureViewDimension::D2,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Texture {
+            multisampled: false,
+            sample_type: TextureSampleType::Float { filterable: true },
+            view_dimension: TextureViewDimension::D2,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Buffer {
+            has_dynamic_offset: true,
+            min_binding_size: Some(u64::from(uniform_buffer_size).try_into().unwrap()),
+            ty: BufferBindingType::Uniform,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+      ],
+      label: label!(),
+    })
+  }
+
   fn create_render_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &PipelineLayout,
@@ -378,7 +259,6 @@ impl Renderer {
   }
 
   fn draw(
-    &self,
     bind_group: &BindGroup,
     encoder: &mut CommandEncoder,
     tiling: Option<(Tiling, u32)>,
@@ -415,6 +295,124 @@ impl Renderer {
     }
 
     pass.draw(0..3, 0..1);
+  }
+
+  fn filter_bind_group(
+    &self,
+    frequencies: &TextureView,
+    input: &TextureView,
+    samples: &TextureView,
+  ) -> BindGroup {
+    let mut next = 0;
+    let mut binding = || {
+      let binding = next;
+      next += 1;
+      binding
+    };
+    self.device.create_bind_group(&BindGroupDescriptor {
+      layout: &self.filter_pipeline.bind_group_layout,
+      entries: &[
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::Sampler(&self.filtering_sampler),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::TextureView(frequencies),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::TextureView(input),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::Sampler(&self.non_filtering_sampler),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::TextureView(samples),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::Buffer(BufferBinding {
+            buffer: &self.filter_pipeline.uniform_buffer,
+            offset: 0,
+            size: Some(
+              u64::from(self.filter_pipeline.uniform_buffer_size)
+                .try_into()
+                .unwrap(),
+            ),
+          }),
+        },
+      ],
+      label: label!(),
+    })
+  }
+
+  fn filter_bind_group_layout(device: &wgpu::Device, uniform_buffer_size: u32) -> BindGroupLayout {
+    let mut next = 0;
+    let mut binding = || {
+      let binding = next;
+      next += 1;
+      binding
+    };
+    device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+      entries: &[
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Sampler(SamplerBindingType::Filtering),
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Texture {
+            multisampled: false,
+            sample_type: TextureSampleType::Float { filterable: false },
+            view_dimension: TextureViewDimension::D1,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Texture {
+            multisampled: false,
+            sample_type: TextureSampleType::Float { filterable: true },
+            view_dimension: TextureViewDimension::D2,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Texture {
+            multisampled: false,
+            sample_type: TextureSampleType::Float { filterable: false },
+            view_dimension: TextureViewDimension::D1,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Buffer {
+            has_dynamic_offset: true,
+            min_binding_size: Some(u64::from(uniform_buffer_size).try_into().unwrap()),
+            ty: BufferBindingType::Uniform,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+      ],
+      label: label!(),
+    })
   }
 
   pub(crate) fn frame(&self) -> u64 {
@@ -547,8 +545,8 @@ impl Renderer {
         pipeline_layout,
         render_pipeline,
         uniform_buffer,
-        uniform_buffer_stride,
         uniform_buffer_size,
+        uniform_buffer_stride,
       }
     };
 
@@ -894,7 +892,7 @@ impl Renderer {
     let mut destination = 1;
     for i in 0..filters {
       let i = u32::try_from(i).unwrap();
-      self.draw(
+      Self::draw(
         &self.bindings().targets[source].bind_group,
         &mut encoder,
         Some((tiling, i)),
@@ -905,7 +903,7 @@ impl Renderer {
       (source, destination) = (destination, source);
     }
 
-    self.draw(
+    Self::draw(
       &self.bindings().tiling_bind_group,
       &mut encoder,
       None,
@@ -916,7 +914,7 @@ impl Renderer {
 
     self.render_overlay(state, fps)?;
 
-    self.draw(
+    Self::draw(
       &self.bindings().overlay_bind_group,
       &mut encoder,
       None,
@@ -926,7 +924,7 @@ impl Renderer {
     );
 
     if let Some(frame) = &frame {
-      self.draw(
+      Self::draw(
         &self.bindings().overlay_bind_group,
         &mut encoder,
         None,
