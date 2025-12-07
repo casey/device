@@ -2,16 +2,18 @@ use super::*;
 
 #[derive(Clone, Copy, Debug, Default, ValueEnum)]
 pub(crate) enum Format {
+  #[value(name("bgra8unorm"))]
   Bgra8Unorm,
   #[default]
+  #[value(name("bgra8unorm-srgb"))]
   Bgra8UnormSrgb,
 }
 
 impl Display for Format {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     match self {
-      Self::Bgra8Unorm => write!(f, "bgra8-unorm"),
-      Self::Bgra8UnormSrgb => write!(f, "bgra8-unorm-srgb"),
+      Self::Bgra8Unorm => write!(f, "bgra8unorm"),
+      Self::Bgra8UnormSrgb => write!(f, "bgra8unorm-srgb"),
     }
   }
 }
