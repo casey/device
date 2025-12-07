@@ -358,13 +358,15 @@ impl Renderer {
       .context(error::RequestDevice)?;
 
     let (surface, format) = if let Some(surface) = surface {
-      let config = surface
+      let format = Format::try_from(surface.get_capabilities(&adapter).formats[1])?;
+
+      let mut config = surface
         .get_default_config(&adapter, size.x.get(), size.y.get())
         .context(error::DefaultConfig)?;
 
-      surface.configure(&device, &config);
+      config.format = format.into();
 
-      let format = Format::try_from(surface.get_capabilities(&adapter).formats[0])?;
+      surface.configure(&device, &config);
 
       (Some((surface, config)), format)
     } else {

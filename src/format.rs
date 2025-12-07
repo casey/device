@@ -1,7 +1,8 @@
 use super::*;
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub(crate) enum Format {
+  Bgra8Unorm,
   #[default]
   Bgra8UnormSrgb,
 }
@@ -9,7 +10,7 @@ pub(crate) enum Format {
 impl Format {
   pub(crate) fn swizzle(self, src: &[u8], dst: &mut [u8]) {
     match self {
-      Self::Bgra8UnormSrgb => {
+      Self::Bgra8Unorm | Self::Bgra8UnormSrgb => {
         let [b, g, r, a] = src.try_into().unwrap();
         let dst = <&mut [u8; 4]>::try_from(dst).unwrap();
         *dst = [r, g, b, a];
@@ -23,6 +24,7 @@ impl TryFrom<TextureFormat> for Format {
 
   fn try_from(texture_format: TextureFormat) -> Result<Self> {
     match texture_format {
+      TextureFormat::Bgra8Unorm => Ok(Self::Bgra8Unorm),
       TextureFormat::Bgra8UnormSrgb => Ok(Self::Bgra8UnormSrgb),
       _ => Err(error::UnsupportedTextureFormat { texture_format }.build()),
     }
@@ -32,6 +34,7 @@ impl TryFrom<TextureFormat> for Format {
 impl From<Format> for TextureFormat {
   fn from(format: Format) -> Self {
     match format {
+      Format::Bgra8Unorm => Self::Bgra8Unorm,
       Format::Bgra8UnormSrgb => Self::Bgra8UnormSrgb,
     }
   }
