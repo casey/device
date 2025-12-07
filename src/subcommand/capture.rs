@@ -47,6 +47,7 @@ impl Capture {
       None,
       Vector2::new(resolution, resolution),
       resolution,
+      options.format,
     ))?;
 
     let fps = state.fps.unwrap_or(DEFAULT_FPS.try_into().unwrap());
