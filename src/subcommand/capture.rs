@@ -44,10 +44,10 @@ impl Capture {
     let resolution = state.resolution.unwrap_or(DEFAULT_RESOLUTION);
 
     let mut renderer = pollster::block_on(Renderer::new(
-      None,
-      Vector2::new(resolution, resolution),
-      resolution,
       options.format,
+      None,
+      resolution,
+      Vector2::new(resolution, resolution),
       None,
     ))?;
 

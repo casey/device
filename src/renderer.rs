@@ -323,11 +323,11 @@ impl Renderer {
   }
 
   pub(crate) async fn new(
-    window: Option<Arc<Window>>,
-    size: Vector2<NonZeroU32>,
-    resolution: NonZeroU32,
     format: Option<Format>,
     present_mode: Option<PresentMode>,
+    resolution: NonZeroU32,
+    size: Vector2<NonZeroU32>,
+    window: Option<Arc<Window>>,
   ) -> Result<Self> {
     let instance = Instance::default();
 
@@ -1156,9 +1156,9 @@ mod tests {
     Mutex::new(
       pollster::block_on(Renderer::new(
         None,
-        Vector2::new(resolution, resolution),
-        resolution,
         None,
+        resolution,
+        Vector2::new(resolution, resolution),
         None,
       ))
       .unwrap(),
@@ -1529,7 +1529,7 @@ mod tests {
     let resolution = 65536.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
     let mut renderer =
-      pollster::block_on(Renderer::new(None, size, resolution, None, None)).unwrap();
+      pollster::block_on(Renderer::new(None, None, resolution, size, None)).unwrap();
     renderer.resize(size, resolution);
   }
 
@@ -1541,7 +1541,7 @@ mod tests {
     let resolution = 5809.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
     let mut renderer =
-      pollster::block_on(Renderer::new(None, size, resolution, None, None)).unwrap();
+      pollster::block_on(Renderer::new(None, None, resolution, size, None)).unwrap();
     renderer.resize(size, resolution);
     renderer
       .render(

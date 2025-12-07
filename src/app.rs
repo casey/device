@@ -608,11 +608,11 @@ impl ApplicationHandler for App {
       self.window = Some(window.clone());
 
       let renderer = match pollster::block_on(Renderer::new(
-        Some(window),
-        size,
-        resolution,
         self.options.format,
         self.present_mode,
+        resolution,
+        size,
+        Some(window),
       )) {
         Ok(renderer) => renderer,
         Err(err) => {
