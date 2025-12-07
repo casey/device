@@ -18,6 +18,7 @@ pub(crate) struct App {
   options: Options,
   patch: Patch,
   play: bool,
+  present_mode: Option<PresentMode>,
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
   state: State,
@@ -77,7 +78,12 @@ impl App {
     Ok(())
   }
 
-  pub(crate) fn new(options: Options, record: bool, config: Config) -> Result<Self> {
+  pub(crate) fn new(
+    options: Options,
+    present_mode: Option<PresentMode>,
+    record: bool,
+    config: Config,
+  ) -> Result<Self> {
     let host = cpal::default_host();
 
     let output_device = host
@@ -154,6 +160,7 @@ impl App {
       options,
       patch: Patch::default(),
       play: false,
+      present_mode,
       recorder,
       renderer: None,
       state,
@@ -601,10 +608,11 @@ impl ApplicationHandler for App {
       self.window = Some(window.clone());
 
       let renderer = match pollster::block_on(Renderer::new(
-        Some(window),
-        size,
-        resolution,
         self.options.format,
+        self.present_mode,
+        resolution,
+        size,
+        Some(window),
       )) {
         Ok(renderer) => renderer,
         Err(err) => {
