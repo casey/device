@@ -4,11 +4,13 @@ use super::*;
 pub(crate) struct Run {
   #[arg(long)]
   record: bool,
+  #[arg(long)]
+  present_mode: Option<PresentMode>,
 }
 
 impl Run {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
-    let mut app = App::new(options, self.record, config)?;
+    let mut app = App::new(options, self.present_mode, self.record, config)?;
 
     let event_loop = EventLoop::with_user_event()
       .build()
