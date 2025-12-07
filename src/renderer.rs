@@ -1,10 +1,22 @@
 use super::*;
 
+// todo:
+// - benchmark with vsync off
+// - should I move pipeline functions into module or struct?
+// - tiling should read from filtering sampler?
+//
+// - shaders:
+//   - filter
+//   - tiling compositing
+//   - overlay compositing
+//   - blit to screen
+
 pub(crate) struct Renderer {
-  bind_group_layout: BindGroupLayout,
   bindings: Option<Bindings>,
+  composite_pipeline: Pipeline,
   device: wgpu::Device,
   error_channel: mpsc::Receiver<wgpu::Error>,
+  filter_pipeline: Pipeline,
   filtering_sampler: Sampler,
   font_context: FontContext,
   format: Format,
@@ -16,39 +28,29 @@ pub(crate) struct Renderer {
   non_filtering_sampler: Sampler,
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
-  pipeline_layout: PipelineLayout,
   queue: Queue,
-  render_pipeline: RenderPipeline,
   resolution: NonZeroU32,
   samples: TextureView,
   size: Vector2<NonZeroU32>,
   surface: Option<(Surface<'static>, SurfaceConfiguration)>,
-  uniform_buffer: Buffer,
-  uniform_buffer_size: u32,
-  uniform_buffer_stride: u32,
 }
 
 impl Renderer {
-  fn bind_group(
+  fn filter_bind_group(
     &self,
-    back: &TextureView,
     frequencies: &TextureView,
-    front: &TextureView,
+    input: &TextureView,
     samples: &TextureView,
   ) -> BindGroup {
-    let mut i = 0;
+    let mut next = 0;
     let mut binding = || {
-      let binding = i;
-      i += 1;
+      let binding = next;
+      next += 1;
       binding
     };
     self.device.create_bind_group(&BindGroupDescriptor {
-      layout: &self.bind_group_layout,
+      layout: &self.filter_pipeline.bind_group_layout,
       entries: &[
-        BindGroupEntry {
-          binding: binding(),
-          resource: BindingResource::TextureView(back),
-        },
         BindGroupEntry {
           binding: binding(),
           resource: BindingResource::Sampler(&self.filtering_sampler),
@@ -59,7 +61,7 @@ impl Renderer {
         },
         BindGroupEntry {
           binding: binding(),
-          resource: BindingResource::TextureView(front),
+          resource: BindingResource::TextureView(input),
         },
         BindGroupEntry {
           binding: binding(),
@@ -72,9 +74,13 @@ impl Renderer {
         BindGroupEntry {
           binding: binding(),
           resource: BindingResource::Buffer(BufferBinding {
-            buffer: &self.uniform_buffer,
+            buffer: &self.filter_pipeline.uniform_buffer,
             offset: 0,
-            size: Some(u64::from(self.uniform_buffer_size).try_into().unwrap()),
+            size: Some(
+              u64::from(self.filter_pipeline.uniform_buffer_size)
+                .try_into()
+                .unwrap(),
+            ),
           }),
         },
       ],
@@ -82,25 +88,54 @@ impl Renderer {
     })
   }
 
-  fn bind_group_layout(device: &wgpu::Device, uniform_buffer_size: u32) -> BindGroupLayout {
-    let mut i = 0;
+  fn composite_bind_group(&self, back: &TextureView, front: &TextureView) -> BindGroup {
+    let mut next = 0;
     let mut binding = || {
-      let binding = i;
-      i += 1;
+      let binding = next;
+      next += 1;
+      binding
+    };
+    self.device.create_bind_group(&BindGroupDescriptor {
+      layout: &self.composite_pipeline.bind_group_layout,
+      entries: &[
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::TextureView(back),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::TextureView(front),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::Sampler(&self.non_filtering_sampler),
+        },
+        BindGroupEntry {
+          binding: binding(),
+          resource: BindingResource::Buffer(BufferBinding {
+            buffer: &self.composite_pipeline.uniform_buffer,
+            offset: 0,
+            size: Some(
+              u64::from(self.composite_pipeline.uniform_buffer_size)
+                .try_into()
+                .unwrap(),
+            ),
+          }),
+        },
+      ],
+      label: label!(),
+    })
+  }
+
+  fn filter_bind_group_layout(device: &wgpu::Device, uniform_buffer_size: u32) -> BindGroupLayout {
+    let mut next = 0;
+    let mut binding = || {
+      let binding = next;
+      next += 1;
       binding
     };
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
-        BindGroupLayoutEntry {
-          binding: binding(),
-          count: None,
-          ty: BindingType::Texture {
-            multisampled: false,
-            sample_type: TextureSampleType::Float { filterable: true },
-            view_dimension: TextureViewDimension::D2,
-          },
-          visibility: ShaderStages::FRAGMENT,
-        },
         BindGroupLayoutEntry {
           binding: binding(),
           count: None,
@@ -141,6 +176,59 @@ impl Renderer {
             sample_type: TextureSampleType::Float { filterable: false },
             view_dimension: TextureViewDimension::D1,
           },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Buffer {
+            has_dynamic_offset: true,
+            min_binding_size: Some(u64::from(uniform_buffer_size).try_into().unwrap()),
+            ty: BufferBindingType::Uniform,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+      ],
+      label: label!(),
+    })
+  }
+
+  fn composite_bind_group_layout(
+    device: &wgpu::Device,
+    uniform_buffer_size: u32,
+  ) -> BindGroupLayout {
+    let mut next = 0;
+    let mut binding = || {
+      let binding = next;
+      next += 1;
+      binding
+    };
+    device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+      entries: &[
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Texture {
+            multisampled: false,
+            sample_type: TextureSampleType::Float { filterable: true },
+            view_dimension: TextureViewDimension::D2,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Texture {
+            multisampled: false,
+            sample_type: TextureSampleType::Float { filterable: true },
+            view_dimension: TextureViewDimension::D2,
+          },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding(),
+          count: None,
+          ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
@@ -253,11 +341,17 @@ impl Renderer {
     device: &wgpu::Device,
     pipeline_layout: &PipelineLayout,
     format: Format,
-    shader: &str,
+    vertex: &str,
+    fragment: &str,
   ) -> RenderPipeline {
-    let shader = device.create_shader_module(ShaderModuleDescriptor {
+    let vertex = device.create_shader_module(ShaderModuleDescriptor {
       label: label!(),
-      source: ShaderSource::Wgsl(shader.into()),
+      source: ShaderSource::Wgsl(vertex.into()),
+    });
+
+    let fragment = device.create_shader_module(ShaderModuleDescriptor {
+      label: label!(),
+      source: ShaderSource::Wgsl(fragment.into()),
     });
 
     device.create_render_pipeline(&RenderPipelineDescriptor {
@@ -266,7 +360,7 @@ impl Renderer {
       fragment: Some(FragmentState {
         compilation_options: PipelineCompilationOptions::default(),
         entry_point: Some("fragment"),
-        module: &shader,
+        module: &fragment,
         targets: &[Some(TextureFormat::from(format).into())],
       }),
       label: label!(),
@@ -278,7 +372,7 @@ impl Renderer {
         buffers: &[],
         compilation_options: PipelineCompilationOptions::default(),
         entry_point: Some("vertex"),
-        module: &shader,
+        module: &vertex,
       },
     })
   }
@@ -290,6 +384,7 @@ impl Renderer {
     tiling: Option<(Tiling, u32)>,
     uniform: u32,
     view: &TextureView,
+    pipeline: &Pipeline,
   ) {
     let mut pass = encoder.begin_render_pass(&RenderPassDescriptor {
       color_attachments: &[Some(RenderPassColorAttachment {
@@ -307,9 +402,13 @@ impl Renderer {
       timestamp_writes: None,
     });
 
-    pass.set_bind_group(0, Some(bind_group), &[self.uniform_buffer_stride * uniform]);
+    pass.set_bind_group(
+      0,
+      Some(bind_group),
+      &[pipeline.uniform_buffer_stride * uniform],
+    );
 
-    pass.set_pipeline(&self.render_pipeline);
+    pass.set_pipeline(&pipeline.render_pipeline);
 
     if let Some((tiling, filter)) = tiling {
       tiling.set_viewport(&mut pass, filter);
@@ -392,13 +491,6 @@ impl Renderer {
 
     device.on_uncaptured_error(Box::new(move |error| tx.send(error).unwrap()));
 
-    let uniform_buffer_size = {
-      let mut buffer = vec![0; MIB];
-      u32::try_from(Uniforms::default().write(&mut buffer)).unwrap()
-    };
-
-    let bind_group_layout = Self::bind_group_layout(&device, uniform_buffer_size);
-
     let filtering_sampler = device.create_sampler(&SamplerDescriptor {
       address_mode_u: AddressMode::Repeat,
       address_mode_v: AddressMode::Repeat,
@@ -416,25 +508,86 @@ impl Renderer {
     });
 
     let limits = device.limits();
-    let alignment = limits.min_uniform_buffer_offset_alignment;
-    let padding = (alignment - uniform_buffer_size % alignment) % alignment;
-    let uniform_buffer_stride = uniform_buffer_size + padding;
 
-    let uniform_buffer = device.create_buffer(&BufferDescriptor {
-      label: label!(),
-      mapped_at_creation: false,
-      size: limits.max_buffer_size,
-      usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
-    });
+    let uniform_buffer_stride = |uniform_buffer_size| {
+      let alignment = limits.min_uniform_buffer_offset_alignment;
+      let padding = (alignment - uniform_buffer_size % alignment) % alignment;
+      uniform_buffer_size + padding
+    };
 
-    let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
-      bind_group_layouts: &[&bind_group_layout],
-      label: label!(),
-      push_constant_ranges: &[],
-    });
+    let composite_pipeline = {
+      let uniform_buffer_size = CompositeUniforms::size();
+      let uniform_buffer_stride = uniform_buffer_stride(uniform_buffer_size);
 
-    let render_pipeline =
-      Self::create_render_pipeline(&device, &pipeline_layout, format, &ShaderWgsl.to_string());
+      let bind_group_layout = Self::composite_bind_group_layout(&device, uniform_buffer_size);
+
+      let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+        bind_group_layouts: &[&bind_group_layout],
+        label: label!(),
+        push_constant_ranges: &[],
+      });
+
+      let render_pipeline = Self::create_render_pipeline(
+        &device,
+        &pipeline_layout,
+        format,
+        &VertexWgsl.to_string(),
+        &CompositeWgsl.to_string(),
+      );
+
+      let uniform_buffer = device.create_buffer(&BufferDescriptor {
+        label: label!(),
+        mapped_at_creation: false,
+        size: u64::from(uniform_buffer_stride) * 3,
+        usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
+      });
+
+      Pipeline {
+        bind_group_layout,
+        pipeline_layout,
+        render_pipeline,
+        uniform_buffer,
+        uniform_buffer_stride,
+        uniform_buffer_size,
+      }
+    };
+
+    let filter_pipeline = {
+      let uniform_buffer = device.create_buffer(&BufferDescriptor {
+        label: label!(),
+        mapped_at_creation: false,
+        size: limits.max_buffer_size,
+        usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
+      });
+
+      let uniform_buffer_size = FilterUniforms::size();
+      let uniform_buffer_stride = uniform_buffer_stride(uniform_buffer_size);
+
+      let bind_group_layout = Self::filter_bind_group_layout(&device, uniform_buffer_size);
+
+      let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+        bind_group_layouts: &[&bind_group_layout],
+        label: label!(),
+        push_constant_ranges: &[],
+      });
+
+      let render_pipeline = Self::create_render_pipeline(
+        &device,
+        &pipeline_layout,
+        format,
+        &VertexWgsl.to_string(),
+        &FilterWgsl.to_string(),
+      );
+
+      Pipeline {
+        bind_group_layout,
+        pipeline_layout,
+        render_pipeline,
+        uniform_buffer,
+        uniform_buffer_size,
+        uniform_buffer_stride,
+      }
+    };
 
     let samples = device
       .create_texture(&TextureDescriptor {
@@ -482,10 +635,11 @@ impl Renderer {
     .context(error::CreateOverlayRenderer)?;
 
     let mut renderer = Self {
-      bind_group_layout,
       bindings: None,
+      composite_pipeline,
       device,
       error_channel,
+      filter_pipeline,
       filtering_sampler,
       font_context: FontContext::new(),
       format,
@@ -497,16 +651,11 @@ impl Renderer {
       non_filtering_sampler,
       overlay_renderer,
       overlay_scene: vello::Scene::new(),
-      pipeline_layout,
       queue,
-      render_pipeline,
       resolution,
       samples,
       size,
       surface,
-      uniform_buffer,
-      uniform_buffer_size,
-      uniform_buffer_stride,
     };
 
     renderer.resize(size, resolution);
@@ -523,13 +672,42 @@ impl Renderer {
   }
 
   pub(crate) fn reload_shader(&mut self) -> Result {
-    let shader = ShaderWgsl
+    let vertex = VertexWgsl
       .reload_from_path()
-      .context(error::ShaderReload)?
+      .context(error::ShaderReload {
+        path: VertexWgsl::PATH.unwrap(),
+      })?
       .to_string();
 
-    self.render_pipeline =
-      Self::create_render_pipeline(&self.device, &self.pipeline_layout, self.format, &shader);
+    let filter = FilterWgsl
+      .reload_from_path()
+      .context(error::ShaderReload {
+        path: FilterWgsl::PATH.unwrap(),
+      })?
+      .to_string();
+
+    let composite = CompositeWgsl
+      .reload_from_path()
+      .context(error::ShaderReload {
+        path: CompositeWgsl::PATH.unwrap(),
+      })?
+      .to_string();
+
+    self.filter_pipeline.render_pipeline = Self::create_render_pipeline(
+      &self.device,
+      &self.filter_pipeline.pipeline_layout,
+      self.format,
+      &vertex,
+      &filter,
+    );
+
+    self.composite_pipeline.render_pipeline = Self::create_render_pipeline(
+      &self.device,
+      &self.composite_pipeline.pipeline_layout,
+      self.format,
+      &vertex,
+      &composite,
+    );
 
     Ok(())
   }
@@ -570,8 +748,6 @@ impl Renderer {
     };
 
     let filters = state.filters.len() + 1;
-
-    let mut uniforms = Vec::new();
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let tiling_size = if state.tile {
@@ -617,113 +793,68 @@ impl Renderer {
 
     let transient = state.transient();
 
-    for (i, filter) in state
-      .filters
-      .iter()
-      .chain(iter::once(&transient))
-      .enumerate()
     {
-      let i = u32::try_from(i).unwrap();
-      uniforms.push(Uniforms {
-        back_read: false,
-        color: filter.color,
-        coordinates: filter.coordinates,
-        field: filter.field,
-        filters: filter_count,
-        fit: false,
-        frequency_range,
-        front_offset: tiling.source_offset(i),
-        front_read: true,
-        gain,
-        index: i,
-        interpolate: state.interpolate,
-        offset: tiling.offset(i),
-        position: filter.position,
-        repeat: state.repeat,
-        resolution: tiling.resolution(),
-        rms: if state.spread {
-          rms * (i as f32 + 1.0) / filters as f32
-        } else {
-          rms
-        },
-        sample_range,
-        tiling: tiling.size,
-        wrap: filter.wrap,
-      });
+      let mut uniforms = Vec::new();
+
+      for (i, filter) in state
+        .filters
+        .iter()
+        .chain(iter::once(&transient))
+        .enumerate()
+      {
+        let i = u32::try_from(i).unwrap();
+        uniforms.push(FilterUniforms {
+          color: filter.color,
+          coordinates: filter.coordinates,
+          field: filter.field,
+          frequency_range,
+          front_offset: tiling.source_offset(i),
+          gain,
+          interpolate: state.interpolate,
+          offset: tiling.offset(i),
+          position: filter.position,
+          repeat: state.repeat,
+          resolution: tiling.resolution as f32,
+          rms: if state.spread {
+            rms * (i as f32 + 1.0) / filters as f32
+          } else {
+            rms
+          },
+          sample_range,
+          tiling: tiling.size,
+          wrap: filter.wrap,
+        });
+      }
+
+      self.write_uniform_buffer(&self.filter_pipeline, &uniforms);
     }
 
     let resolution = Vec2f::new(self.resolution.get() as f32, self.resolution.get() as f32);
 
-    uniforms.push(Uniforms {
-      back_read: tiling.back_read(filter_count),
-      color: Mat4f::identity(),
-      coordinates: false,
-      field: Field::None,
-      filters: filter_count,
-      fit: state.fit,
-      frequency_range,
-      front_offset: Vec2f::new(0.0, 0.0),
-      front_read: tiling.front_read(filter_count),
-      gain,
-      index: filter_count,
-      interpolate: false,
-      offset: Vec2f::default(),
-      position: Mat3f::identity(),
-      repeat: state.repeat,
-      resolution,
-      rms,
-      sample_range,
-      tiling: 1,
-      wrap: false,
-    });
+    {
+      let uniforms = [
+        CompositeUniforms {
+          back_read: tiling.back_read(filter_count),
+          fit: false,
+          front_read: tiling.front_read(filter_count),
+          resolution,
+        },
+        CompositeUniforms {
+          back_read: true,
+          fit: false,
+          front_read: true,
+          resolution,
+        },
+        CompositeUniforms {
+          back_read: true,
+          fit: state.fit,
+          front_read: true,
+          resolution: Vec2f::new(self.size.x.get() as f32, self.size.y.get() as f32),
+        },
+      ];
 
-    uniforms.push(Uniforms {
-      back_read: true,
-      color: Mat4f::identity(),
-      coordinates: false,
-      field: Field::None,
-      filters: filter_count,
-      fit: state.fit,
-      frequency_range,
-      front_offset: Vec2f::new(0.0, 0.0),
-      front_read: true,
-      gain,
-      index: filter_count,
-      interpolate: false,
-      offset: Vec2f::default(),
-      position: Mat3f::identity(),
-      repeat: state.repeat,
-      resolution,
-      rms,
-      sample_range,
-      tiling: 1,
-      wrap: false,
-    });
-
-    uniforms.push(Uniforms {
-      back_read: true,
-      color: Mat4f::identity(),
-      coordinates: false,
-      field: Field::None,
-      filters: filter_count,
-      fit: state.fit,
-      frequency_range,
-      front_offset: Vec2f::new(0.0, 0.0),
-      front_read: true,
-      gain,
-      index: filter_count,
-      interpolate: false,
-      offset: Vec2f::default(),
-      position: Mat3f::identity(),
-      repeat: state.repeat,
-      resolution: Vec2f::new(self.size.x.get() as f32, self.size.y.get() as f32),
-      rms,
-      sample_range,
-      tiling: 1,
-      wrap: false,
-    });
-
-    self.write_uniform_buffer(&uniforms);
+      self.write_uniform_buffer(&self.composite_pipeline, &uniforms);
+    }
 
     let mut encoder = self
       .device
@@ -769,6 +900,7 @@ impl Renderer {
         Some((tiling, i)),
         i,
         &self.bindings().targets[destination].texture_view,
+        &self.filter_pipeline,
       );
       (source, destination) = (destination, source);
     }
@@ -777,8 +909,9 @@ impl Renderer {
       &self.bindings().tiling_bind_group,
       &mut encoder,
       None,
-      filter_count,
+      0,
       &self.bindings().tiling_view,
+      &self.composite_pipeline,
     );
 
     self.render_overlay(state, fps)?;
@@ -787,8 +920,9 @@ impl Renderer {
       &self.bindings().overlay_bind_group,
       &mut encoder,
       None,
-      filter_count + 1,
+      1,
       &self.bindings().targets[0].texture_view,
+      &self.composite_pipeline,
     );
 
     if let Some(frame) = &frame {
@@ -796,8 +930,9 @@ impl Renderer {
         &self.bindings().overlay_bind_group,
         &mut encoder,
         None,
-        filter_count + 2,
+        2,
         &frame.texture.create_view(&TextureViewDescriptor::default()),
+        &self.composite_pipeline,
       );
     }
 
@@ -1017,14 +1152,10 @@ impl Renderer {
       })
       .create_view(&TextureViewDescriptor::default());
 
-    let targets = [self.target(&tiling_view), self.target(&tiling_view)];
+    let targets = [self.target(), self.target()];
 
-    let tiling_bind_group = self.bind_group(
-      &targets[0].texture_view,
-      &self.frequencies,
-      &targets[1].texture_view,
-      &self.samples,
-    );
+    let tiling_bind_group =
+      self.composite_bind_group(&targets[0].texture_view, &targets[1].texture_view);
 
     let overlay_view = self
       .device
@@ -1044,12 +1175,7 @@ impl Renderer {
       })
       .create_view(&TextureViewDescriptor::default());
 
-    let overlay_bind_group = self.bind_group(
-      &tiling_view,
-      &self.frequencies,
-      &overlay_view,
-      &self.samples,
-    );
+    let overlay_bind_group = self.composite_bind_group(&tiling_view, &overlay_view);
 
     self.bindings = Some(Bindings {
       captures: Arc::new(Mutex::new(Vec::new())),
@@ -1061,7 +1187,7 @@ impl Renderer {
     });
   }
 
-  fn target(&self, back: &TextureView) -> Target {
+  fn target(&self) -> Target {
     let texture = self.device.create_texture(&TextureDescriptor {
       dimension: TextureDimension::D2,
       format: self.format.into(),
@@ -1081,7 +1207,7 @@ impl Renderer {
 
     let texture_view = texture.create_view(&TextureViewDescriptor::default());
 
-    let bind_group = self.bind_group(back, &self.frequencies, &texture_view, &self.samples);
+    let bind_group = self.filter_bind_group(&self.frequencies, &texture_view, &self.samples);
 
     Target {
       bind_group,
@@ -1114,21 +1240,21 @@ impl Renderer {
     );
   }
 
-  fn write_uniform_buffer(&mut self, uniforms: &[Uniforms]) {
+  fn write_uniform_buffer(&self, pipeline: &Pipeline, uniforms: &[impl Uniforms]) {
     if uniforms.is_empty() {
       return;
     }
 
-    let size = u64::from(self.uniform_buffer_stride) * uniforms.len().into_u64();
+    let size = u64::from(pipeline.uniform_buffer_stride) * uniforms.len().into_u64();
 
     let mut buffer = self
       .queue
-      .write_buffer_with(&self.uniform_buffer, 0, size.try_into().unwrap())
+      .write_buffer_with(&pipeline.uniform_buffer, 0, size.try_into().unwrap())
       .unwrap();
 
     for (uniforms, dst) in uniforms
       .iter()
-      .zip(buffer.chunks_mut(self.uniform_buffer_stride.into_usize()))
+      .zip(buffer.chunks_mut(pipeline.uniform_buffer_stride.into_usize()))
     {
       uniforms.write(dst);
     }
@@ -1520,6 +1646,14 @@ mod tests {
           .all()
           .push(),
       )
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn coordinates() {
+    Baseline::new(name!())
+      .state(State::default().coordinates(true).all().push())
       .run();
   }
 

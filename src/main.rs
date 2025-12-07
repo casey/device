@@ -1,15 +1,54 @@
 use {
   self::{
-    analyzer::Analyzer, app::App, arguments::Arguments, axis::Axis, bindings::Bindings,
-    command::Command, config::Config, controller::Controller, error::Error, event::Event,
-    field::Field, filter::Filter, format::Format, fps::Fps, frame::Frame, hub::Hub, image::Image,
-    input::Input, into_stereo::IntoStereo, into_u64::IntoU64, into_u128::IntoU128,
-    into_usize::IntoUsize, into_utf8_path::IntoUtf8Path, message::Message, options::Options,
-    parameter::Parameter, patch::Patch, present_mode::PresentMode, program::Program,
-    recorder::Recorder, renderer::Renderer, resampler_ext::ResamplerExt, scene::Scene,
-    score::Score, shared::Shared, sound::Sound, state::State,
-    stream_config_display::StreamConfigDisplay, subcommand::Subcommand, tally::Tally, tap::Tap,
-    target::Target, templates::ShaderWgsl, text::Text, tiling::Tiling, uniforms::Uniforms,
+    analyzer::Analyzer,
+    app::App,
+    arguments::Arguments,
+    axis::Axis,
+    bindings::Bindings,
+    command::Command,
+    composite_uniforms::CompositeUniforms,
+    config::Config,
+    controller::Controller,
+    error::Error,
+    event::Event,
+    field::Field,
+    filter::Filter,
+    filter_uniforms::FilterUniforms,
+    format::Format,
+    fps::Fps,
+    frame::Frame,
+    hub::Hub,
+    image::Image,
+    input::Input,
+    into_stereo::IntoStereo,
+    into_u64::IntoU64,
+    into_u128::IntoU128,
+    into_usize::IntoUsize,
+    into_utf8_path::IntoUtf8Path,
+    message::Message,
+    options::Options,
+    parameter::Parameter,
+    patch::Patch,
+    pipeline::Pipeline,
+    present_mode::PresentMode,
+    program::Program,
+    recorder::Recorder,
+    renderer::Renderer,
+    resampler_ext::ResamplerExt,
+    scene::Scene,
+    score::Score,
+    shared::Shared,
+    sound::Sound,
+    state::State,
+    stream_config_display::StreamConfigDisplay,
+    subcommand::Subcommand,
+    tally::Tally,
+    tap::Tap,
+    target::Target,
+    templates::{CompositeWgsl, FilterWgsl, VertexWgsl},
+    text::Text,
+    tiling::Tiling,
+    uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -90,12 +129,14 @@ mod arguments;
 mod axis;
 mod bindings;
 mod command;
+mod composite_uniforms;
 mod config;
 mod controller;
 mod error;
 mod event;
 mod field;
 mod filter;
+mod filter_uniforms;
 mod format;
 mod fps;
 mod frame;
@@ -111,6 +152,7 @@ mod message;
 mod options;
 mod parameter;
 mod patch;
+mod pipeline;
 mod present_mode;
 mod program;
 mod recorder;

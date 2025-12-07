@@ -37,10 +37,6 @@ impl Tiling {
     )
   }
 
-  pub(crate) fn resolution(self) -> Vec2f {
-    Vec2f::new(self.resolution as f32, self.resolution as f32)
-  }
-
   pub(crate) fn set_viewport(self, render_pass: &mut RenderPass, filter: u32) {
     if self.size == 1 {
       return;
