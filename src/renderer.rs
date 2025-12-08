@@ -792,6 +792,7 @@ impl Renderer {
       {
         let i = u32::try_from(i).unwrap();
         uniforms.push(FilterUniforms {
+          alpha: filter.alpha,
           base: filter.base,
           color: filter.color,
           coordinates: filter.coordinates,

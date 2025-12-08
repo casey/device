@@ -72,6 +72,7 @@ impl Options {
   pub(crate) fn format(&self) -> Option<Format> {
     self
       .format
+      .or_else(|| self.scene.and_then(Scene::format))
       .or_else(|| self.program.and_then(|program| program.scene().format()))
   }
 
