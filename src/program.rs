@@ -7,6 +7,7 @@ pub(crate) enum Program {
   Busy,
   Noise,
   Expo,
+  Transit,
 }
 
 impl Program {
@@ -22,6 +23,10 @@ impl Program {
         let wave = tap.load_wave(&config.find_song("expo 2000 vocode")?)?;
         tap.sequence_wave(&wave, 0.0, 1.0);
       }
+      Self::Transit => {
+        let wave = tap.load_wave(&config.find_song("in transit corrente")?)?;
+        tap.sequence_wave(&wave, 0.0, 0.0);
+      }
     }
     Ok(())
   }
@@ -32,6 +37,7 @@ impl Program {
       Self::Busy => Scene::Highwaystar.state(),
       Self::Noise => Scene::Noise.state(),
       Self::Expo => Scene::Starburst.state(),
+      Self::Transit => Scene::Kaleidoscope.state(),
     }
   }
 }

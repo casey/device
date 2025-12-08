@@ -72,7 +72,7 @@ impl Scene {
         state
       }
       Self::Kaleidoscope => {
-        let mut r = 5.0 / 6.0 * TAU;
+        let mut r = 0.0;
         let s = 1.0 / 0.75;
 
         let mut state = State::default();
@@ -83,10 +83,11 @@ impl Scene {
           .scale(s)
           .wrap(true)
           .repeat(true)
+          .db(-24.0)
           .times(8);
 
         state.callback(move |state, elapsed| {
-          r += elapsed / TAU;
+          r += elapsed / 32.6 * TAU / 4.0;
 
           state
             .truncate(8)

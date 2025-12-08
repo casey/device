@@ -81,6 +81,14 @@ capture-expo:
     --verbose \
     capture
 
+capture-transit:
+  cargo run --release -- \
+    --format bgra8unorm  \
+    --program transit \
+    --resolution 2048 \
+    --verbose \
+    capture
+
 record-curtains:
   cargo run --release -- \
     --fps 60 \
