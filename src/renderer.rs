@@ -1548,9 +1548,10 @@ mod tests {
       .state(
         State::default()
           .repeat(true)
-          .invert()
-          .cross()
-          .scale(2.0)
+          .rotate_position(0.2 * TAU)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .all()
+          .push()
           .push(),
       )
       .run();
@@ -1563,9 +1564,10 @@ mod tests {
       .state(
         State::default()
           .repeat(false)
-          .invert()
-          .cross()
-          .scale(2.0)
+          .rotate_position(0.2 * TAU)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .all()
+          .push()
           .push(),
       )
       .run();
