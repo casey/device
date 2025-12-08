@@ -224,8 +224,7 @@ impl Scene {
           .rotate_position(0.1 * TAU);
 
         for _ in 0..20 {
-          state.filter.field = *fields.choose(&mut rng).unwrap();
-          state.push();
+          state.field(*fields.choose(&mut rng).unwrap()).push();
         }
 
         state
@@ -233,8 +232,7 @@ impl Scene {
           .rotate_position(0.2 * TAU);
 
         for _ in 0..10 {
-          state.filter.field = *fields.choose(&mut rng).unwrap();
-          state.push();
+          state.field(*fields.choose(&mut rng).unwrap()).push();
         }
 
         state
