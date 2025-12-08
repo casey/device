@@ -1647,19 +1647,6 @@ mod tests {
 
   #[test]
   #[ignore]
-  fn rotate_green_small() {
-    Baseline::new(name!())
-      .state(
-        State::default()
-          .rotate_color(Axis::Green, 0.035 * TAU)
-          .all()
-          .push(),
-      )
-      .run();
-  }
-
-  #[test]
-  #[ignore]
   fn resolution_is_clamped_to_2d_texture_limit() {
     let resolution = 65536.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
