@@ -15,7 +15,7 @@ var frequencies: texture_1d<f32>;
 
 @group(0)
 @binding({{ binding() }})
-var input: texture_2d<f32>;
+var source: texture_2d<f32>;
 
 @group(0)
 @binding({{ binding() }})
@@ -71,7 +71,9 @@ fn field_circle(p: vec2f) -> bool {
 }
 
 fn field_cross(p: vec2f) -> bool {
-  return min(abs(p.x), abs(p.y)) < 0.25 * coefficient();
+  let x = abs(p.x);
+  let y = abs(p.y);
+  return min(x, y) < 0.25 * coefficient() && x < 1.0 && y < 1.0;
 }
 
 fn field_frequencies(p: vec2f) -> bool {
@@ -117,25 +119,16 @@ fn field_x(p: vec2f) -> bool {
   return abs(abs(p.x) - abs(p.y)) < sqrt(2) * 0.25 * coefficient() - 0.5 * pixel;
 }
 
-fn read(uv: vec2f) -> bool {
-  return bool(uniforms.repeat) || all(uv >= vec2(0.0, 0.0)) && all(uv <= vec2(1.0, 1.0));
-}
-
-fn sample(texture: texture_2d<f32>, uv: vec2f) -> vec4f {
-  if bool(uniforms.interpolate) {
-    return textureSample(texture, filtering_sampler, uv);
-  } else {
-    return textureSample(texture, non_filtering_sampler, uv);
-  }
-}
-
 @fragment
 fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // subtract offset get tile coordinates
   let tile = position.xy - uniforms.offset;
 
+  // convert to uv coordinates
+  let source_uv = tile / vec2(uniforms.resolution, uniforms.resolution);
+
   // convert tile coordinates to [-1, 1]
-  let centered = tile / vec2(uniforms.resolution, uniforms.resolution) * 2 - 1;
+  let centered = source_uv * 2 - 1;
 
   // apply position transform
   let transformed = (uniforms.position * vec3(centered, 1)).xy;
@@ -148,24 +141,34 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
     uv = fract(uv);
   }
 
+  // scale to compensate for tiles not taking up full front texture
+  let tile_scale = vec2(uniforms.resolution, uniforms.resolution) * f32(uniforms.tiling)
+    / vec2f(textureDimensions(source, 0));
+
   var input_color = TRANSPARENT;
 
-  if read(uv) {
+  if bool(uniforms.repeat) || all(uv >= vec2(0.0, 0.0)) && all(uv <= vec2(1.0, 1.0)) {
     if bool(uniforms.coordinates) {
       input_color = vec4(uv, 1.0, 1.0);
     } else {
       // convert uv coordinates to tile source coordinates
-      var tile_uv = uv / f32(uniforms.tiling) + uniforms.front_offset;
-
-      // scale to compensate for tiles not taking up full front texture
-      let scale = vec2(uniforms.resolution, uniforms.resolution) * f32(uniforms.tiling)
-        / vec2f(textureDimensions(input, 0));
-      tile_uv *= scale;
+      let tile_uv = (uv / f32(uniforms.tiling) + uniforms.front_offset) * tile_scale;
 
       // read input color
-      input_color = sample(input, tile_uv);
+      if bool(uniforms.interpolate) {
+        input_color = textureSample(source, filtering_sampler, tile_uv);
+      } else {
+        input_color = textureSample(source, non_filtering_sampler, tile_uv);
+      }
     }
   }
+
+  // Sample original color
+  let original_color = textureSample(
+    source,
+    non_filtering_sampler,
+    (source_uv / f32(uniforms.tiling) + uniforms.front_offset) * tile_scale,
+  );
 
   let input = vec4(input_color.rgb, 1.0);
 
@@ -194,6 +197,6 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
 
     return color;
   } else {
-    return input;
+    return original_color;
   }
 }

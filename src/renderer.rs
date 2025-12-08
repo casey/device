@@ -290,7 +290,7 @@ impl Renderer {
   fn filter_bind_group(
     &self,
     frequencies: &TextureView,
-    input: &TextureView,
+    source: &TextureView,
     samples: &TextureView,
   ) -> BindGroup {
     let mut next = 0;
@@ -312,7 +312,7 @@ impl Renderer {
         },
         BindGroupEntry {
           binding: binding(),
-          resource: BindingResource::TextureView(input),
+          resource: BindingResource::TextureView(source),
         },
         BindGroupEntry {
           binding: binding(),
@@ -1548,11 +1548,10 @@ mod tests {
       .state(
         State::default()
           .repeat(true)
+          .rotate_position(0.2 * TAU)
           .rotate_color(Axis::Green, 0.1 * TAU)
           .all()
           .push()
-          .rotate_position(0.1 * TAU)
-          .x()
           .push(),
       )
       .run();
@@ -1564,11 +1563,11 @@ mod tests {
     Baseline::new(name!())
       .state(
         State::default()
+          .repeat(false)
+          .rotate_position(0.2 * TAU)
           .rotate_color(Axis::Green, 0.1 * TAU)
           .all()
           .push()
-          .rotate_position(0.1 * TAU)
-          .x()
           .push(),
       )
       .run();
@@ -1595,6 +1594,22 @@ mod tests {
   fn triangle() {
     Baseline::new(name!())
       .state(State::default().invert().triangle().push())
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn all() {
+    Baseline::new(name!())
+      .state(State::default().invert().all().push())
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn none() {
+    Baseline::new(name!())
+      .state(State::default().invert().none().push())
       .run();
   }
 

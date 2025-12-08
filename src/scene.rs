@@ -54,7 +54,8 @@ impl Scene {
         .vz(-0.05)
         .interpolate(true)
         .position(Mat3f::new_rotation(-0.01))
-        .none()
+        .all()
+        .identity()
         .times(157),
       Self::None => State::default(),
       Self::RedX => State::default().invert_r().x().push(),
@@ -74,7 +75,7 @@ impl Scene {
         ];
 
         let mut state = State::default()
-          .repeat(true)
+          .repeat(false)
           .rotate_color(Axis::Green, 0.1 * TAU)
           .rotate_position(0.1 * TAU);
 

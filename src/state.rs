@@ -82,6 +82,11 @@ impl State {
     self
   }
 
+  pub(crate) fn identity(mut self) -> Self {
+    self.filter.color = Mat4f::identity();
+    self
+  }
+
   pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
     self.interpolate = interpolate;
     self
@@ -103,6 +108,7 @@ impl State {
     self
   }
 
+  #[cfg(test)]
   pub(crate) fn none(mut self) -> Self {
     self.filter.field = Field::None;
     self
@@ -124,14 +130,7 @@ impl State {
   }
 
   pub(crate) fn rotate_color(mut self, axis: Axis, angle: f32) -> Self {
-    self.filter.color = Mat4f::from_scaled_axis(
-      match axis {
-        #[cfg(test)]
-        Axis::Red => Vec3f::new(1.0, 0.0, 0.0),
-        Axis::Green => Vec3f::new(0.0, 1.0, 0.0),
-        Axis::Blue => Vec3f::new(0.0, 0.0, 1.0),
-      } * angle,
-    );
+    self.filter.color = Mat4f::from_axis_angle(&axis.axis(), angle);
     self
   }
 
@@ -189,6 +188,7 @@ impl State {
 
   pub(crate) fn transient(&self) -> Filter {
     Filter {
+      field: Field::All,
       position: Mat3f::new_rotation(self.position.w)
         * Mat3f::new_translation(&self.position.xy()).prepend_scaling(self.position.z),
       wrap: self.wrap,
