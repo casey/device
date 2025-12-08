@@ -87,6 +87,11 @@ impl State {
     self
   }
 
+  pub(crate) fn identity(mut self) -> Self {
+    self.filter.color = Mat4f::identity();
+    self
+  }
+
   pub(crate) fn invert(mut self) -> Self {
     self.filter.color = invert_color();
     self
@@ -182,6 +187,7 @@ impl State {
 
   pub(crate) fn transient(&self) -> Filter {
     Filter {
+      field: Field::All,
       position: Mat3f::new_rotation(self.position.w)
         * Mat3f::new_translation(&self.position.xy()).prepend_scaling(self.position.z),
       wrap: self.wrap,

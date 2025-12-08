@@ -1548,11 +1548,9 @@ mod tests {
       .state(
         State::default()
           .repeat(true)
-          .rotate_color(Axis::Green, 0.1 * TAU)
-          .all()
-          .push()
-          .rotate_position(0.1 * TAU)
-          .x()
+          .invert()
+          .cross()
+          .scale(2.0)
           .push(),
       )
       .run();
@@ -1564,11 +1562,10 @@ mod tests {
     Baseline::new(name!())
       .state(
         State::default()
-          .rotate_color(Axis::Green, 0.1 * TAU)
-          .all()
-          .push()
-          .rotate_position(0.1 * TAU)
-          .x()
+          .repeat(false)
+          .invert()
+          .cross()
+          .scale(2.0)
           .push(),
       )
       .run();

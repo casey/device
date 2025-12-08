@@ -319,6 +319,7 @@ impl App {
           "z" => self.state.filters.push(Filter {
             position: Mat3f::new_scaling(2.0),
             wrap: self.state.wrap,
+            field: Field::All,
             ..default()
           }),
           _ => {}
