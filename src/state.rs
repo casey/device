@@ -108,6 +108,7 @@ impl State {
     self
   }
 
+  #[cfg(test)]
   pub(crate) fn none(mut self) -> Self {
     self.filter.field = Field::None;
     self
