@@ -140,11 +140,10 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   var transformed = (uniforms.position * vec3(centered, 1)).xy;
 
   // convert position to uv coordinates
-  var uv = (transformed + 1) / 2;
+  let uv = (transformed + 1) / 2;
 
-  // wrap uv coordinates
+  // wrap transformed coordinates
   if bool(uniforms.wrap) {
-    uv = fract(uv);
     transformed = mod_floor(transformed + 1.0, 2.0) - 1.0;
   }
 
