@@ -25,7 +25,9 @@ pub(crate) enum Scene {
 impl Scene {
   pub(crate) fn format(self) -> Option<Format> {
     match self {
-      Self::Kaleidoscope | Self::Starburst | Self::StarburstRandom => Some(Format::Bgra8Unorm),
+      Self::Kaleidoscope | Self::Starburst | Self::StarburstRandom | Self::Pattern => {
+        Some(Format::Bgra8Unorm)
+      }
       _ => None,
     }
   }
@@ -135,20 +137,19 @@ impl Scene {
       }
       Self::Pattern => {
         let mut state = State::default();
+
         state
           .invert()
           .field(Field::Circle { size: Some(1.0) })
-          .transform(0.0, 2.0);
+          .repeat(true)
+          .alpha(0.75)
+          .scale(2.0);
 
-        for i in 0u8..2 {
+        for i in 0u8..8 {
           state.push().wrap(i.is_multiple_of(2));
         }
 
         state
-
-        // alpha(0.75);
-        // circle();
-        // transform(0, [2, 2], [0, 0]);
       }
       Self::RedX => {
         let mut state = State::default();

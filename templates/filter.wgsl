@@ -37,6 +37,7 @@ const {{ field.constant() }}: u32 = {{ field.number() }};
 %% }
 
 struct Uniforms {
+  alpha: f32,
   base: f32,
   color: mat4x4f,
   coordinates: u32,
@@ -191,18 +192,22 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
     }
   }
 
+  var alpha = 0.0;
+
   if on {
-    // convert rgb color to [-1, 1]
-    let centered = input * 2 - 1;
-
-    // apply color transform
-    let transformed = uniforms.color * centered;
-
-    // convert back to rgb
-    let color = (transformed + 1) / 2;
-
-    return color;
-  } else {
-    return original_color;
+    alpha = uniforms.alpha;
   }
+
+  // convert rgb color to [-1, 1]
+  let color_vector = input * 2 - 1;
+
+  // apply color transform
+  let transformed_color_vector = uniforms.color * color_vector;
+
+  // convert back to rgb
+  let transformed_color = (transformed_color_vector + 1) / 2;
+
+  let blend = transformed_color.rgb * alpha + original_color.rgb * (1 - alpha);
+
+  return vec4(blend, 1);
 }

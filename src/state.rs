@@ -52,6 +52,11 @@ impl State {
     self
   }
 
+  pub(crate) fn alpha(&mut self, alpha: f32) -> &mut Self {
+    self.filter.alpha = alpha;
+    self
+  }
+
   #[allow(unused)]
   pub(crate) fn base(&mut self, base: f32) -> &mut Self {
     self.filter.base = base;
