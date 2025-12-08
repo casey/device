@@ -1599,6 +1599,22 @@ mod tests {
 
   #[test]
   #[ignore]
+  fn all() {
+    Baseline::new(name!())
+      .state(State::default().invert().all().push())
+      .run();
+  }
+
+  #[test]
+  #[ignore]
+  fn none() {
+    Baseline::new(name!())
+      .state(State::default().invert().none().push())
+      .run();
+  }
+
+  #[test]
+  #[ignore]
   fn rotate_red() {
     Baseline::new(name!())
       .state(

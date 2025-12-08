@@ -262,7 +262,6 @@ impl App {
           "d" => self.state.filters.push(Filter {
             coordinates: true,
             wrap: self.state.wrap,
-            field: Field::All,
             ..default()
           }),
           "f" => {
@@ -320,7 +319,6 @@ impl App {
           "z" => self.state.filters.push(Filter {
             position: Mat3f::new_scaling(2.0),
             wrap: self.state.wrap,
-            field: Field::All,
             ..default()
           }),
           _ => {}
