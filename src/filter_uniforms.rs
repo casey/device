@@ -2,6 +2,7 @@ use super::*;
 
 #[derive(Default)]
 pub(crate) struct FilterUniforms {
+  pub(crate) base: f32,
   pub(crate) color: Mat4f,
   pub(crate) coordinates: bool,
   pub(crate) field: Field,
@@ -24,6 +25,7 @@ impl Uniforms for FilterUniforms {
   fn write(&self, dst: &mut [u8]) -> usize {
     let mut i = 0;
     let mut a = 0;
+    self.base.write(dst, &mut i, &mut a);
     self.color.write(dst, &mut i, &mut a);
     self.coordinates.write(dst, &mut i, &mut a);
     self.field.write(dst, &mut i, &mut a);
