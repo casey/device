@@ -2,6 +2,7 @@ use super::*;
 
 pub(crate) struct State {
   pub(crate) alpha: Parameter,
+  pub(crate) callback: Option<Box<dyn FnMut(&mut Self, f32)>>,
   pub(crate) db: f32,
   pub(crate) filter: Filter,
   pub(crate) filters: Vec<Filter>,
@@ -24,6 +25,7 @@ impl Default for State {
   fn default() -> Self {
     Self {
       alpha: Parameter::default(),
+      callback: None,
       db: 0.0,
       filter: Filter::default(),
       filters: Vec::new(),
@@ -58,6 +60,11 @@ impl State {
 
   pub(crate) fn bottom(mut self) -> Self {
     self.filter.field = Field::Bottom;
+    self
+  }
+
+  pub(crate) fn callback(mut self, callback: impl FnMut(&mut State, f32) + 'static) -> Self {
+    self.callback = Some(Box::new(callback));
     self
   }
 
@@ -182,6 +189,11 @@ impl State {
     self.position.y -= self.velocity.y * 4.0 * elapsed;
     self.position.z -= self.velocity.z * elapsed;
     self.position.w -= self.velocity.w * elapsed;
+    let mut callback = self.callback.take();
+    if let Some(callback) = &mut callback {
+      callback(self, elapsed);
+    }
+    self.callback = callback;
   }
 
   #[cfg(test)]

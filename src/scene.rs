@@ -46,18 +46,40 @@ impl Scene {
         .scale(2.0)
         .times(8),
       Self::Kaleidoscope => {
-        let r = 5.0 / 6.0 * TAU;
+        // how to make it move?
+        // - call a function every frame
+        // - store a callback closure on the state
+
+        let mut r = 5.0 / 6.0 * TAU;
         let s = 1.0 / 0.75;
-        State::default()
-          .rotate_color(Axis::Green, 0.05 * TAU)
-          .field(Field::Circle { size: Some(1.0) })
-          .scale(s)
-          .wrap(true)
-          .repeat(true)
-          .times(8)
-          .position(Mat3f::new_rotation(r).prepend_scaling(s))
-          .rotate_color(Axis::Blue, 0.05 * TAU)
-          .times(8)
+
+        State::default().callback(move |state, elapsed| {
+          r += elapsed / TAU;
+
+          *state = State::default()
+            .rotate_color(Axis::Green, 0.05 * TAU)
+            .field(Field::Circle { size: Some(1.0) })
+            .scale(s)
+            .wrap(true)
+            .repeat(true)
+            .times(8)
+            .position(Mat3f::new_rotation(-r).prepend_scaling(s))
+            .rotate_color(Axis::Blue, 0.05 * TAU)
+            .times(8);
+        })
+
+        // let r = 5.0 / 6.0 * TAU;
+        // let s = 1.0 / 0.75;
+        // State::default()
+        //   .rotate_color(Axis::Green, 0.05 * TAU)
+        //   .field(Field::Circle { size: Some(1.0) })
+        //   .scale(s)
+        //   .wrap(true)
+        //   .repeat(true)
+        //   .times(8)
+        //   .position(Mat3f::new_rotation(r).prepend_scaling(s))
+        //   .rotate_color(Axis::Blue, 0.05 * TAU)
+        //   .times(8)
       }
       Self::Middle => State::default().invert().top().push().bottom().push(),
       Self::Noise => State::default()
