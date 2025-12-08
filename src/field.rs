@@ -57,7 +57,7 @@ impl Field {
   }
 
   pub(crate) fn number(self) -> u32 {
-    unsafe { *(&self as *const Self as *const u32) }
+    unsafe { *((&raw const self).cast::<u32>()) }
   }
 
   pub(crate) fn parameter(self) -> f32 {
