@@ -52,6 +52,8 @@ program program:
 hello: (program "hello")
 busy: (program "busy")
 noise: (program "noise")
+expo: (program "expo")
+transit: (program "transit")
 
 curtains:
   cargo run --release -- --song 'curtains closing' run
