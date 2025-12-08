@@ -21,9 +21,6 @@ use {
     image::Image,
     input::Input,
     into_stereo::IntoStereo,
-    into_u64::IntoU64,
-    into_u128::IntoU128,
-    into_usize::IntoUsize,
     into_utf8_path::IntoUtf8Path,
     message::Message,
     options::Options,
@@ -90,6 +87,7 @@ use {
   },
   strum::{EnumIter, IntoEnumIterator, IntoStaticStr},
   tempfile::TempDir,
+  usized::{IntoU64, IntoU128, IntoUsize},
   vello::{kurbo, peniko},
   walkdir::WalkDir,
   wgpu::{
@@ -144,9 +142,6 @@ mod hub;
 mod image;
 mod input;
 mod into_stereo;
-mod into_u128;
-mod into_u64;
-mod into_usize;
 mod into_utf8_path;
 mod message;
 mod options;
