@@ -154,7 +154,7 @@ impl Tap {
     );
   }
 
-  pub(crate) fn sequence_wave(&mut self, wave: &Arc<Wave>) {
+  pub(crate) fn sequence_wave(&mut self, wave: &Arc<Wave>, fade_in: f64, fade_out: f64) {
     if wave.channels() == 0 {
       return;
     }
@@ -163,11 +163,11 @@ impl Tap {
 
     if wave.channels() == 1 {
       let mono = WavePlayer::new(wave, 0, 0, wave.len(), None);
-      self.sequence(An(mono), duration, 0.0, 0.0);
+      self.sequence(An(mono), duration, fade_in, fade_out);
     } else {
       let left = WavePlayer::new(wave, 0, 0, wave.len(), None);
       let right = WavePlayer::new(wave, 1, 0, wave.len(), None);
-      self.sequence(An(left) | An(right), duration, 0.0, 0.0);
+      self.sequence(An(left) | An(right), duration, fade_in, fade_out);
     }
   }
 
