@@ -82,13 +82,13 @@ impl State {
     self
   }
 
-  pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
-    self.interpolate = interpolate;
+  pub(crate) fn identity(mut self) -> Self {
+    self.filter.color = Mat4f::identity();
     self
   }
 
-  pub(crate) fn identity(mut self) -> Self {
-    self.filter.color = Mat4f::identity();
+  pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
+    self.interpolate = interpolate;
     self
   }
 
