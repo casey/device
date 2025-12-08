@@ -24,84 +24,131 @@ pub(crate) enum Scene {
 impl Scene {
   pub(crate) fn state(self) -> State {
     match self {
-      Self::All => State::default().invert().all().push(),
-      Self::Bottom => State::default().invert().bottom().push(),
-      Self::Circle => State::default().invert().circle().push(),
-      Self::Frequencies => State::default().invert().frequencies().push(),
-      Self::Hello => State::default()
-        .text(Some(Text {
-          size: 0.075,
-          string: "hello world".into(),
-          x: 0.10,
-          y: -0.10,
-        }))
-        .db(-40.0)
-        .invert()
-        .frequencies()
-        .push(),
-      Self::Highwaystar => State::default()
-        .invert()
-        .circle()
-        .interpolate(true)
-        .scale(2.0)
-        .times(8),
-      Self::Kaleidoscope => {
-        // how to make it move?
-        // - call a function every frame
-        // - store a callback closure on the state
+      Self::All => {
+        let mut state = State::default();
+        state.invert().all().push();
+        state
+      }
+      Self::Bottom => {
+        let mut state = State::default();
+        state.invert().bottom().push();
+        state
+      }
+      Self::Circle => {
+        let mut state = State::default();
+        state.invert().circle().push();
+        state
+      }
+      Self::Frequencies => {
+        let mut state = State::default();
+        state.invert().frequencies().push();
+        state
+      }
+      Self::Hello => {
+        let mut state = State::default();
 
+        state
+          .text(Some(Text {
+            size: 0.075,
+            string: "hello world".into(),
+            x: 0.10,
+            y: -0.10,
+          }))
+          .db(-40.0)
+          .invert()
+          .frequencies()
+          .push();
+
+        state
+      }
+      Self::Highwaystar => {
+        let mut state = State::default();
+        state
+          .invert()
+          .circle()
+          .interpolate(true)
+          .scale(2.0)
+          .times(8);
+        state
+      }
+      Self::Kaleidoscope => {
         let mut r = 5.0 / 6.0 * TAU;
         let s = 1.0 / 0.75;
 
-        State::default().callback(move |state, elapsed| {
+        let mut state = State::default();
+
+        state
+          .rotate_color(Axis::Green, 0.05 * TAU)
+          .field(Field::Circle { size: Some(1.0) })
+          .scale(s)
+          .wrap(true)
+          .repeat(true)
+          .times(8);
+
+        state.callback(move |state, elapsed| {
           r += elapsed / TAU;
 
-          *state = State::default()
-            .rotate_color(Axis::Green, 0.05 * TAU)
-            .field(Field::Circle { size: Some(1.0) })
-            .scale(s)
-            .wrap(true)
-            .repeat(true)
-            .times(8)
+          state.filters.truncate(8);
+
+          state
             .position(Mat3f::new_rotation(-r).prepend_scaling(s))
             .rotate_color(Axis::Blue, 0.05 * TAU)
             .times(8);
-        })
+        });
 
-        // let r = 5.0 / 6.0 * TAU;
-        // let s = 1.0 / 0.75;
-        // State::default()
-        //   .rotate_color(Axis::Green, 0.05 * TAU)
-        //   .field(Field::Circle { size: Some(1.0) })
-        //   .scale(s)
-        //   .wrap(true)
-        //   .repeat(true)
-        //   .times(8)
-        //   .position(Mat3f::new_rotation(r).prepend_scaling(s))
-        //   .rotate_color(Axis::Blue, 0.05 * TAU)
-        //   .times(8)
+        state
       }
-      Self::Middle => State::default().invert().top().push().bottom().push(),
-      Self::Noise => State::default()
-        .invert()
-        .x()
-        .push()
-        .samples()
-        .push()
-        .z(0.05)
-        .vz(-0.05)
-        .interpolate(true)
-        .position(Mat3f::new_rotation(-0.01))
-        .all()
-        .identity()
-        .times(157),
-      Self::None => State::default(),
-      Self::RedX => State::default().invert_r().x().push(),
-      Self::Rip => State::default().invert().top().push().samples().push(),
-      Self::Top => State::default().invert().top().push(),
-      Self::Samples => State::default().invert().samples().push(),
+      Self::Middle => {
+        let mut state = State::default();
+        state.invert().top().push().bottom().push();
+        state
+      }
+      Self::Noise => {
+        let mut state = State::default();
+        state
+          .invert()
+          .x()
+          .push()
+          .samples()
+          .push()
+          .z(0.05)
+          .vz(-0.05)
+          .interpolate(true)
+          .position(Mat3f::new_rotation(-0.01))
+          .all()
+          .identity()
+          .times(157);
+        state
+      }
+      Self::None => {
+        let mut state = State::default();
+        state.none();
+        state
+      }
+      Self::RedX => {
+        let mut state = State::default();
+        state.invert_r().x().push();
+        state
+      }
+      Self::Rip => {
+        let mut state = State::default();
+        state.invert().top().push().samples().push();
+        state
+      }
+      Self::Top => {
+        let mut state = State::default();
+        state.invert().top().push();
+        state
+      }
+      Self::Samples => {
+        let mut state = State::default();
+        state.invert().samples().push();
+        state
+      }
       Self::Starburst => {
-        let mut state = State::default()
+        let mut state = State::default();
+
+        state
           .repeat(false)
           .wrap(false)
           .spread(true)
@@ -131,10 +178,10 @@ impl Scene {
           Field::Cross,
         ] {
           state.filter.field = field;
-          state = state.push();
+          state.push();
         }
 
-        state = state
+        state
           .rotate_color(Axis::Blue, 0.1 * TAU)
           .rotate_position(0.2 * TAU);
 
@@ -151,7 +198,7 @@ impl Scene {
           Field::X,
         ] {
           state.filter.field = field;
-          state = state.push();
+          state.push();
         }
 
         state
@@ -168,7 +215,9 @@ impl Scene {
           Field::X,
         ];
 
-        let mut state = State::default()
+        let mut state = State::default();
+
+        state
           .repeat(false)
           .wrap(false)
           .spread(true)
@@ -177,21 +226,25 @@ impl Scene {
 
         for _ in 0..20 {
           state.filter.field = *fields.choose(&mut rng).unwrap();
-          state = state.push();
+          state.push();
         }
 
-        state = state
+        state
           .rotate_color(Axis::Blue, 0.1 * TAU)
           .rotate_position(0.2 * TAU);
 
         for _ in 0..10 {
           state.filter.field = *fields.choose(&mut rng).unwrap();
-          state = state.push();
+          state.push();
         }
 
         state
       }
-      Self::X => State::default().invert().x().push(),
+      Self::X => {
+        let mut state = State::default();
+        state.invert().x().push();
+        state
+      }
     }
   }
 }

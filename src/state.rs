@@ -47,138 +47,137 @@ impl Default for State {
 }
 
 impl State {
-  pub(crate) fn all(mut self) -> Self {
+  pub(crate) fn all(&mut self) -> &mut Self {
     self.filter.field = Field::All;
     self
   }
 
   #[allow(unused)]
-  pub(crate) fn base(mut self, base: f32) -> Self {
+  pub(crate) fn base(&mut self, base: f32) -> &mut Self {
     self.filter.base = base;
     self
   }
 
-  pub(crate) fn bottom(mut self) -> Self {
+  pub(crate) fn bottom(&mut self) -> &mut Self {
     self.filter.field = Field::Bottom;
     self
   }
 
-  pub(crate) fn callback(mut self, callback: impl FnMut(&mut State, f32) + 'static) -> Self {
+  pub(crate) fn callback(&mut self, callback: impl FnMut(&mut State, f32) + 'static) -> &mut Self {
     self.callback = Some(Box::new(callback));
     self
   }
 
-  pub(crate) fn circle(mut self) -> Self {
+  pub(crate) fn circle(&mut self) -> &mut Self {
     self.filter.field = Field::Circle { size: None };
     self
   }
 
   #[cfg(test)]
-  pub(crate) fn coordinates(mut self, coordinates: bool) -> Self {
+  pub(crate) fn coordinates(&mut self, coordinates: bool) -> &mut Self {
     self.filter.coordinates = coordinates;
     self
   }
 
   #[cfg(test)]
-  pub(crate) fn cross(mut self) -> Self {
+  pub(crate) fn cross(&mut self) -> &mut Self {
     self.filter.field = Field::Cross;
     self
   }
 
-  pub(crate) fn db(mut self, db: f32) -> Self {
+  pub(crate) fn db(&mut self, db: f32) -> &mut Self {
     self.db = db;
     self
   }
 
-  pub(crate) fn field(mut self, field: Field) -> Self {
+  pub(crate) fn field(&mut self, field: Field) -> &mut Self {
     self.filter.field = field;
     self
   }
 
-  pub(crate) fn frequencies(mut self) -> Self {
+  pub(crate) fn frequencies(&mut self) -> &mut Self {
     self.filter.field = Field::Frequencies;
     self
   }
 
-  pub(crate) fn identity(mut self) -> Self {
+  pub(crate) fn identity(&mut self) -> &mut Self {
     self.filter.color = Mat4f::identity();
     self
   }
 
-  pub(crate) fn interpolate(mut self, interpolate: bool) -> Self {
+  pub(crate) fn interpolate(&mut self, interpolate: bool) -> &mut Self {
     self.interpolate = interpolate;
     self
   }
 
-  pub(crate) fn invert(mut self) -> Self {
+  pub(crate) fn invert(&mut self) -> &mut Self {
     self.filter.color = invert_color();
     self
   }
 
-  pub(crate) fn invert_r(mut self) -> Self {
+  pub(crate) fn invert_r(&mut self) -> &mut Self {
     self.filter.color = Mat4f::from_diagonal(&Vec4f::new(-1.0, 1.0, 1.0, 1.0));
     self
   }
 
   #[cfg(test)]
-  pub(crate) fn left(mut self) -> Self {
+  pub(crate) fn left(&mut self) -> &mut Self {
     self.filter.field = Field::Left;
     self
   }
 
-  #[cfg(test)]
-  pub(crate) fn none(mut self) -> Self {
+  pub(crate) fn none(&mut self) -> &mut Self {
     self.filter.field = Field::None;
     self
   }
 
-  pub(crate) fn position(mut self, position: Mat3f) -> Self {
+  pub(crate) fn position(&mut self, position: Mat3f) -> &mut Self {
     self.filter.position = position;
     self
   }
 
-  pub(crate) fn push(mut self) -> Self {
+  pub(crate) fn push(&mut self) -> &mut Self {
     self.filters.push(self.filter.clone());
     self
   }
 
-  pub(crate) fn repeat(mut self, repeat: bool) -> Self {
+  pub(crate) fn repeat(&mut self, repeat: bool) -> &mut Self {
     self.repeat = repeat;
     self
   }
 
-  pub(crate) fn rotate_color(mut self, axis: Axis, angle: f32) -> Self {
+  pub(crate) fn rotate_color(&mut self, axis: Axis, angle: f32) -> &mut Self {
     self.filter.color = Mat4f::from_axis_angle(&axis.axis(), angle);
     self
   }
 
-  pub(crate) fn rotate_position(mut self, angle: f32) -> Self {
+  pub(crate) fn rotate_position(&mut self, angle: f32) -> &mut Self {
     self.filter.position = Mat3f::new_rotation(-angle);
     self
   }
 
-  pub(crate) fn samples(mut self) -> Self {
+  pub(crate) fn samples(&mut self) -> &mut Self {
     self.filter.field = Field::Samples;
     self
   }
 
-  pub(crate) fn scale(mut self, n: f32) -> Self {
+  pub(crate) fn scale(&mut self, n: f32) -> &mut Self {
     self.filter.position *= Mat3f::new_scaling(n);
     self
   }
 
-  pub(crate) fn spread(mut self, spread: bool) -> Self {
+  pub(crate) fn spread(&mut self, spread: bool) -> &mut Self {
     self.spread = spread;
     self
   }
 
   #[cfg(test)]
-  pub(crate) fn square(mut self) -> Self {
+  pub(crate) fn square(&mut self) -> &mut Self {
     self.filter.field = Field::Square;
     self
   }
 
-  pub(crate) fn text(mut self, text: Option<Text>) -> Self {
+  pub(crate) fn text(&mut self, text: Option<Text>) -> &mut Self {
     self.text = text;
     self
   }
@@ -197,19 +196,19 @@ impl State {
   }
 
   #[cfg(test)]
-  pub(crate) fn tile(mut self, tile: bool) -> Self {
+  pub(crate) fn tile(&mut self, tile: bool) -> &mut Self {
     self.tile = tile;
     self
   }
 
-  pub(crate) fn times(mut self, n: usize) -> Self {
+  pub(crate) fn times(&mut self, n: usize) -> &mut Self {
     for _ in 0..n {
-      self = self.push();
+      self.push();
     }
     self
   }
 
-  pub(crate) fn top(mut self) -> Self {
+  pub(crate) fn top(&mut self) -> &mut Self {
     self.filter.field = Field::Top;
     self
   }
@@ -225,27 +224,27 @@ impl State {
   }
 
   #[cfg(test)]
-  pub(crate) fn triangle(mut self) -> Self {
+  pub(crate) fn triangle(&mut self) -> &mut Self {
     self.filter.field = Field::Triangle;
     self
   }
 
-  pub(crate) fn vz(mut self, vz: f32) -> Self {
+  pub(crate) fn vz(&mut self, vz: f32) -> &mut Self {
     self.velocity.z = vz;
     self
   }
 
-  pub(crate) fn wrap(mut self, wrap: bool) -> Self {
+  pub(crate) fn wrap(&mut self, wrap: bool) -> &mut Self {
     self.filter.wrap = wrap;
     self
   }
 
-  pub(crate) fn x(mut self) -> Self {
+  pub(crate) fn x(&mut self) -> &mut Self {
     self.filter.field = Field::X;
     self
   }
 
-  pub(crate) fn z(mut self, z: f32) -> Self {
+  pub(crate) fn z(&mut self, z: f32) -> &mut Self {
     self.position.z = z;
     self
   }
