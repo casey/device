@@ -31,13 +31,13 @@ impl Program {
     Ok(())
   }
 
-  pub(crate) fn state(self) -> State {
+  pub(crate) fn scene(self) -> Scene {
     match self {
-      Self::Hello => Scene::Hello.state(),
-      Self::Busy => Scene::Highwaystar.state(),
-      Self::Noise => Scene::Noise.state(),
-      Self::Expo => Scene::Starburst.state(),
-      Self::Transit => Scene::Kaleidoscope.state(),
+      Self::Hello => Scene::Hello,
+      Self::Busy => Scene::Highwaystar,
+      Self::Noise => Scene::Noise,
+      Self::Expo => Scene::Starburst,
+      Self::Transit => Scene::Kaleidoscope,
     }
   }
 }

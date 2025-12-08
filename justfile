@@ -72,22 +72,8 @@ capture program:
 capture-hello: (capture "hello")
 capture-busy: (capture "busy")
 capture-noise: (capture "noise")
-
-capture-expo:
-  cargo run --release -- \
-    --format bgra8unorm  \
-    --program expo \
-    --resolution 2048 \
-    --verbose \
-    capture
-
-capture-transit:
-  cargo run --release -- \
-    --format bgra8unorm  \
-    --program transit \
-    --resolution 2048 \
-    --verbose \
-    capture
+capture-expo: (capture "expo")
+capture-transit: (capture "transit")
 
 record-curtains:
   cargo run --release -- \

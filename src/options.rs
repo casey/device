@@ -69,11 +69,20 @@ impl Options {
     Ok(())
   }
 
+  pub(crate) fn format(&self) -> Option<Format> {
+    self.format.or_else(|| {
+      self
+        .program
+        .map(|program| program.scene().format())
+        .flatten()
+    })
+  }
+
   pub(crate) fn state(&self) -> State {
     let mut state = if let Some(scene) = self.scene {
       scene.state()
     } else if let Some(program) = self.program {
-      program.state()
+      program.scene().state()
     } else {
       default()
     };
