@@ -15,6 +15,7 @@ pub(crate) enum Scene {
   Rip,
   Samples,
   Starburst,
+  StarburstRandom,
   Top,
   X,
 }
@@ -63,20 +64,10 @@ impl Scene {
       Self::Top => State::default().invert().top().push(),
       Self::Samples => State::default().invert().samples().push(),
       Self::Starburst => {
-        let mut rng = SmallRng::seed_from_u64(0);
-
-        let fields = [
-          Field::All,
-          Field::Circle { size: Some(1.0) },
-          Field::Cross,
-          Field::Square,
-          Field::Top,
-          Field::X,
-        ];
-
         let mut state = State::default()
           .repeat(false)
           .wrap(false)
+          .spread(true)
           .rotate_color(Axis::Green, 0.1 * TAU)
           .rotate_position(0.1 * TAU);
 
@@ -106,11 +97,6 @@ impl Scene {
           state = state.push();
         }
 
-        // for _ in 0..20 {
-        //   state.filter.field = *fields.choose(&mut rng).unwrap();
-        //   state = state.push();
-        // }
-
         state = state
           .rotate_color(Axis::Blue, 0.1 * TAU)
           .rotate_position(0.2 * TAU);
@@ -131,10 +117,40 @@ impl Scene {
           state = state.push();
         }
 
-        // for _ in 0..10 {
-        //   state.filter.field = *fields.choose(&mut rng).unwrap();
-        //   state = state.push();
-        // }
+        state
+      }
+      Self::StarburstRandom => {
+        let mut rng = SmallRng::from_rng(&mut rand::rng());
+
+        let fields = [
+          Field::All,
+          Field::Circle { size: Some(1.0) },
+          Field::Cross,
+          Field::Square,
+          Field::Top,
+          Field::X,
+        ];
+
+        let mut state = State::default()
+          .repeat(false)
+          .wrap(false)
+          .spread(true)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .rotate_position(0.1 * TAU);
+
+        for _ in 0..20 {
+          state.filter.field = *fields.choose(&mut rng).unwrap();
+          state = state.push();
+        }
+
+        state = state
+          .rotate_color(Axis::Blue, 0.1 * TAU)
+          .rotate_position(0.2 * TAU);
+
+        for _ in 0..10 {
+          state.filter.field = *fields.choose(&mut rng).unwrap();
+          state = state.push();
+        }
 
         state
       }
