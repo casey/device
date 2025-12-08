@@ -800,6 +800,7 @@ impl Renderer {
           gain,
           interpolate: state.interpolate,
           offset: tiling.offset(i),
+          parameter: filter.field.parameter(),
           position: filter.position,
           repeat: state.repeat,
           resolution: tiling.resolution as f32,

@@ -67,7 +67,7 @@ impl Scene {
 
         let fields = [
           Field::All,
-          Field::Circle,
+          Field::Circle { size: Some(1.0) },
           Field::Cross,
           Field::Square,
           Field::Top,
@@ -76,22 +76,65 @@ impl Scene {
 
         let mut state = State::default()
           .repeat(false)
+          .wrap(false)
           .rotate_color(Axis::Green, 0.1 * TAU)
           .rotate_position(0.1 * TAU);
 
-        for _ in 0..20 {
-          state.filter.field = *fields.choose(&mut rng).unwrap();
+        for field in [
+          Field::Cross,
+          Field::Cross,
+          Field::X,
+          Field::Top,
+          Field::All,
+          Field::Circle { size: Some(1.0) },
+          Field::All,
+          Field::Cross,
+          Field::Square,
+          Field::All,
+          Field::Cross,
+          Field::Cross,
+          Field::All,
+          Field::Square,
+          Field::Top,
+          Field::Circle { size: Some(1.0) },
+          Field::Top,
+          Field::All,
+          Field::X,
+          Field::Cross,
+        ] {
+          state.filter.field = field;
           state = state.push();
         }
+
+        // for _ in 0..20 {
+        //   state.filter.field = *fields.choose(&mut rng).unwrap();
+        //   state = state.push();
+        // }
 
         state = state
           .rotate_color(Axis::Blue, 0.1 * TAU)
           .rotate_position(0.2 * TAU);
 
-        for _ in 0..10 {
-          state.filter.field = *fields.choose(&mut rng).unwrap();
+        for field in [
+          Field::Cross,
+          Field::Circle { size: Some(1.0) },
+          Field::Top,
+          Field::Circle { size: Some(1.0) },
+          Field::Top,
+          Field::Circle { size: Some(1.0) },
+          Field::X,
+          Field::X,
+          Field::Cross,
+          Field::X,
+        ] {
+          state.filter.field = field;
           state = state.push();
         }
+
+        // for _ in 0..10 {
+        //   state.filter.field = *fields.choose(&mut rng).unwrap();
+        //   state = state.push();
+        // }
 
         state
       }

@@ -51,7 +51,7 @@ impl Shared for Field {
   const SIZE: usize = u32::SIZE;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
-    (*self as u32).write_aligned(buffer);
+    self.number().write_aligned(buffer);
   }
 }
 

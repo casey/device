@@ -56,7 +56,7 @@ impl State {
   }
 
   pub(crate) fn circle(mut self) -> Self {
-    self.filter.field = Field::Circle;
+    self.filter.field = Field::Circle { size: None };
     self
   }
 
@@ -204,6 +204,11 @@ impl State {
 
   pub(crate) fn vz(mut self, vz: f32) -> Self {
     self.velocity.z = vz;
+    self
+  }
+
+  pub(crate) fn wrap(mut self, wrap: bool) -> Self {
+    self.filter.wrap = wrap;
     self
   }
 

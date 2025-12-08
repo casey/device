@@ -255,7 +255,7 @@ impl App {
           }),
           "c" => self.state.filters.push(Filter {
             color: invert_color(),
-            field: Field::Circle,
+            field: Field::Circle { size: None },
             wrap: self.state.wrap,
             ..default()
           }),
@@ -373,7 +373,7 @@ impl App {
         }),
         (Controller::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
           color: invert_color(),
-          field: Field::Circle,
+          field: Field::Circle { size: None },
           wrap: self.state.wrap,
           ..default()
         }),

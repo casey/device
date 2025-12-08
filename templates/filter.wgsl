@@ -45,6 +45,7 @@ struct Uniforms {
   gain: f32,
   interpolate: u32,
   offset: vec2f,
+  parameter: f32,
   position: mat3x3f,
   repeat: u32,
   resolution: f32,
@@ -67,7 +68,7 @@ fn field_bottom(p: vec2f) -> bool {
 }
 
 fn field_circle(p: vec2f) -> bool {
-  return length(p) < 0.5 * coefficient();
+  return length(p) < uniforms.parameter * coefficient();
 }
 
 fn field_cross(p: vec2f) -> bool {
