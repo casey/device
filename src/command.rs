@@ -25,6 +25,7 @@ impl Command {
     map.insert("spread", Self::Nullary(spread));
     map.insert("square", Self::Nullary(square));
     map.insert("status", Self::Nullary(status));
+    map.insert("top", Self::Nullary(top));
     map.insert("triangle", Self::Nullary(triangle));
     map
   }
@@ -72,6 +73,15 @@ fn square(state: &mut State) {
 
 fn status(state: &mut State) {
   state.status ^= true;
+}
+
+fn top(state: &mut State) {
+  state.filters.push(Filter {
+    color: invert_color(),
+    field: Field::Top,
+    wrap: state.wrap,
+    ..default()
+  });
 }
 
 fn triangle(state: &mut State) {

@@ -21,10 +21,10 @@ clean:
   rm -f capture.png
   rm -f recording.mp4
 
-baseline:
+baseline *args:
   #!/usr/bin/env bash
   rm baseline/*.test.png
-  cargo ltest -- --ignored
+  cargo ltest -- --ignored "$@"
   for image in baseline/*.png; do
     if [[ $image == *.test.png ]]; then
       continue

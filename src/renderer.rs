@@ -1647,6 +1647,31 @@ mod tests {
 
   #[test]
   #[ignore]
+  fn rotate_green_small() {
+    Baseline::new(name!())
+      .state(
+        State::default()
+          .rotate_color(Axis::Green, 0.035 * TAU)
+          .all()
+          .push(),
+      )
+      .run();
+  }
+
+  #[test]
+  fn foo() {
+    let state = State::default().rotate_color(Axis::Green, 0.1 * TAU);
+
+    let a = Vec3f::new(0.0, 0.0, 0.0);
+    let b = a * 2.0 - Vec3f::new(1.0, 1.0, 1.0);
+    let c = state.filter.color * Vec4f::new(b.x, b.y, b.z, 1.0);
+    let d = (c.xyz() + Vec3f::new(1.0, 1.0, 1.0)) / 2.0;
+    dbg!(d);
+    panic!();
+  }
+
+  #[test]
+  #[ignore]
   fn resolution_is_clamped_to_2d_texture_limit() {
     let resolution = 65536.try_into().unwrap();
     let size = Vector2::new(resolution, resolution);
