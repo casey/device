@@ -13,10 +13,9 @@ var filtering_sampler: sampler;
 @binding({{ binding() }})
 var frequencies: texture_1d<f32>;
 
-// todo: rename to source
 @group(0)
 @binding({{ binding() }})
-var input: texture_2d<f32>;
+var source: texture_2d<f32>;
 
 @group(0)
 @binding({{ binding() }})
@@ -150,21 +149,21 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
 
       // scale to compensate for tiles not taking up full front texture
       let scale = vec2(uniforms.resolution, uniforms.resolution) * f32(uniforms.tiling)
-        / vec2f(textureDimensions(input, 0));
+        / vec2f(textureDimensions(source, 0));
       tile_uv *= scale;
 
       // read input color
       if bool(uniforms.interpolate) {
-        input_color = textureSample(input, filtering_sampler, tile_uv);
+        input_color = textureSample(source, filtering_sampler, tile_uv);
       } else {
-        input_color = textureSample(input, non_filtering_sampler, tile_uv);
+        input_color = textureSample(source, non_filtering_sampler, tile_uv);
       }
     }
   }
 
   // Sample original color
   let original_color = textureSample(
-    input,
+    source,
     non_filtering_sampler,
     (position.xy - uniforms.offset) / vec2(uniforms.resolution, uniforms.resolution),
   );

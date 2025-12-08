@@ -290,7 +290,7 @@ impl Renderer {
   fn filter_bind_group(
     &self,
     frequencies: &TextureView,
-    input: &TextureView,
+    source: &TextureView,
     samples: &TextureView,
   ) -> BindGroup {
     let mut next = 0;
@@ -312,7 +312,7 @@ impl Renderer {
         },
         BindGroupEntry {
           binding: binding(),
-          resource: BindingResource::TextureView(input),
+          resource: BindingResource::TextureView(source),
         },
         BindGroupEntry {
           binding: binding(),
