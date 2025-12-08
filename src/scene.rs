@@ -8,6 +8,7 @@ pub(crate) enum Scene {
   Frequencies,
   Hello,
   Highwaystar,
+  Kaleidoscope,
   Middle,
   Noise,
   None,
@@ -44,6 +45,20 @@ impl Scene {
         .interpolate(true)
         .scale(2.0)
         .times(8),
+      Self::Kaleidoscope => {
+        let r = 5.0 / 6.0 * TAU;
+        let s = 1.0 / 0.75;
+        State::default()
+          .rotate_color(Axis::Green, 0.05 * TAU)
+          .field(Field::Circle { size: Some(1.0) })
+          .scale(s)
+          .wrap(true)
+          .repeat(true)
+          .times(8)
+          .position(Mat3f::new_rotation(r).prepend_scaling(s))
+          .rotate_color(Axis::Blue, 0.05 * TAU)
+          .times(8)
+      }
       Self::Middle => State::default().invert().top().push().bottom().push(),
       Self::Noise => State::default()
         .invert()
