@@ -21,6 +21,8 @@ pub(crate) struct Options {
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) db: Option<f32>,
   #[arg(long)]
+  pub(crate) fade_out: f32,
+  #[arg(long)]
   pub(crate) format: Option<Format>,
   #[arg(long)]
   pub(crate) fps: Option<Fps>,
@@ -56,12 +58,12 @@ impl Options {
   pub(crate) fn add_source(&self, config: &Config, tap: &mut Tap) -> Result {
     if let Some(song) = &self.song {
       let wave = tap.load_wave(&config.find_song(song)?)?;
-      tap.sequence_wave(&wave);
+      tap.sequence_wave(&wave, 0.0, 0.0);
     } else if let Some(score) = self.score {
       score.sequence(tap);
     } else if let Some(track) = &self.track {
       let wave = tap.load_wave(track)?;
-      tap.sequence_wave(&wave);
+      tap.sequence_wave(&wave, 0.0, 0.0);
     } else if let Some(program) = self.program {
       program.add_source(config, tap)?;
     }

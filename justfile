@@ -73,6 +73,14 @@ capture-hello: (capture "hello")
 capture-busy: (capture "busy")
 capture-noise: (capture "noise")
 
+capture-expo:
+  cargo run --release -- \
+    --format bgra8unorm  \
+    --program expo \
+    --resolution 2048 \
+    --verbose \
+    capture
+
 record-curtains:
   cargo run --release -- \
     --fps 60 \

@@ -10,6 +10,7 @@ pub(crate) struct FilterUniforms {
   pub(crate) gain: f32,
   pub(crate) interpolate: bool,
   pub(crate) offset: Vec2f,
+  pub(crate) parameter: f32,
   pub(crate) position: Mat3f,
   pub(crate) repeat: bool,
   pub(crate) resolution: f32,
@@ -31,6 +32,7 @@ impl Uniforms for FilterUniforms {
     self.gain.write(dst, &mut i, &mut a);
     self.interpolate.write(dst, &mut i, &mut a);
     self.offset.write(dst, &mut i, &mut a);
+    self.parameter.write(dst, &mut i, &mut a);
     self.position.write(dst, &mut i, &mut a);
     self.repeat.write(dst, &mut i, &mut a);
     self.resolution.write(dst, &mut i, &mut a);

@@ -5,7 +5,7 @@ use super::*;
 pub(crate) enum Field {
   All,
   Bottom,
-  Circle,
+  Circle { size: Option<f32> },
   Cross,
   Frequencies,
   Left,
@@ -38,7 +38,7 @@ impl Field {
     match self {
       Self::All => 'A',
       Self::Bottom => 'B',
-      Self::Circle => '●',
+      Self::Circle { .. } => '●',
       Self::Cross => '✚',
       Self::Frequencies => 'F',
       Self::Left => 'L',
@@ -57,6 +57,13 @@ impl Field {
   }
 
   pub(crate) fn number(self) -> u32 {
-    self as u32
+    unsafe { *((&raw const self).cast::<u32>()) }
+  }
+
+  pub(crate) fn parameter(self) -> f32 {
+    match self {
+      Self::Circle { size } => size.unwrap_or(0.5),
+      _ => 0.0,
+    }
   }
 }

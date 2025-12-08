@@ -6,6 +6,7 @@ pub(crate) enum Program {
   Hello,
   Busy,
   Noise,
+  Expo,
 }
 
 impl Program {
@@ -13,10 +14,14 @@ impl Program {
     match self {
       Self::Hello => {
         let wave = tap.load_wave(&config.find_song("old generic boss")?)?;
-        tap.sequence_wave(&wave);
+        tap.sequence_wave(&wave, 0.0, 0.0);
       }
       Self::Busy => Score::BusySignal.sequence(tap),
       Self::Noise => Score::BrownNoise.sequence(tap),
+      Self::Expo => {
+        let wave = tap.load_wave(&config.find_song("expo 2000 vocode")?)?;
+        tap.sequence_wave(&wave, 0.0, 1.0);
+      }
     }
     Ok(())
   }
@@ -26,6 +31,7 @@ impl Program {
       Self::Hello => Scene::Hello.state(),
       Self::Busy => Scene::Highwaystar.state(),
       Self::Noise => Scene::Noise.state(),
+      Self::Expo => Scene::Starburst.state(),
     }
   }
 }

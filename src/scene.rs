@@ -15,6 +15,7 @@ pub(crate) enum Scene {
   Rip,
   Samples,
   Starburst,
+  StarburstRandom,
   Top,
   X,
 }
@@ -63,11 +64,67 @@ impl Scene {
       Self::Top => State::default().invert().top().push(),
       Self::Samples => State::default().invert().samples().push(),
       Self::Starburst => {
-        let mut rng = SmallRng::seed_from_u64(0);
+        let mut state = State::default()
+          .repeat(false)
+          .wrap(false)
+          .spread(true)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .rotate_position(0.1 * TAU);
+
+        for field in [
+          Field::Cross,
+          Field::Cross,
+          Field::X,
+          Field::Top,
+          Field::All,
+          Field::Circle { size: Some(1.0) },
+          Field::All,
+          Field::Cross,
+          Field::Square,
+          Field::All,
+          Field::Cross,
+          Field::Cross,
+          Field::All,
+          Field::Square,
+          Field::Top,
+          Field::Circle { size: Some(1.0) },
+          Field::Top,
+          Field::All,
+          Field::X,
+          Field::Cross,
+        ] {
+          state.filter.field = field;
+          state = state.push();
+        }
+
+        state = state
+          .rotate_color(Axis::Blue, 0.1 * TAU)
+          .rotate_position(0.2 * TAU);
+
+        for field in [
+          Field::Cross,
+          Field::Circle { size: Some(1.0) },
+          Field::Top,
+          Field::Circle { size: Some(1.0) },
+          Field::Top,
+          Field::Circle { size: Some(1.0) },
+          Field::X,
+          Field::X,
+          Field::Cross,
+          Field::X,
+        ] {
+          state.filter.field = field;
+          state = state.push();
+        }
+
+        state
+      }
+      Self::StarburstRandom => {
+        let mut rng = SmallRng::from_rng(&mut rand::rng());
 
         let fields = [
           Field::All,
-          Field::Circle,
+          Field::Circle { size: Some(1.0) },
           Field::Cross,
           Field::Square,
           Field::Top,
@@ -76,6 +133,8 @@ impl Scene {
 
         let mut state = State::default()
           .repeat(false)
+          .wrap(false)
+          .spread(true)
           .rotate_color(Axis::Green, 0.1 * TAU)
           .rotate_position(0.1 * TAU);
 

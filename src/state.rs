@@ -56,7 +56,7 @@ impl State {
   }
 
   pub(crate) fn circle(mut self) -> Self {
-    self.filter.field = Field::Circle;
+    self.filter.field = Field::Circle { size: None };
     self
   }
 
@@ -149,6 +149,11 @@ impl State {
     self
   }
 
+  pub(crate) fn spread(mut self, spread: bool) -> Self {
+    self.spread = spread;
+    self
+  }
+
   #[cfg(test)]
   pub(crate) fn square(mut self) -> Self {
     self.filter.field = Field::Square;
@@ -204,6 +209,11 @@ impl State {
 
   pub(crate) fn vz(mut self, vz: f32) -> Self {
     self.velocity.z = vz;
+    self
+  }
+
+  pub(crate) fn wrap(mut self, wrap: bool) -> Self {
+    self.filter.wrap = wrap;
     self
   }
 
