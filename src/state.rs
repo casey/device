@@ -213,6 +213,10 @@ impl State {
     self
   }
 
+  pub(crate) fn transform(&mut self, rotation: f32, scaling: f32) -> &mut Self {
+    self.position(Mat3f::new_rotation(-rotation).prepend_scaling(scaling))
+  }
+
   pub(crate) fn transient(&self) -> Filter {
     Filter {
       field: Field::All,
@@ -226,6 +230,11 @@ impl State {
   #[cfg(test)]
   pub(crate) fn triangle(&mut self) -> &mut Self {
     self.filter.field = Field::Triangle;
+    self
+  }
+
+  pub(crate) fn truncate(&mut self, len: usize) -> &mut Self {
+    self.filters.truncate(len);
     self
   }
 

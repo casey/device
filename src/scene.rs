@@ -88,10 +88,9 @@ impl Scene {
         state.callback(move |state, elapsed| {
           r += elapsed / TAU;
 
-          state.filters.truncate(8);
-
           state
-            .position(Mat3f::new_rotation(-r).prepend_scaling(s))
+            .truncate(8)
+            .transform(r, s)
             .rotate_color(Axis::Blue, 0.05 * TAU)
             .times(8);
         });
