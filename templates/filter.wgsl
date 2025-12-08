@@ -207,7 +207,9 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // convert back to rgb
   let transformed_color = (transformed_color_vector + 1) / 2;
 
+  // blend transformed and original color
   let blend = transformed_color.rgb * alpha + original_color.rgb * (1 - alpha);
 
+  // return blend with opaque alpha channel
   return vec4(blend, 1);
 }
