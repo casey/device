@@ -70,12 +70,9 @@ impl Options {
   }
 
   pub(crate) fn format(&self) -> Option<Format> {
-    self.format.or_else(|| {
-      self
-        .program
-        .map(|program| program.scene().format())
-        .flatten()
-    })
+    self
+      .format
+      .or_else(|| self.program.and_then(|program| program.scene().format()))
   }
 
   pub(crate) fn state(&self) -> State {
