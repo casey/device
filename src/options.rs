@@ -21,8 +21,6 @@ pub(crate) struct Options {
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) db: Option<f32>,
   #[arg(long)]
-  pub(crate) fade_out: f32,
-  #[arg(long)]
   pub(crate) format: Option<Format>,
   #[arg(long)]
   pub(crate) fps: Option<Fps>,
