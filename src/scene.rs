@@ -12,6 +12,7 @@ pub(crate) enum Scene {
   Middle,
   Noise,
   None,
+  Pattern,
   RedX,
   Rip,
   Samples,
@@ -131,6 +132,23 @@ impl Scene {
         let mut state = State::default();
         state.none();
         state
+      }
+      Self::Pattern => {
+        let mut state = State::default();
+        state
+          .invert()
+          .field(Field::Circle { size: Some(1.0) })
+          .transform(0.0, 2.0);
+
+        for i in 0u8..2 {
+          state.push().wrap(i.is_multiple_of(2));
+        }
+
+        state
+
+        // alpha(0.75);
+        // circle();
+        // transform(0, [2, 2], [0, 0]);
       }
       Self::RedX => {
         let mut state = State::default();
