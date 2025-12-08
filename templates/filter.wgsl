@@ -121,6 +121,10 @@ fn field_x(p: vec2f) -> bool {
   return abs(abs(p.x) - abs(p.y)) < sqrt(2) * 0.25 * coefficient() - 0.5 * pixel;
 }
 
+fn mod_floor(x: vec2f, y: f32) -> vec2f {
+  return x - y * floor(x / y);
+}
+
 @fragment
 fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // subtract offset get tile coordinates
@@ -133,7 +137,7 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   let centered = source_uv * 2 - 1;
 
   // apply position transform
-  let transformed = (uniforms.position * vec3(centered, 1)).xy;
+  var transformed = (uniforms.position * vec3(centered, 1)).xy;
 
   // convert position to uv coordinates
   var uv = (transformed + 1) / 2;
@@ -141,6 +145,7 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // wrap uv coordinates
   if bool(uniforms.wrap) {
     uv = fract(uv);
+    transformed = mod_floor(transformed + 1.0, 2.0) - 1.0;
   }
 
   // scale to compensate for tiles not taking up full front texture

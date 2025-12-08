@@ -83,6 +83,11 @@ impl State {
     self
   }
 
+  pub(crate) fn field(mut self, field: Field) -> Self {
+    self.filter.field = field;
+    self
+  }
+
   pub(crate) fn frequencies(mut self) -> Self {
     self.filter.field = Field::Frequencies;
     self
