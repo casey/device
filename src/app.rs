@@ -262,6 +262,7 @@ impl App {
           "d" => self.state.filters.push(Filter {
             coordinates: true,
             wrap: self.state.wrap,
+            field: Field::All,
             ..default()
           }),
           "f" => {
