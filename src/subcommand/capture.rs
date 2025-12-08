@@ -73,7 +73,6 @@ impl Capture {
     let mut samples = vec![0.0; spf.into_usize() * Tap::CHANNELS.into_usize()];
 
     let mut done = false;
-    let mut elapsed = Duration::default();
     for frame in 0.. {
       if frames.map_or(done, |frames| frame == frames) {
         break;
@@ -102,10 +101,7 @@ impl Capture {
       media.push((image, sound));
 
       state.tick(fps.duration());
-      elapsed += fps.duration();
     }
-
-    dbg!(elapsed.as_secs_f32());
 
     progress.finish();
 
