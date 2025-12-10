@@ -54,8 +54,8 @@ impl Tap {
       return Ok(Arc::new(Wave::new(1, self.sample_rate as f64)));
     }
 
-    for channel in (Self::CHANNELS.into_usize()..input.channels()).rev() {
-      input.remove_channel(channel);
+    while input.channels() > Self::CHANNELS.into_usize() {
+      input.remove_channel(input.channels() - 1);
     }
 
     let sample_rate = input.sample_rate();
