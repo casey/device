@@ -143,7 +143,7 @@ impl Tap {
   where
     T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
   {
-    self.done = self.done.max(self.sequencer.time() + duration);
+    self.done = self.done.max(self.time + duration);
     self.sequencer.push_relative(
       0.0,
       duration,
