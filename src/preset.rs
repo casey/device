@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, EnumIter, ValueEnum)]
+#[derive(Clone, Copy, Debug, ValueEnum)]
 pub(crate) enum Preset {
   Circle,
   Desaturate,
