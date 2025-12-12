@@ -88,10 +88,10 @@ mod tests {
       assert_eq!(tiling.offset(filter), offset,);
     }
 
-    case(0, Vec2f::new(0.0, 0.0), Vec2f::new(0.0, 0.0));
-    case(1, Vec2f::new(100.0, 0.0), Vec2f::new(0.0, 0.0));
-    case(2, Vec2f::new(0.0, 100.0), Vec2f::new(0.5, 0.0));
-    case(3, Vec2f::new(100.0, 100.0), Vec2f::new(0.0, 0.5));
-    case(4, Vec2f::new(0.0, 200.0), Vec2f::new(0.5, 0.5));
+    case(0, vector!(0.0, 0.0), vector!(0.0, 0.0));
+    case(1, vector!(100.0, 0.0), vector!(0.0, 0.0));
+    case(2, vector!(0.0, 100.0), vector!(0.5, 0.0));
+    case(3, vector!(100.0, 100.0), vector!(0.0, 0.5));
+    case(4, vector!(0.0, 200.0), vector!(0.5, 0.5));
   }
 }
