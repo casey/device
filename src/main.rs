@@ -62,7 +62,7 @@ use {
   },
   hound::{WavSpec, WavWriter},
   indicatif::{ProgressBar, ProgressStyle},
-  nalgebra::Vector2,
+  nalgebra::{Vector2, matrix, vector},
   parley::{FontContext, LayoutContext},
   rand::{SeedableRng, prelude::IteratorRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
