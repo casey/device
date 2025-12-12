@@ -173,13 +173,9 @@ impl State {
     self
   }
 
+  #[cfg(test)]
   pub(crate) fn rms(&mut self, rms: Mat1x2f) -> &mut Self {
     self.filter.rms = rms;
-    self
-  }
-
-  pub(crate) fn rotation(&mut self, rotation: f32) -> &mut Self {
-    self.filter.rotation = rotation;
     self
   }
 
@@ -190,6 +186,12 @@ impl State {
 
   pub(crate) fn rotate_position(&mut self, angle: f32) -> &mut Self {
     self.filter.position = Mat3f::new_rotation(-angle);
+    self
+  }
+
+  #[cfg(test)]
+  pub(crate) fn rotation(&mut self, rotation: f32) -> &mut Self {
+    self.filter.rotation = rotation;
     self
   }
 
