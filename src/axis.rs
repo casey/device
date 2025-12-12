@@ -37,8 +37,8 @@ impl Axis {
       Self::Blue => Vec3f::z_axis(),
     };
 
-    let rotate = Mat4f::from_axis_angle(&axis, angle);
+    let transformation = Mat4f::from_axis_angle(&axis, angle);
 
-    TO_RGB * rotate * FROM_RGB
+    TO_RGB * transformation * FROM_RGB
   }
 }
