@@ -78,6 +78,7 @@ impl State {
     self
   }
 
+  #[cfg(false)]
   pub(crate) fn clear(&mut self) -> &mut Self {
     self.filters.clear();
     self

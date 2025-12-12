@@ -64,15 +64,15 @@ maria:
   cargo run --release -- --song 'total 4/13 maria' run
 
 blaster:
-  cargo run --release -- --format bgra8unorm --song 'total 4/13 maria' --db -15 --blaster test
+  cargo run --release -- --format bgra8unorm --song 'total 4/13 maria' --db -15 --preset test
 
-blaster-preset preset:
+preset preset:
   cargo run --release -- \
     --format bgra8unorm \
     --song 'total 4/13 maria' \
     --mute \
-    --blaster test \
-    --blaster {{preset}} \
+    --preset test \
+    --preset {{preset}} \
     run
 
 nobrain:

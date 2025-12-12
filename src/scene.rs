@@ -3,6 +3,7 @@ use super::*;
 #[derive(Clone, Copy, ValueEnum)]
 pub(crate) enum Scene {
   All,
+  Blaster,
   Bottom,
   Circle,
   Frequencies,
@@ -37,6 +38,11 @@ impl Scene {
     match self {
       Self::All => {
         state.invert().all().push();
+      }
+      Self::Blaster => {
+        state
+          .filters
+          .extend((0..16).map(|_| Preset::random().filter()));
       }
       Self::Bottom => {
         state.invert().bottom().push();
@@ -137,14 +143,7 @@ impl Scene {
         state.invert().samples().push();
       }
       Self::Starburst => {
-        state
-          .repeat(false)
-          .wrap(false)
-          .spread(true)
-          .rotate_color(Axis::Green, 0.1 * TAU)
-          .rotate_position(0.1 * TAU);
-
-        for field in [
+        const A: [Field; 20] = [
           Field::Cross,
           Field::Cross,
           Field::X,
@@ -165,16 +164,9 @@ impl Scene {
           Field::All,
           Field::X,
           Field::Cross,
-        ] {
-          state.filter.field = field;
-          state.push();
-        }
+        ];
 
-        state
-          .rotate_color(Axis::Blue, 0.1 * TAU)
-          .rotate_position(0.2 * TAU);
-
-        for field in [
+        const B: [Field; 10] = [
           Field::Cross,
           Field::Circle { size: Some(1.0) },
           Field::Top,
@@ -184,21 +176,6 @@ impl Scene {
           Field::X,
           Field::X,
           Field::Cross,
-          Field::X,
-        ] {
-          state.filter.field = field;
-          state.push();
-        }
-      }
-      Self::StarburstRandom => {
-        let mut rng = SmallRng::from_rng(&mut rand::rng());
-
-        let fields = [
-          Field::All,
-          Field::Circle { size: Some(1.0) },
-          Field::Cross,
-          Field::Square,
-          Field::Top,
           Field::X,
         ];
 
@@ -209,8 +186,41 @@ impl Scene {
           .rotate_color(Axis::Green, 0.1 * TAU)
           .rotate_position(0.1 * TAU);
 
+        for field in A {
+          state.filter.field = field;
+          state.push();
+        }
+
+        state
+          .rotate_color(Axis::Blue, 0.1 * TAU)
+          .rotate_position(0.2 * TAU);
+
+        for field in B {
+          state.filter.field = field;
+          state.push();
+        }
+      }
+      Self::StarburstRandom => {
+        const FIELDS: [Field; 6] = [
+          Field::All,
+          Field::Circle { size: Some(1.0) },
+          Field::Cross,
+          Field::Square,
+          Field::Top,
+          Field::X,
+        ];
+
+        let mut rng = SmallRng::from_rng(&mut rand::rng());
+
+        state
+          .repeat(false)
+          .wrap(false)
+          .spread(true)
+          .rotate_color(Axis::Green, 0.1 * TAU)
+          .rotate_position(0.1 * TAU);
+
         for _ in 0..20 {
-          state.field(*fields.choose(&mut rng).unwrap()).push();
+          state.field(*FIELDS.choose(&mut rng).unwrap()).push();
         }
 
         state
@@ -218,7 +228,7 @@ impl Scene {
           .rotate_position(0.2 * TAU);
 
         for _ in 0..10 {
-          state.field(*fields.choose(&mut rng).unwrap()).push();
+          state.field(*FIELDS.choose(&mut rng).unwrap()).push();
         }
       }
       Self::X => {
