@@ -257,7 +257,7 @@ impl App {
             self.state.clear();
 
             for _ in 0..16 {
-              self.state.filters.push(Blaster::random().filter());
+              self.state.filters.push(Preset::random().filter());
             }
           }
           "c" => self.state.filters.push(Filter {

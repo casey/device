@@ -1,7 +1,7 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug, EnumIter, ValueEnum)]
-pub(crate) enum Blaster {
+pub(crate) enum Preset {
   Circle,
   Desaturate,
   FlipH,
@@ -28,7 +28,7 @@ pub(crate) enum Blaster {
   ZoomOutNe,
 }
 
-impl Blaster {
+impl Preset {
   fn boring(self) -> bool {
     matches!(self, Self::Off | Self::Identity)
   }
