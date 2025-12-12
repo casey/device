@@ -1,11 +1,5 @@
 use super::*;
 
-// todo:
-// - review
-//   - add new reference tests for anything that has changed
-//   - add reference tests for all blaster filters
-//   - rms-locking reference tests
-
 #[derive(Clone, Copy, Debug, EnumIter, ValueEnum)]
 pub(crate) enum Blaster {
   Circle,
