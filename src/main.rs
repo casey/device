@@ -5,10 +5,13 @@ use {
     arguments::Arguments,
     axis::Axis,
     bindings::Bindings,
+    blaster::Blaster,
+    bool_ext::BoolExt,
     command::Command,
     composite_uniforms::CompositeUniforms,
     config::Config,
     controller::Controller,
+    counter::Counter,
     error::Error,
     event::Event,
     field::Field,
@@ -23,6 +26,7 @@ use {
     into_stereo::IntoStereo,
     into_utf8_path::IntoUtf8Path,
     message::Message,
+    mirror::Mirror,
     options::Options,
     parameter::Parameter,
     patch::Patch,
@@ -45,6 +49,7 @@ use {
     templates::{CompositeWgsl, FilterWgsl, VertexWgsl},
     text::Text,
     tiling::Tiling,
+    to_affine::ToAffine,
     uniforms::Uniforms,
   },
   boilerplate::Boilerplate,
@@ -57,9 +62,9 @@ use {
   },
   hound::{WavSpec, WavWriter},
   indicatif::{ProgressBar, ProgressStyle},
-  nalgebra::{Unit, Vector2},
+  nalgebra::{Vector2, matrix, vector},
   parley::{FontContext, LayoutContext},
-  rand::{SeedableRng, rngs::SmallRng, seq::IndexedRandom},
+  rand::{SeedableRng, prelude::IteratorRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
@@ -72,7 +77,7 @@ use {
     fmt::{self, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
-    iter, mem,
+    mem,
     num::NonZeroU32,
     ops::{Add, AddAssign, SubAssign},
     process::{self, ExitStatus, Stdio},
@@ -126,10 +131,14 @@ mod app;
 mod arguments;
 mod axis;
 mod bindings;
+mod blaster;
+mod bool_ext;
+mod color;
 mod command;
 mod composite_uniforms;
 mod config;
 mod controller;
+mod counter;
 mod error;
 mod event;
 mod field;
@@ -144,6 +153,7 @@ mod input;
 mod into_stereo;
 mod into_utf8_path;
 mod message;
+mod mirror;
 mod options;
 mod parameter;
 mod patch;
@@ -151,6 +161,8 @@ mod pipeline;
 mod present_mode;
 mod program;
 mod recorder;
+#[cfg(test)]
+mod reference;
 mod renderer;
 mod resampler_ext;
 mod scene;
@@ -166,6 +178,7 @@ mod target;
 mod templates;
 mod text;
 mod tiling;
+mod to_affine;
 mod uniforms;
 
 const KIB: usize = 1 << 10;
@@ -180,8 +193,12 @@ const TAU: f32 = f32::consts::TAU;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 
+type Mat1x2f = nalgebra::Matrix1x2<f32>;
+type Mat2x3f = nalgebra::Matrix2x3<f32>;
 type Mat3f = nalgebra::Matrix3<f32>;
+type Mat3x4f = nalgebra::Matrix3x4<f32>;
 type Mat4f = nalgebra::Matrix4<f32>;
+type Rot2f = nalgebra::Rotation2<f32>;
 type Vec2f = nalgebra::Vector2<f32>;
 type Vec3f = nalgebra::Vector3<f32>;
 type Vec4f = nalgebra::Vector4<f32>;
@@ -192,10 +209,6 @@ fn default<T: Default>() -> T {
 
 fn display<'a, T: Display + 'a>(t: T) -> Box<dyn Display + 'a> {
   Box::new(t)
-}
-
-fn invert_color() -> Mat4f {
-  Mat4f::from_diagonal(&Vec4f::new(-1.0, -1.0, -1.0, 1.0))
 }
 
 fn pad(i: usize, alignment: usize) -> usize {

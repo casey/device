@@ -105,7 +105,7 @@ impl Tap {
     Ok(Arc::new(output))
   }
 
-  pub(crate) fn new(sample_rate: u32) -> Self {
+  pub(crate) fn new(options: &Options, sample_rate: u32) -> Self {
     let mut sequencer = Sequencer::new(false, Self::CHANNELS.into());
     sequencer.set_sample_rate(sample_rate.into());
     let sequencer_backend = sequencer.backend();
@@ -113,6 +113,7 @@ impl Tap {
     Self {
       backend: Arc::new(Mutex::new(Backend {
         buffer: BufferVec::new(Self::CHANNELS.into()),
+        mute: options.mute,
         paused: paused.clone(),
         sample: 0,
         samples: Vec::new(),
@@ -208,6 +209,7 @@ impl Tap {
 
 struct Backend {
   buffer: BufferVec,
+  mute: bool,
   paused: Arc<AtomicBool>,
   sample: u64,
   samples: Vec<f32>,
@@ -221,7 +223,7 @@ impl Backend {
       return;
     }
 
-    for sample in buffer {
+    for slot in buffer {
       if self
         .sample
         .is_multiple_of(MAX_BUFFER_SIZE.into_u64() * u64::from(Tap::CHANNELS))
@@ -233,12 +235,14 @@ impl Backend {
         );
       }
 
-      *sample = self.buffer.at_f32(
+      let sample = self.buffer.at_f32(
         self.sample.into_usize() % Tap::CHANNELS.into_usize(),
         (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE,
       );
 
-      self.samples.push(*sample);
+      *slot = if self.mute { 0.0 } else { sample };
+
+      self.samples.push(sample);
 
       self.sample += 1;
     }

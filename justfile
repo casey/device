@@ -1,5 +1,7 @@
 set positional-arguments
 
+alias ref := reference
+
 watch +args='lcheck':
   cargo watch --clear --exec '{{args}}'
 
@@ -17,15 +19,15 @@ ci: forbid
 clippy: (watch 'lclippy --all-targets -- --deny warnings')
 
 clean:
-  rm -f baseline/*.test.png
+  rm -f reference/*.test.png
   rm -f capture.png
   rm -f recording.mp4
 
-baseline *args:
+reference *args:
   #!/usr/bin/env bash
-  rm baseline/*.test.png
-  cargo ltest -- --ignored "$@"
-  for image in baseline/*.png; do
+  rm reference/*.test.png
+  cargo ltest -- --skip renderer:: --ignored "$@"
+  for image in reference/*.png; do
     if [[ $image == *.test.png ]]; then
       continue
     fi
@@ -60,6 +62,18 @@ curtains:
 
 maria:
   cargo run --release -- --song 'total 4/13 maria' run
+
+blaster:
+  cargo run --release -- --format bgra8unorm --song 'total 4/13 maria' --db -15 --blaster test
+
+blaster-preset preset:
+  cargo run --release -- \
+    --format bgra8unorm \
+    --song 'total 4/13 maria' \
+    --mute \
+    --blaster test \
+    --blaster {{preset}} \
+    run
 
 nobrain:
   cargo run --release -- --song 'no brain$' run

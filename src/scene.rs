@@ -33,30 +33,21 @@ impl Scene {
   }
 
   pub(crate) fn state(self) -> State {
+    let mut state = State::default();
     match self {
       Self::All => {
-        let mut state = State::default();
         state.invert().all().push();
-        state
       }
       Self::Bottom => {
-        let mut state = State::default();
         state.invert().bottom().push();
-        state
       }
       Self::Circle => {
-        let mut state = State::default();
         state.invert().circle().push();
-        state
       }
       Self::Frequencies => {
-        let mut state = State::default();
         state.invert().frequencies().push();
-        state
       }
       Self::Hello => {
-        let mut state = State::default();
-
         state
           .text(Some(Text {
             size: 0.075,
@@ -68,31 +59,25 @@ impl Scene {
           .invert()
           .frequencies()
           .push();
-
-        state
       }
       Self::Highwaystar => {
-        let mut state = State::default();
         state
+          .repeat(false)
           .invert()
           .circle()
           .interpolate(true)
           .scale(2.0)
           .times(8);
-        state
       }
       Self::Kaleidoscope => {
         let mut r = 0.0;
         let s = 1.0 / 0.75;
-
-        let mut state = State::default();
 
         state
           .rotate_color(Axis::Green, 0.05 * TAU)
           .field(Field::Circle { size: Some(1.0) })
           .scale(s)
           .wrap(true)
-          .repeat(true)
           .db(-24.0)
           .times(8);
 
@@ -105,17 +90,13 @@ impl Scene {
             .rotate_color(Axis::Blue, 0.05 * TAU)
             .times(8);
         });
-
-        state
       }
       Self::Middle => {
-        let mut state = State::default();
         state.invert().top().push().bottom().push();
-        state
       }
       Self::Noise => {
-        let mut state = State::default();
         state
+          .repeat(false)
           .invert()
           .x()
           .push()
@@ -128,52 +109,34 @@ impl Scene {
           .all()
           .identity()
           .times(157);
-        state
       }
       Self::None => {
-        let mut state = State::default();
         state.none();
-        state
       }
       Self::Pattern => {
-        let mut state = State::default();
-
         state
           .invert()
           .field(Field::Circle { size: Some(1.0) })
-          .repeat(true)
           .alpha(0.75)
           .scale(2.0);
 
         for i in 0u8..8 {
           state.push().wrap(i.is_multiple_of(2));
         }
-
-        state
       }
       Self::RedX => {
-        let mut state = State::default();
         state.invert_r().x().push();
-        state
       }
       Self::Rip => {
-        let mut state = State::default();
-        state.invert().top().push().samples().push();
-        state
+        state.invert().top().push().bottom().push().samples().push();
       }
       Self::Top => {
-        let mut state = State::default();
         state.invert().top().push();
-        state
       }
       Self::Samples => {
-        let mut state = State::default();
         state.invert().samples().push();
-        state
       }
       Self::Starburst => {
-        let mut state = State::default();
-
         state
           .repeat(false)
           .wrap(false)
@@ -226,8 +189,6 @@ impl Scene {
           state.filter.field = field;
           state.push();
         }
-
-        state
       }
       Self::StarburstRandom => {
         let mut rng = SmallRng::from_rng(&mut rand::rng());
@@ -240,8 +201,6 @@ impl Scene {
           Field::Top,
           Field::X,
         ];
-
-        let mut state = State::default();
 
         state
           .repeat(false)
@@ -261,14 +220,12 @@ impl Scene {
         for _ in 0..10 {
           state.field(*fields.choose(&mut rng).unwrap()).push();
         }
-
-        state
       }
       Self::X => {
-        let mut state = State::default();
         state.invert().x().push();
-        state
       }
     }
+
+    state
   }
 }

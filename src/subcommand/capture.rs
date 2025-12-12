@@ -33,7 +33,7 @@ pub(crate) struct Capture {
 
 impl Capture {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
-    let mut tap = Tap::new(DEFAULT_SAMPLE_RATE);
+    let mut tap = Tap::new(&options, DEFAULT_SAMPLE_RATE);
 
     options.add_source(&config, &mut tap)?;
 
