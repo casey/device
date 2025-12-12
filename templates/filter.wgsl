@@ -120,6 +120,11 @@ fn field_x(p: vec2f) -> bool {
   return abs(abs(p.x) - abs(p.y)) < sqrt(2) * 0.25 * coefficient() - 0.5 * pixel;
 }
 
+fn grid(uv: vec2f) -> vec2f {
+  return round(vec2(uv.x, (uv.y - 1) * -1)  * uniforms.grid)
+    / uniforms.grid * uniforms.grid_alpha;
+}
+
 fn mod_floor(x: vec2f, y: f32) -> vec2f {
   return x - y * floor(x / y);
 }
@@ -206,8 +211,7 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // convert back to rgb
   var transformed_color = uniforms.color * vec4(input_color.rgb, 1.0);
 
-  let grid = round(vec2(mirrored_uv.x, (mirrored_uv.y - 1) * -1)  * uniforms.grid)
-    / uniforms.grid * uniforms.grid_alpha;
+  let grid = grid(mirrored_uv);
   transformed_color.g += grid.x;
   transformed_color.b += grid.y;
 
