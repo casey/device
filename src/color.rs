@@ -16,7 +16,7 @@ pub(crate) const CENTERED_RGB_INVERSE: Mat4f = matrix!(
 
 const YCGCO: Mat3f = matrix!(
    0.25, 0.5,  0.25;
-   0.5,  0.0, -0.5;
+   0.50, 0.0, -0.50;
   -0.25, 0.5, -0.25;
 );
 
@@ -27,7 +27,7 @@ const YCGCO_INVERSE: Mat3f = matrix!(
 );
 
 const YIQ: Mat3f = matrix!(
-  0.299,   0.587,   0.114;
+  0.2990,  0.5870,  0.1140;
   0.5959, -0.2746, -0.3213;
   0.2115, -0.5227,  0.3112;
 );
