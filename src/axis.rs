@@ -31,6 +31,6 @@ impl Axis {
 
     let transformation = Mat4f::from_axis_angle(&axis, angle);
 
-    color::CENTERED_RGB * transformation * color::CENTERED_RGB_INVERSE
+    color::CENTERED_RGB_INVERSE * transformation * color::CENTERED_RGB
   }
 }
