@@ -29,10 +29,6 @@ pub(crate) enum Preset {
 }
 
 impl Preset {
-  fn boring(self) -> bool {
-    matches!(self, Self::Off | Self::Identity)
-  }
-
   pub(crate) fn filter(self) -> Filter {
     match self {
       Self::Circle => Filter {
@@ -135,12 +131,5 @@ impl Preset {
         ..default()
       },
     }
-  }
-
-  pub(crate) fn random() -> Self {
-    Self::iter()
-      .filter(|blaster| !blaster.boring())
-      .choose(&mut rand::rng())
-      .unwrap()
   }
 }
