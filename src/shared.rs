@@ -68,6 +68,19 @@ impl Shared for Mat3f {
   }
 }
 
+impl Shared for Mat2x3f {
+  const ALIGNMENT: usize = 8;
+  const SIZE: usize = 24;
+
+  fn write_aligned(&self, buffer: &mut [u8]) {
+    for (column, buffer) in self.column_iter().zip(buffer.chunks_mut(f32::SIZE * 2)) {
+      for (scalar, buffer) in column.as_slice().iter().zip(buffer.chunks_mut(f32::SIZE)) {
+        scalar.write_aligned(buffer);
+      }
+    }
+  }
+}
+
 impl Shared for Mat4f {
   const ALIGNMENT: usize = 16;
   const SIZE: usize = 64;
@@ -79,12 +92,47 @@ impl Shared for Mat4f {
   }
 }
 
+impl Shared for Mat3x4f {
+  const ALIGNMENT: usize = 16;
+  const SIZE: usize = 64;
+
+  fn write_aligned(&self, buffer: &mut [u8]) {
+    for (column, buffer) in self.column_iter().zip(buffer.chunks_mut(f32::SIZE * 4)) {
+      for (scalar, buffer) in column.as_slice().iter().zip(buffer.chunks_mut(f32::SIZE)) {
+        scalar.write_aligned(buffer);
+      }
+    }
+  }
+}
+
+impl Shared for Vec2b {
+  const ALIGNMENT: usize = 8;
+  const SIZE: usize = 8;
+
+  fn write_aligned(&self, buffer: &mut [u8]) {
+    for (scalar, buffer) in self.as_slice().iter().zip(buffer.chunks_mut(u32::SIZE)) {
+      scalar.write_aligned(buffer);
+    }
+  }
+}
+
 impl Shared for Vec2f {
   const ALIGNMENT: usize = 8;
   const SIZE: usize = 8;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
     for (scalar, buffer) in self.as_slice().iter().zip(buffer.chunks_mut(f32::SIZE)) {
+      scalar.write_aligned(buffer);
+    }
+  }
+}
+
+impl Shared for Vec4f {
+  const ALIGNMENT: usize = 16;
+  const SIZE: usize = 16;
+
+  fn write_aligned(&self, buffer: &mut [u8]) {
+    for (scalar, buffer) in self.as_slice().iter().zip(buffer.chunks_mut(u32::SIZE)) {
       scalar.write_aligned(buffer);
     }
   }

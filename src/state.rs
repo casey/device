@@ -10,13 +10,12 @@ pub(crate) struct State {
   pub(crate) fps: Option<Fps>,
   pub(crate) interpolate: bool,
   pub(crate) parameter: Parameter,
-  pub(crate) position: Vec4f,
-  pub(crate) repeat: bool,
   pub(crate) resolution: Option<NonZeroU32>,
   pub(crate) spread: bool,
   pub(crate) status: bool,
   pub(crate) text: Option<Text>,
   pub(crate) tile: bool,
+  pub(crate) transient: Vec4f,
   pub(crate) velocity: Vec4f,
   pub(crate) wrap: bool,
 }
@@ -33,8 +32,7 @@ impl Default for State {
       fps: None,
       interpolate: false,
       parameter: Parameter::default(),
-      position: Vec4f::new(0.0, 0.0, 1.0, 0.0),
-      repeat: false,
+      transient: Self::TRANSIENT_IDENTITY,
       resolution: None,
       spread: false,
       status: false,
@@ -47,6 +45,8 @@ impl Default for State {
 }
 
 impl State {
+  const TRANSIENT_IDENTITY: Vec4f = Vec4f::new(0.0, 0.0, 1.0, 0.0);
+
   pub(crate) fn all(&mut self) -> &mut Self {
     self.filter.field = Field::All;
     self
@@ -75,6 +75,11 @@ impl State {
 
   pub(crate) fn circle(&mut self) -> &mut Self {
     self.filter.field = Field::Circle { size: None };
+    self
+  }
+
+  pub(crate) fn clear(&mut self) -> &mut Self {
+    self.filters.clear();
     self
   }
 
@@ -116,12 +121,12 @@ impl State {
   }
 
   pub(crate) fn invert(&mut self) -> &mut Self {
-    self.filter.color = invert_color();
+    self.filter.color = color::invert();
     self
   }
 
   pub(crate) fn invert_r(&mut self) -> &mut Self {
-    self.filter.color = Mat4f::from_diagonal(&Vec4f::new(-1.0, 1.0, 1.0, 1.0));
+    self.filter.color = Axis::Red.invert();
     self
   }
 
@@ -131,8 +136,25 @@ impl State {
     self
   }
 
+  #[cfg(test)]
+  pub(crate) fn mirror_x(&mut self, mirror: Mirror) -> &mut Self {
+    self.filter.mirror.x = mirror;
+    self
+  }
+
+  #[cfg(test)]
+  pub(crate) fn mirror_y(&mut self, mirror: Mirror) -> &mut Self {
+    self.filter.mirror.y = mirror;
+    self
+  }
+
   pub(crate) fn none(&mut self) -> &mut Self {
     self.filter.field = Field::None;
+    self
+  }
+
+  pub(crate) fn pop(&mut self) -> &mut Self {
+    self.filters.pop();
     self
   }
 
@@ -147,12 +169,22 @@ impl State {
   }
 
   pub(crate) fn repeat(&mut self, repeat: bool) -> &mut Self {
-    self.repeat = repeat;
+    self.filter.repeat = repeat;
+    self
+  }
+
+  pub(crate) fn rms(&mut self, rms: Mat1x2f) -> &mut Self {
+    self.filter.rms = rms;
+    self
+  }
+
+  pub(crate) fn rotation(&mut self, rotation: f32) -> &mut Self {
+    self.filter.rotation = rotation;
     self
   }
 
   pub(crate) fn rotate_color(&mut self, axis: Axis, angle: f32) -> &mut Self {
-    self.filter.color = Mat4f::from_axis_angle(&axis.axis(), angle);
+    self.filter.color = axis.rotate(angle);
     self
   }
 
@@ -189,10 +221,10 @@ impl State {
 
   pub(crate) fn tick(&mut self, elapsed: Duration) {
     let elapsed = elapsed.as_secs_f32();
-    self.position.x -= self.velocity.x * 4.0 * elapsed;
-    self.position.y -= self.velocity.y * 4.0 * elapsed;
-    self.position.z -= self.velocity.z * elapsed;
-    self.position.w -= self.velocity.w * elapsed;
+    self.transient.x -= self.velocity.x * 4.0 * elapsed;
+    self.transient.y -= self.velocity.y * 4.0 * elapsed;
+    self.transient.z -= self.velocity.z * elapsed;
+    self.transient.w -= self.velocity.w * elapsed;
     let mut callback = self.callback.take();
     if let Some(callback) = &mut callback {
       callback(self, elapsed);
@@ -222,13 +254,17 @@ impl State {
     self.position(Mat3f::new_rotation(-rotation).prepend_scaling(scaling))
   }
 
-  pub(crate) fn transient(&self) -> Filter {
-    Filter {
-      field: Field::All,
-      position: Mat3f::new_rotation(self.position.w)
-        * Mat3f::new_translation(&self.position.xy()).prepend_scaling(self.position.z),
-      wrap: self.wrap,
-      ..default()
+  pub(crate) fn transient(&self) -> Option<Filter> {
+    if self.transient == Self::TRANSIENT_IDENTITY {
+      None
+    } else {
+      Some(Filter {
+        field: Field::All,
+        position: Mat3f::new_rotation(self.transient.w)
+          * Mat3f::new_translation(&self.transient.xy()).prepend_scaling(self.transient.z),
+        wrap: self.wrap,
+        ..default()
+      })
     }
   }
 
@@ -259,7 +295,7 @@ impl State {
   }
 
   pub(crate) fn z(&mut self, z: f32) -> &mut Self {
-    self.position.z = z;
+    self.transient.z = z;
     self
   }
 }

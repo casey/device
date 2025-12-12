@@ -18,6 +18,8 @@ const AUDIO: &str = "audio";
     .valid(AnsiColor::Green.on_default())
 )]
 pub(crate) struct Options {
+  #[arg(long)]
+  pub(crate) blaster: Option<Vec<Blaster>>,
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) db: Option<f32>,
   #[arg(long)]
@@ -28,6 +30,8 @@ pub(crate) struct Options {
   pub(crate) input: bool,
   #[arg(long)]
   pub(crate) interpolate: Option<bool>,
+  #[arg(long)]
+  pub(crate) mute: bool,
   #[arg(long)]
   pub(crate) program: Option<Program>,
   #[arg(long)]
@@ -84,6 +88,12 @@ impl Options {
     } else {
       default()
     };
+
+    if let Some(blaster) = &self.blaster {
+      for blaster in blaster {
+        state.filters.push(blaster.filter());
+      }
+    }
 
     state.db = self.db.unwrap_or(state.db);
     state.fps = self.fps.or(state.fps);

@@ -4,16 +4,19 @@ use super::*;
 pub(crate) struct FilterUniforms {
   pub(crate) alpha: f32,
   pub(crate) base: f32,
-  pub(crate) color: Mat4f,
+  pub(crate) color: Mat3x4f,
   pub(crate) coordinates: bool,
   pub(crate) field: Field,
   pub(crate) frequency_range: f32,
   pub(crate) front_offset: Vec2f,
   pub(crate) gain: f32,
+  pub(crate) grid: f32,
+  pub(crate) grid_alpha: f32,
   pub(crate) interpolate: bool,
+  pub(crate) mirror: Vec4f,
   pub(crate) offset: Vec2f,
   pub(crate) parameter: f32,
-  pub(crate) position: Mat3f,
+  pub(crate) position: Mat2x3f,
   pub(crate) repeat: bool,
   pub(crate) resolution: f32,
   pub(crate) rms: f32,
@@ -34,7 +37,10 @@ impl Uniforms for FilterUniforms {
     self.frequency_range.write(dst, &mut i, &mut a);
     self.front_offset.write(dst, &mut i, &mut a);
     self.gain.write(dst, &mut i, &mut a);
+    self.grid.write(dst, &mut i, &mut a);
+    self.grid_alpha.write(dst, &mut i, &mut a);
     self.interpolate.write(dst, &mut i, &mut a);
+    self.mirror.write(dst, &mut i, &mut a);
     self.offset.write(dst, &mut i, &mut a);
     self.parameter.write(dst, &mut i, &mut a);
     self.position.write(dst, &mut i, &mut a);

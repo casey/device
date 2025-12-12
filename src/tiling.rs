@@ -7,17 +7,9 @@ pub(crate) struct Tiling {
 }
 
 impl Tiling {
-  pub(crate) fn back_read(self, filters: u32) -> bool {
+  pub(crate) fn destination_read(self, filters: u32) -> bool {
     if self.size == 1 {
       filters.is_multiple_of(2)
-    } else {
-      true
-    }
-  }
-
-  pub(crate) fn front_read(self, filters: u32) -> bool {
-    if self.size == 1 {
-      !filters.is_multiple_of(2)
     } else {
       true
     }
@@ -68,5 +60,38 @@ impl Tiling {
     let col = filter % self.size;
 
     Vec2f::new(col as f32 / self.size as f32, row as f32 / self.size as f32)
+  }
+
+  pub(crate) fn source_read(self, filters: u32) -> bool {
+    if self.size == 1 {
+      !filters.is_multiple_of(2)
+    } else {
+      true
+    }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn tiling() {
+    #[track_caller]
+    fn case(filter: u32, offset: Vec2f, source_offset: Vec2f) {
+      let tiling = Tiling {
+        resolution: 100,
+        size: 2,
+      };
+
+      assert_eq!(tiling.source_offset(filter), source_offset,);
+      assert_eq!(tiling.offset(filter), offset,);
+    }
+
+    case(0, Vec2f::new(0.0, 0.0), Vec2f::new(0.0, 0.0));
+    case(1, Vec2f::new(100.0, 0.0), Vec2f::new(0.0, 0.0));
+    case(2, Vec2f::new(0.0, 100.0), Vec2f::new(0.5, 0.0));
+    case(3, Vec2f::new(100.0, 100.0), Vec2f::new(0.0, 0.5));
+    case(4, Vec2f::new(0.0, 200.0), Vec2f::new(0.5, 0.5));
   }
 }

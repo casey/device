@@ -1,32 +1,27 @@
-%% let mut next = 0;
-%% let mut binding = || {
-%%   let binding = next;
-%%   next += 1;
-%%   binding
-%% };
+%% let mut binding = Counter::default();
 
 @group(0)
-@binding({{ binding() }})
+@binding({{ binding.next() }})
 var filtering_sampler: sampler;
 
 @group(0)
-@binding({{ binding() }})
+@binding({{ binding.next() }})
 var frequencies: texture_1d<f32>;
 
 @group(0)
-@binding({{ binding() }})
+@binding({{ binding.next() }})
 var source: texture_2d<f32>;
 
 @group(0)
-@binding({{ binding() }})
+@binding({{ binding.next() }})
 var non_filtering_sampler: sampler;
 
 @group(0)
-@binding({{ binding() }})
+@binding({{ binding.next() }})
 var samples: texture_1d<f32>;
 
 @group(0)
-@binding({{ binding() }})
+@binding({{ binding.next() }})
 var<uniform> uniforms: Uniforms;
 
 const ERROR = vec4f(0, 1, 0, 1);
@@ -39,16 +34,19 @@ const {{ field.constant() }}: u32 = {{ field.number() }};
 struct Uniforms {
   alpha: f32,
   base: f32,
-  color: mat4x4f,
+  color: mat4x3f,
   coordinates: u32,
   field: u32,
   frequency_range: f32,
   front_offset: vec2f,
   gain: f32,
+  grid: f32,
+  grid_alpha: f32,
   interpolate: u32,
+  mirror: vec4f,
   offset: vec2f,
   parameter: f32,
-  position: mat3x3f,
+  position: mat3x2f,
   repeat: u32,
   resolution: f32,
   rms: f32,
@@ -126,6 +124,13 @@ fn mod_floor(x: vec2f, y: f32) -> vec2f {
   return x - y * floor(x / y);
 }
 
+fn mirror(uv: vec2f) -> vec2f {
+  let triangle = 1.0 - abs(2.0 * uv - 1.0);
+  let inverse = 1.0 - triangle;
+  let chosen = mix(triangle, inverse, uniforms.mirror.zw);
+  return mix(uv, chosen, uniforms.mirror.xy);
+}
+
 @fragment
 fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // subtract offset get tile coordinates
@@ -134,14 +139,16 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // convert to uv coordinates
   let source_uv = tile / vec2(uniforms.resolution, uniforms.resolution);
 
+  let mirrored_uv = mirror(source_uv);
+
   // convert tile coordinates to [-1, 1]
-  let centered = source_uv * 2 - 1;
+  let centered = mirrored_uv * 2 - 1;
 
   // apply position transform
-  var transformed = (uniforms.position * vec3(centered, 1)).xy;
+  var transformed = uniforms.position * vec3(centered, 1);
 
   // convert position to uv coordinates
-  let uv = (transformed + 1) / 2;
+  var uv = (transformed + 1) / 2;
 
   // wrap transformed coordinates
   if bool(uniforms.wrap) {
@@ -174,10 +181,8 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   let original_color = textureSample(
     source,
     non_filtering_sampler,
-    (source_uv / f32(uniforms.tiling) + uniforms.front_offset) * tile_scale,
+    (mirrored_uv / f32(uniforms.tiling) + uniforms.front_offset) * tile_scale,
   );
-
-  let input = vec4(input_color.rgb, 1.0);
 
   var on: bool;
 
@@ -198,17 +203,16 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
     alpha = uniforms.alpha;
   }
 
-  // convert rgb color to [-1, 1]
-  let color_vector = input * 2 - 1;
-
-  // apply color transform
-  let transformed_color_vector = uniforms.color * color_vector;
-
   // convert back to rgb
-  let transformed_color = (transformed_color_vector + 1) / 2;
+  var transformed_color = uniforms.color * vec4(input_color.rgb, 1.0);
+
+  let grid = round(vec2(mirrored_uv.x, (mirrored_uv.y - 1) * -1)  * uniforms.grid)
+    / uniforms.grid * uniforms.grid_alpha;
+  transformed_color.g += grid.x;
+  transformed_color.b += grid.y;
 
   // blend transformed and original color
-  let blend = transformed_color.rgb * alpha + original_color.rgb * (1 - alpha);
+  let blend = mix(original_color.rgb, transformed_color, alpha);
 
   // return blend with opaque alpha channel
   return vec4(blend, 1);

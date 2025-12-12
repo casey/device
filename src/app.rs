@@ -106,7 +106,7 @@ impl App {
       SupportedBufferSize::Unknown => BufferSize::Default,
     };
 
-    let mut tap = Tap::new(stream_config.sample_rate.0);
+    let mut tap = Tap::new(&options, stream_config.sample_rate.0);
 
     tap.pause();
 
@@ -248,13 +248,20 @@ impl App {
             capture = false;
           }
           "a" => self.state.filters.push(Filter {
-            color: invert_color(),
+            color: color::invert(),
             field: Field::All,
             wrap: self.state.wrap,
             ..default()
           }),
+          "b" => {
+            self.state.clear();
+
+            for _ in 0..16 {
+              self.state.filters.push(Blaster::random().filter());
+            }
+          }
           "c" => self.state.filters.push(Filter {
-            color: invert_color(),
+            color: color::invert(),
             field: Field::Circle { size: None },
             wrap: self.state.wrap,
             ..default()
@@ -265,13 +272,13 @@ impl App {
             ..default()
           }),
           "f" => {
-            self.state.fit = !self.state.fit;
+            self.state.fit.toggle();
           }
           "i" => {
-            self.state.interpolate = !self.state.interpolate;
+            self.state.interpolate.toggle();
           }
           "l" => self.state.filters.push(Filter {
-            color: invert_color(),
+            color: color::invert(),
             field: Field::Frequencies,
             wrap: self.state.wrap,
             ..default()
@@ -296,22 +303,22 @@ impl App {
             }
           }
           "r" => {
-            self.state.repeat = !self.state.repeat;
+            self.state.filter.repeat.toggle();
           }
           "s" => self.state.filters.push(Filter {
-            color: invert_color(),
+            color: color::invert(),
             field: Field::Samples,
             wrap: self.state.wrap,
             ..default()
           }),
           "t" => {
-            self.state.tile = !self.state.tile;
+            self.state.tile.toggle();
           }
           "w" => {
-            self.state.wrap = !self.state.wrap;
+            self.state.wrap.toggle();
           }
           "x" => self.state.filters.push(Filter {
-            color: invert_color(),
+            color: color::invert(),
             field: Field::X,
             wrap: self.state.wrap,
             ..default()
@@ -325,7 +332,7 @@ impl App {
         },
         Key::Named(key) => match key {
           NamedKey::Backspace => {
-            self.state.filters.pop();
+            self.state.pop();
           }
           NamedKey::ArrowLeft => {
             self.state.filters.push(Filter {
@@ -354,25 +361,25 @@ impl App {
     for message in self.hub.messages().lock().unwrap().drain(..) {
       match message.tuple() {
         (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
-          color: invert_color(),
+          color: color::invert(),
           field: Field::Top,
           wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 1, Event::Button(true)) => self.state.filters.push(Filter {
-          color: invert_color(),
+          color: color::invert(),
           field: Field::Bottom,
           wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 2, Event::Button(true)) => self.state.filters.push(Filter {
-          color: invert_color(),
+          color: color::invert(),
           field: Field::X,
           wrap: self.state.wrap,
           ..default()
         }),
         (Controller::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
-          color: invert_color(),
+          color: color::invert(),
           field: Field::Circle { size: None },
           wrap: self.state.wrap,
           ..default()
@@ -401,9 +408,9 @@ impl App {
           self.state.filters.pop();
         }
         (Controller::Twister, control, Event::Button(true)) => match control {
-          4 => self.state.position.x = 0.0,
-          5 => self.state.position.y = 0.0,
-          6 => self.state.position.z = 0.0,
+          4 => self.state.transient.x = 0.0,
+          5 => self.state.transient.y = 0.0,
+          6 => self.state.transient.z = 0.0,
           _ => {}
         },
         (Controller::Twister, control, Event::Encoder(parameter)) => {

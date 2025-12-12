@@ -1,77 +1,44 @@
-%% let mut next = 0;
-%% let mut binding = || {
-%%   let binding = next;
-%%   next += 1;
-%%   binding
-%% };
+%% let mut binding = Counter::default();
 
 @group(0)
-@binding({{ binding() }})
-var back: texture_2d<f32>;
+@binding({{ binding.next() }})
+var destination: texture_2d<f32>;
 
 @group(0)
-@binding({{ binding() }})
-var front: texture_2d<f32>;
+@binding({{ binding.next() }})
+var source: texture_2d<f32>;
 
 @group(0)
-@binding({{ binding() }})
+@binding({{ binding.next() }})
 var texture_sampler: sampler;
 
 @group(0)
-@binding({{ binding() }})
+@binding({{ binding.next() }})
 var<uniform> uniforms: Uniforms;
 
-const TRANSPARENT = vec4f(0, 0, 0, 0);
-
 struct Uniforms {
-  back_read: u32,
-  fit: u32,
-  front_read: u32,
-  resolution: vec2f,
+  destination: u32,
+  source: u32,
+  viewport: mat3x2f,
+}
+
+fn sample(condition: u32, texture: texture_2d<f32>, uv: vec2f) -> vec4f {
+  if bool(condition) {
+    return textureSample(texture, texture_sampler, uv);
+  } else {
+    return vec4f(0, 0, 0, 0);
+  }
 }
 
 @fragment
 fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
-  // convert fragment coordinates to [-1, 1]
-  var centered = position.xy / uniforms.resolution * 2 - 1;
+  let uv = uniforms.viewport * vec3(position.xy, 1.0);
 
-  // calculate aspect ratio
-  let aspect = uniforms.resolution.x / uniforms.resolution.y;
+  let src = sample(uniforms.source, source, uv);
 
-  if bool(uniforms.fit) {
-    // fit to viewport
-    if aspect > 1 {
-      centered.x *= aspect;
-    } else {
-      centered.y /= aspect;
-    }
-  } else {
-    // fill viewport
-    if aspect > 1 {
-      centered.y /= aspect;
-    } else {
-      centered.x *= aspect;
-    }
-  }
+  let dst = sample(uniforms.destination, destination, uv);
 
-  // convert to uv coordinates
-  let uv = (centered + 1) / 2;
+  let blend = mix(dst.rgb, src.rgb, src.a);
 
-  var front_color = TRANSPARENT;
-
-  if bool(uniforms.front_read) {
-    // read front color
-    front_color = textureSample(front, texture_sampler, uv);
-  }
-
-  var back_color = TRANSPARENT;
-
-  if bool(uniforms.back_read) {
-    // read back color
-    back_color = textureSample(back, texture_sampler, uv);
-  }
-
-  let blend = front_color.rgb * front_color.a + back_color.rgb * (1 - front_color.a);
-
-  return vec4(blend, 1.0);
+  return vec4(blend, 1);
 }

@@ -33,7 +33,7 @@ impl Command {
 
 fn cross(state: &mut State) {
   state.filters.push(Filter {
-    color: invert_color(),
+    color: color::invert(),
     field: Field::Cross,
     wrap: state.wrap,
     ..default()
@@ -42,7 +42,7 @@ fn cross(state: &mut State) {
 
 fn left(state: &mut State) {
   state.filters.push(Filter {
-    color: invert_color(),
+    color: color::invert(),
     field: Field::Left,
     wrap: state.wrap,
     ..default()
@@ -51,7 +51,7 @@ fn left(state: &mut State) {
 
 fn right(state: &mut State) {
   state.filters.push(Filter {
-    color: invert_color(),
+    color: color::invert(),
     field: Field::Right,
     wrap: state.wrap,
     ..default()
@@ -64,7 +64,7 @@ fn spread(state: &mut State) {
 
 fn square(state: &mut State) {
   state.filters.push(Filter {
-    color: invert_color(),
+    color: color::invert(),
     field: Field::Square,
     wrap: state.wrap,
     ..default()
@@ -77,7 +77,7 @@ fn status(state: &mut State) {
 
 fn top(state: &mut State) {
   state.filters.push(Filter {
-    color: invert_color(),
+    color: color::invert(),
     field: Field::Top,
     wrap: state.wrap,
     ..default()
@@ -86,7 +86,7 @@ fn top(state: &mut State) {
 
 fn triangle(state: &mut State) {
   state.filters.push(Filter {
-    color: invert_color(),
+    color: color::invert(),
     field: Field::Triangle,
     wrap: state.wrap,
     ..default()

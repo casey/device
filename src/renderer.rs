@@ -117,29 +117,25 @@ impl Renderer {
   }
 
   fn composite_bind_group(&self, back: &TextureView, front: &TextureView) -> BindGroup {
-    let mut next = 0;
-    let mut binding = || {
-      let binding = next;
-      next += 1;
-      binding
-    };
+    let mut binding = Counter::default();
+
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.composite_pipeline.bind_group_layout,
       entries: &[
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::TextureView(back),
         },
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::TextureView(front),
         },
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::Sampler(&self.non_filtering_sampler),
         },
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::Buffer(BufferBinding {
             buffer: &self.composite_pipeline.uniform_buffer,
             offset: 0,
@@ -159,16 +155,12 @@ impl Renderer {
     device: &wgpu::Device,
     uniform_buffer_size: u32,
   ) -> BindGroupLayout {
-    let mut next = 0;
-    let mut binding = || {
-      let binding = next;
-      next += 1;
-      binding
-    };
+    let mut binding = Counter::default();
+
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Texture {
             multisampled: false,
@@ -178,7 +170,7 @@ impl Renderer {
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Texture {
             multisampled: false,
@@ -188,13 +180,13 @@ impl Renderer {
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Buffer {
             has_dynamic_offset: true,
@@ -293,37 +285,33 @@ impl Renderer {
     source: &TextureView,
     samples: &TextureView,
   ) -> BindGroup {
-    let mut next = 0;
-    let mut binding = || {
-      let binding = next;
-      next += 1;
-      binding
-    };
+    let mut binding = Counter::default();
+
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.filter_pipeline.bind_group_layout,
       entries: &[
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::Sampler(&self.filtering_sampler),
         },
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::TextureView(frequencies),
         },
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::TextureView(source),
         },
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::Sampler(&self.non_filtering_sampler),
         },
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::TextureView(samples),
         },
         BindGroupEntry {
-          binding: binding(),
+          binding: binding.next(),
           resource: BindingResource::Buffer(BufferBinding {
             buffer: &self.filter_pipeline.uniform_buffer,
             offset: 0,
@@ -340,22 +328,18 @@ impl Renderer {
   }
 
   fn filter_bind_group_layout(device: &wgpu::Device, uniform_buffer_size: u32) -> BindGroupLayout {
-    let mut next = 0;
-    let mut binding = || {
-      let binding = next;
-      next += 1;
-      binding
-    };
+    let mut binding = Counter::default();
+
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Sampler(SamplerBindingType::Filtering),
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Texture {
             multisampled: false,
@@ -365,7 +349,7 @@ impl Renderer {
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Texture {
             multisampled: false,
@@ -375,13 +359,13 @@ impl Renderer {
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Texture {
             multisampled: false,
@@ -391,7 +375,7 @@ impl Renderer {
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
-          binding: binding(),
+          binding: binding.next(),
           count: None,
           ty: BindingType::Buffer {
             has_dynamic_offset: true,
@@ -735,7 +719,9 @@ impl Renderer {
       None
     };
 
-    let filters = state.filters.len() + 1;
+    let transient = state.transient();
+
+    let filters = state.filters.len() + transient.iter().count();
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let tiling_size = if state.tile {
@@ -779,38 +765,41 @@ impl Renderer {
 
     let rms = analyzer.rms();
 
-    let transient = state.transient();
-
     {
       let mut uniforms = Vec::new();
 
-      for (i, filter) in state
-        .filters
-        .iter()
-        .chain(iter::once(&transient))
-        .enumerate()
-      {
+      for (i, filter) in state.filters.iter().chain(&transient).enumerate() {
         let i = u32::try_from(i).unwrap();
+
+        let rms = if state.spread {
+          rms * (i as f32 + 1.0) / filters as f32
+        } else {
+          rms
+        };
+
+        let rms = rms * filter.rms[0] + filter.rms[1];
+
+        let response = rms / 10.0 * gain;
+
         uniforms.push(FilterUniforms {
           alpha: filter.alpha,
           base: filter.base,
-          color: filter.color,
+          color: filter.color.to_affine(),
           coordinates: filter.coordinates,
           field: filter.field,
           frequency_range,
           front_offset: tiling.source_offset(i),
           gain,
           interpolate: state.interpolate,
+          mirror: filter.mirror_uniform(),
           offset: tiling.offset(i),
           parameter: filter.field.parameter(),
-          position: filter.position,
-          repeat: state.repeat,
+          grid: filter.grid,
+          grid_alpha: filter.grid_alpha,
+          position: filter.position_uniform(response),
+          repeat: filter.repeat,
           resolution: tiling.resolution as f32,
-          rms: if state.spread {
-            rms * (i as f32 + 1.0) / filters as f32
-          } else {
-            rms
-          },
+          rms,
           sample_range,
           tiling: tiling.size,
           wrap: filter.wrap,
@@ -820,27 +809,39 @@ impl Renderer {
       self.write_uniform_buffer(&self.filter_pipeline, &uniforms);
     }
 
-    let resolution = Vec2f::new(self.resolution.get() as f32, self.resolution.get() as f32);
+    let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
+
+    let aspect_ratio_correction = if state.fit == (aspect_ratio > 1.0) {
+      Vec2f::new(1.0 * aspect_ratio, 1.0)
+    } else {
+      Vec2f::new(1.0, 1.0 / aspect_ratio)
+    };
 
     {
       let uniforms = [
         CompositeUniforms {
-          back_read: tiling.back_read(filter_count),
-          fit: false,
-          front_read: tiling.front_read(filter_count),
-          resolution,
+          destination: tiling.destination_read(filter_count),
+          source: tiling.source_read(filter_count),
+          viewport: Mat3f::new_scaling(1.0 / self.resolution.get() as f32).to_affine(),
         },
         CompositeUniforms {
-          back_read: true,
-          fit: false,
-          front_read: true,
-          resolution,
+          destination: true,
+          source: true,
+          viewport: Mat3f::new_scaling(1.0 / self.resolution.get() as f32).to_affine(),
         },
         CompositeUniforms {
-          back_read: true,
-          fit: state.fit,
-          front_read: true,
-          resolution: Vec2f::new(self.size.x.get() as f32, self.size.y.get() as f32),
+          destination: true,
+          source: true,
+          viewport: Mat3f::new_nonuniform_scaling(&Vec2f::new(
+            1.0 / self.size.x.get() as f32,
+            1.0 / self.size.y.get() as f32,
+          ))
+          .append_scaling(2.0)
+          .append_translation(&Vec2f::new(-1.0, -1.0))
+          .append_nonuniform_scaling(&aspect_ratio_correction)
+          .append_translation(&Vec2f::new(1.0, 1.0))
+          .append_scaling(1.0 / 2.0)
+          .to_affine(),
         },
       ];
 
@@ -1254,382 +1255,7 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-  use {super::*, std::sync::LazyLock};
-
-  macro_rules! name {
-    () => {{
-      fn f() {}
-      std::any::type_name_of_val(&f)
-        .rsplit("::")
-        .skip(1)
-        .next()
-        .unwrap()
-        .replace('_', "-")
-    }};
-  }
-
-  static RENDERER: LazyLock<Mutex<Renderer>> = LazyLock::new(|| {
-    let resolution = 256.try_into().unwrap();
-    Mutex::new(
-      pollster::block_on(Renderer::new(
-        None,
-        None,
-        resolution,
-        Vector2::new(resolution, resolution),
-        None,
-      ))
-      .unwrap(),
-    )
-  });
-
-  struct Baseline {
-    height: Option<u32>,
-    name: String,
-    resolution: Option<u32>,
-    state: State,
-    width: Option<u32>,
-  }
-
-  impl Baseline {
-    fn height(mut self, height: u32) -> Self {
-      self.height = Some(height);
-      self
-    }
-
-    fn new(name: String) -> Self {
-      Self {
-        height: None,
-        name,
-        resolution: None,
-        state: State::default(),
-        width: None,
-      }
-    }
-
-    fn resolution(mut self, resolution: u32) -> Self {
-      self.resolution = Some(resolution);
-      self
-    }
-
-    #[track_caller]
-    fn run(self) {
-      let mut renderer = RENDERER.lock().unwrap();
-
-      let resolution = self.resolution.unwrap_or(256);
-
-      let width = self.width.unwrap_or(resolution).try_into().unwrap();
-
-      let height = self.height.unwrap_or(resolution).try_into().unwrap();
-
-      renderer.resize(Vector2::new(width, height), resolution.try_into().unwrap());
-
-      renderer
-        .render(&Analyzer::new(), &self.state, Instant::now())
-        .unwrap();
-
-      let (tx, rx) = mpsc::channel();
-
-      let expected = Utf8PathBuf::from(format!("baseline/{}.png", self.name));
-      let actual = expected.with_extension("test.png");
-
-      renderer
-        .capture(move |image| {
-          image.save(&actual).unwrap();
-          tx.send(image).unwrap();
-        })
-        .unwrap();
-
-      renderer.device.poll(wgpu::PollType::Wait).unwrap();
-
-      drop(renderer);
-
-      let actual = rx.recv().unwrap();
-
-      if expected.try_exists().unwrap() {
-        assert!(
-          actual == Image::load(&expected).unwrap(),
-          "baseline image mismatch",
-        );
-      } else {
-        panic!("no baseline image found for {}", self.name);
-      }
-    }
-
-    fn state(mut self, state: State) -> Self {
-      self.state = state;
-      self
-    }
-
-    fn width(mut self, width: u32) -> Self {
-      self.width = Some(width);
-      self
-    }
-  }
-
-  #[test]
-  #[ignore]
-  fn circle() {
-    let mut state = State::default();
-    state.invert().circle().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn circle_small_even() {
-    let mut state = State::default();
-    state.invert().circle().push();
-    Baseline::new(name!()).resolution(10).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn circle_small_odd() {
-    let mut state = State::default();
-    state.invert().circle().push();
-    Baseline::new(name!()).resolution(9).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn circle_medium_even() {
-    let mut state = State::default();
-    state.invert().circle().push();
-    Baseline::new(name!()).resolution(32).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn circle_medium_odd() {
-    let mut state = State::default();
-    state.invert().circle().push();
-    Baseline::new(name!()).resolution(31).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn default() {
-    Baseline::new(name!()).state(State::default()).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn left() {
-    let mut state = State::default();
-    state.invert().left().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn x() {
-    let mut state = State::default();
-    state.invert().x().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn x_oblong() {
-    let mut state = State::default();
-    state.invert().x().push();
-    Baseline::new(name!())
-      .width(256)
-      .height(128)
-      .state(state)
-      .run();
-  }
-
-  #[test]
-  #[ignore]
-  fn x_small_even() {
-    let mut state = State::default();
-    state.invert().x().push();
-    Baseline::new(name!()).resolution(10).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn x_small_odd() {
-    let mut state = State::default();
-    state.invert().x().push();
-    Baseline::new(name!()).resolution(9).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn x_medium_even() {
-    let mut state = State::default();
-    state.invert().x().push();
-    Baseline::new(name!()).resolution(32).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn x_medium_odd() {
-    let mut state = State::default();
-    state.invert().x().push();
-    Baseline::new(name!()).resolution(31).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn tile() {
-    let mut state = State::default();
-
-    state
-      .invert()
-      .x()
-      .push()
-      .circle()
-      .push()
-      .x()
-      .push()
-      .circle()
-      .push()
-      .tile(true);
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn circle_scale() {
-    let mut state = State::default();
-    state.invert().circle().scale(2.0).times(2);
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn x_scale() {
-    let mut state = State::default();
-    state.invert().x().scale(2.0).times(2);
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn circle_scale_interpolated() {
-    let mut state = State::default();
-    state
-      .invert()
-      .circle()
-      .scale(2.0)
-      .times(2)
-      .interpolate(true);
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn x_scale_interpolated() {
-    let mut state = State::default();
-
-    state.invert().x().scale(2.0).times(2).interpolate(true);
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn sampling_repeat_on() {
-    let mut state = State::default();
-    state
-      .repeat(true)
-      .rotate_position(0.2 * TAU)
-      .rotate_color(Axis::Green, 0.1 * TAU)
-      .all()
-      .push()
-      .push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn sampling_repeat_off() {
-    let mut state = State::default();
-
-    state
-      .repeat(false)
-      .rotate_position(0.2 * TAU)
-      .rotate_color(Axis::Green, 0.1 * TAU)
-      .all()
-      .push()
-      .push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn cross() {
-    let mut state = State::default();
-    state.invert().cross().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn square() {
-    let mut state = State::default();
-    state.invert().square().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn triangle() {
-    let mut state = State::default();
-    state.invert().triangle().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn all() {
-    let mut state = State::default();
-    state.invert().all().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn none() {
-    let mut state = State::default();
-    state.invert().none().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn rotate_red() {
-    let mut state = State::default();
-
-    state.rotate_color(Axis::Red, TAU / 2.0).all().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn rotate_green() {
-    let mut state = State::default();
-    state.rotate_color(Axis::Green, TAU / 2.0).all().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn rotate_blue() {
-    let mut state = State::default();
-    state.rotate_color(Axis::Blue, TAU / 2.0).all().push();
-    Baseline::new(name!()).state(state).run();
-  }
-
-  #[test]
-  #[ignore]
-  fn coordinates() {
-    let mut state = State::default();
-    state.coordinates(true).all().push();
-    Baseline::new(name!()).state(state).run();
-  }
+  use super::*;
 
   #[test]
   #[ignore]
