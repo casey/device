@@ -11,10 +11,10 @@ impl Mirror {
     !matches!(self, Self::Off)
   }
 
-  pub(crate) fn select(self) -> f32 {
+  pub(crate) fn select(self) -> u8 {
     match self {
-      Self::Off | Self::Triangle => 0.0,
-      Self::Inverse => 1.0,
+      Self::Off | Self::Triangle => 0,
+      Self::Inverse => 1,
     }
   }
 }
@@ -32,8 +32,8 @@ mod tests {
 
   #[test]
   fn select() {
-    assert_eq!(Mirror::Off.select(), 0.0);
-    assert_eq!(Mirror::Triangle.select(), 0.0);
-    assert_eq!(Mirror::Inverse.select(), 1.0);
+    assert_eq!(Mirror::Off.select(), 0);
+    assert_eq!(Mirror::Triangle.select(), 0);
+    assert_eq!(Mirror::Inverse.select(), 1);
   }
 }

@@ -46,8 +46,8 @@ impl Filter {
     Vec4f::new(
       self.mirror.x.is_on().into_f32(),
       self.mirror.y.is_on().into_f32(),
-      self.mirror.x.select(),
-      self.mirror.y.select(),
+      self.mirror.x.select().into(),
+      self.mirror.y.select().into(),
     )
   }
 
