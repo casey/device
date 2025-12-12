@@ -13,3 +13,23 @@ impl BoolExt for bool {
     *self = !*self;
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn into_f32() {
+    assert_eq!(false.into_f32(), 0.0);
+    assert_eq!(true.into_f32(), 1.0);
+  }
+
+  #[test]
+  fn toggle() {
+    let mut b = false;
+    b.toggle();
+    assert_eq!(b, true);
+    b.toggle();
+    assert_eq!(b, false);
+  }
+}
