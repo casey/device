@@ -1,5 +1,19 @@
 use super::*;
 
+pub(crate) const CENTERED_RGB: Mat4f = matrix!(
+  2.0, 0.0, 0.0, -1.0;
+  0.0, 2.0, 0.0, -1.0;
+  0.0, 0.0, 2.0, -1.0;
+  0.0, 0.0, 0.0,  1.0;
+);
+
+pub(crate) const CENTERED_RGB_INVERSE: Mat4f = matrix!(
+  0.5, 0.0, 0.0, 0.5;
+  0.0, 0.5, 0.0, 0.5;
+  0.0, 0.0, 0.5, 0.5;
+  0.0, 0.0, 0.0, 1.0;
+);
+
 const YCGCO: Mat3f = matrix!(
    0.25, 0.5,  0.25;
    0.5,  0.0, -0.5;
@@ -57,6 +71,11 @@ pub(crate) fn saturate(s: f32) -> Mat4f {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn centered_rgb() {
+    assert_eq!(CENTERED_RGB * CENTERED_RGB_INVERSE, Mat4f::identity());
+  }
 
   #[test]
   fn ycgco() {
