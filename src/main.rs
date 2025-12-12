@@ -199,7 +199,6 @@ type Mat3f = nalgebra::Matrix3<f32>;
 type Mat3x4f = nalgebra::Matrix3x4<f32>;
 type Mat4f = nalgebra::Matrix4<f32>;
 type Rot2f = nalgebra::Rotation2<f32>;
-type Vec2b = nalgebra::Vector2<bool>;
 type Vec2f = nalgebra::Vector2<f32>;
 type Vec3f = nalgebra::Vector3<f32>;
 type Vec4f = nalgebra::Vector4<f32>;

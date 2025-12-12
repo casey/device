@@ -105,17 +105,6 @@ impl Shared for Mat3x4f {
   }
 }
 
-impl Shared for Vec2b {
-  const ALIGNMENT: usize = 8;
-  const SIZE: usize = 8;
-
-  fn write_aligned(&self, buffer: &mut [u8]) {
-    for (scalar, buffer) in self.as_slice().iter().zip(buffer.chunks_mut(u32::SIZE)) {
-      scalar.write_aligned(buffer);
-    }
-  }
-}
-
 impl Shared for Vec2f {
   const ALIGNMENT: usize = 8;
   const SIZE: usize = 8;
