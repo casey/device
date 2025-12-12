@@ -8,3 +8,16 @@ impl Counter {
     next
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn counter() {
+    let mut c = Counter::default();
+    assert_eq!(c.next(), 0);
+    assert_eq!(c.next(), 1);
+    assert_eq!(c.next(), 2);
+  }
+}
