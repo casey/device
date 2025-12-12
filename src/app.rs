@@ -254,11 +254,7 @@ impl App {
             ..default()
           }),
           "b" => {
-            self.state.clear();
-
-            for _ in 0..16 {
-              self.state.filters.push(Blaster::random().filter());
-            }
+            self.state.filters = Scene::Blaster.state().filters;
           }
           "c" => self.state.filters.push(Filter {
             color: color::invert(),

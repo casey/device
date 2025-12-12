@@ -5,7 +5,6 @@ use {
     arguments::Arguments,
     axis::Axis,
     bindings::Bindings,
-    blaster::Blaster,
     bool_ext::BoolExt,
     command::Command,
     composite_uniforms::CompositeUniforms,
@@ -32,6 +31,7 @@ use {
     patch::Patch,
     pipeline::Pipeline,
     present_mode::PresentMode,
+    preset::Preset,
     program::Program,
     recorder::Recorder,
     renderer::Renderer,
@@ -64,7 +64,7 @@ use {
   indicatif::{ProgressBar, ProgressStyle},
   nalgebra::{Vector2, matrix, vector},
   parley::{FontContext, LayoutContext},
-  rand::{SeedableRng, prelude::IteratorRandom, rngs::SmallRng, seq::IndexedRandom},
+  rand::{SeedableRng, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
@@ -131,7 +131,6 @@ mod app;
 mod arguments;
 mod axis;
 mod bindings;
-mod blaster;
 mod bool_ext;
 mod color;
 mod command;
@@ -159,6 +158,7 @@ mod parameter;
 mod patch;
 mod pipeline;
 mod present_mode;
+mod preset;
 mod program;
 mod recorder;
 #[cfg(test)]

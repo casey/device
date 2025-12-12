@@ -1,7 +1,7 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, EnumIter, ValueEnum)]
-pub(crate) enum Blaster {
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub(crate) enum Preset {
   Circle,
   Desaturate,
   FlipH,
@@ -28,11 +28,7 @@ pub(crate) enum Blaster {
   ZoomOutNe,
 }
 
-impl Blaster {
-  fn boring(self) -> bool {
-    matches!(self, Self::Off | Self::Identity)
-  }
-
+impl Preset {
   pub(crate) fn filter(self) -> Filter {
     match self {
       Self::Circle => Filter {
@@ -135,12 +131,5 @@ impl Blaster {
         ..default()
       },
     }
-  }
-
-  pub(crate) fn random() -> Self {
-    Self::iter()
-      .filter(|blaster| !blaster.boring())
-      .choose(&mut rand::rng())
-      .unwrap()
   }
 }
