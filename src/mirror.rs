@@ -1,3 +1,4 @@
+#[allow(clippy::arbitrary_source_item_ordering)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(crate) enum Mirror {
   #[default]
@@ -25,9 +26,9 @@ mod tests {
 
   #[test]
   fn is_on() {
-    assert_eq!(Mirror::Off.is_on(), false);
-    assert_eq!(Mirror::Triangle.is_on(), true);
-    assert_eq!(Mirror::Inverse.is_on(), true);
+    assert!(!Mirror::Off.is_on());
+    assert!(Mirror::Triangle.is_on());
+    assert!(Mirror::Inverse.is_on());
   }
 
   #[test]

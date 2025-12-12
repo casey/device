@@ -28,8 +28,10 @@ mod tests {
   fn toggle() {
     let mut b = false;
     b.toggle();
-    assert_eq!(b, true);
+    assert!(b);
     b.toggle();
-    assert_eq!(b, false);
+    assert!(!b);
+    b.toggle();
+    assert!(b);
   }
 }
