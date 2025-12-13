@@ -5,6 +5,18 @@ pub(crate) struct Commands {
 }
 
 impl Commands {
+  pub(crate) fn complete(&self, prefix: &str) -> Option<&str> {
+    self
+      .map
+      .range::<str, (Bound<&str>, Bound<&str>)>((Bound::Included(prefix), Bound::Unbounded))
+      .next()
+      .and_then(|(name, _command)| name.strip_prefix(prefix))
+  }
+
+  pub(crate) fn name(&self, s: &str) -> Option<fn(&mut State)> {
+    self.map.get(s).copied()
+  }
+
   pub(crate) fn new() -> Self {
     let mut map = BTreeMap::new();
 
@@ -13,18 +25,6 @@ impl Commands {
     }
 
     Self { map }
-  }
-
-  pub(crate) fn name(&self, s: &str) -> Option<fn(&mut State)> {
-    self.map.get(s).copied()
-  }
-
-  pub(crate) fn complete(&self, prefix: &str) -> Option<&str> {
-    self
-      .map
-      .range::<str, (Bound<&str>, Bound<&str>)>((Bound::Included(prefix), Bound::Unbounded))
-      .next()
-      .and_then(|(name, _command)| name.strip_prefix(&prefix))
   }
 }
 
@@ -71,24 +71,6 @@ commands! {
   zoom
 }
 
-pub(crate) fn pop(state: &mut State) {
-  state.pop();
-}
-
-pub(crate) fn negative_rotation(state: &mut State) {
-  state.filters.push(Filter {
-    position: Mat3f::new_rotation(-0.01),
-    ..default()
-  });
-}
-
-pub(crate) fn positive_rotation(state: &mut State) {
-  state.filters.push(Filter {
-    position: Mat3f::new_rotation(0.01),
-    ..default()
-  });
-}
-
 pub(crate) fn all(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
@@ -102,6 +84,32 @@ pub(crate) fn blaster(state: &mut State) {
   state.filters = Scene::Blaster.state().filters;
 }
 
+pub(crate) fn bottom(state: &mut State) {
+  state.filters.push(Filter {
+    color: color::invert(),
+    field: Field::Bottom,
+    wrap: state.wrap,
+    ..default()
+  });
+}
+
+pub(crate) fn circle(state: &mut State) {
+  state.filters.push(Filter {
+    color: color::invert(),
+    field: Field::Circle { size: None },
+    wrap: state.wrap,
+    ..default()
+  });
+}
+
+pub(crate) fn coordinates(state: &mut State) {
+  state.filters.push(Filter {
+    coordinates: true,
+    wrap: state.wrap,
+    ..default()
+  });
+}
+
 pub(crate) fn cross(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
@@ -111,12 +119,21 @@ pub(crate) fn cross(state: &mut State) {
   });
 }
 
-pub(crate) fn increment_db(state: &mut State) {
-  state.db += 1.0;
-}
-
 pub(crate) fn decrement_db(state: &mut State) {
   state.db -= 1.0;
+}
+
+pub(crate) fn frequencies(state: &mut State) {
+  state.filters.push(Filter {
+    color: color::invert(),
+    field: Field::Frequencies,
+    wrap: state.wrap,
+    ..default()
+  });
+}
+
+pub(crate) fn increment_db(state: &mut State) {
+  state.db += 1.0;
 }
 
 pub(crate) fn left(state: &mut State) {
@@ -128,10 +145,45 @@ pub(crate) fn left(state: &mut State) {
   });
 }
 
+pub(crate) fn negative_rotation(state: &mut State) {
+  state.filters.push(Filter {
+    position: Mat3f::new_rotation(-0.01),
+    ..default()
+  });
+}
+
+pub(crate) fn none(state: &mut State) {
+  state.filters.push(Filter {
+    field: Field::None,
+    wrap: state.wrap,
+    ..default()
+  });
+}
+
+pub(crate) fn pop(state: &mut State) {
+  state.pop();
+}
+
+pub(crate) fn positive_rotation(state: &mut State) {
+  state.filters.push(Filter {
+    position: Mat3f::new_rotation(0.01),
+    ..default()
+  });
+}
+
 pub(crate) fn right(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
     field: Field::Right,
+    wrap: state.wrap,
+    ..default()
+  });
+}
+
+pub(crate) fn samples(state: &mut State) {
+  state.filters.push(Filter {
+    color: color::invert(),
+    field: Field::Samples,
     wrap: state.wrap,
     ..default()
   });
@@ -155,22 +207,29 @@ pub(crate) fn status(state: &mut State) {
 }
 
 pub(crate) fn toggle_fit(state: &mut State) {
-  state.fit.toggle()
+  state.fit.toggle();
+}
+
+pub(crate) fn toggle_interpolate(state: &mut State) {
+  state.interpolate.toggle();
+}
+
+pub(crate) fn toggle_repeat(state: &mut State) {
+  state.filter.repeat.toggle();
+}
+
+pub(crate) fn toggle_tile(state: &mut State) {
+  state.tile.toggle();
+}
+
+pub(crate) fn toggle_wrap(state: &mut State) {
+  state.wrap.toggle();
 }
 
 pub(crate) fn top(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
     field: Field::Top,
-    wrap: state.wrap,
-    ..default()
-  });
-}
-
-pub(crate) fn bottom(state: &mut State) {
-  state.filters.push(Filter {
-    color: color::invert(),
-    field: Field::Bottom,
     wrap: state.wrap,
     ..default()
   });
@@ -183,65 +242,6 @@ pub(crate) fn triangle(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
-}
-
-pub(crate) fn circle(state: &mut State) {
-  state.filters.push(Filter {
-    color: color::invert(),
-    field: Field::Circle { size: None },
-    wrap: state.wrap,
-    ..default()
-  });
-}
-
-pub(crate) fn coordinates(state: &mut State) {
-  state.filters.push(Filter {
-    coordinates: true,
-    wrap: state.wrap,
-    ..default()
-  });
-}
-
-pub(crate) fn toggle_interpolate(state: &mut State) {
-  state.interpolate.toggle();
-}
-
-pub(crate) fn frequencies(state: &mut State) {
-  state.filters.push(Filter {
-    color: color::invert(),
-    field: Field::Frequencies,
-    wrap: state.wrap,
-    ..default()
-  });
-}
-
-pub(crate) fn none(state: &mut State) {
-  state.filters.push(Filter {
-    field: Field::None,
-    wrap: state.wrap,
-    ..default()
-  });
-}
-
-pub(crate) fn toggle_repeat(state: &mut State) {
-  state.filter.repeat.toggle();
-}
-
-pub(crate) fn samples(state: &mut State) {
-  state.filters.push(Filter {
-    color: color::invert(),
-    field: Field::Samples,
-    wrap: state.wrap,
-    ..default()
-  })
-}
-
-pub(crate) fn toggle_tile(state: &mut State) {
-  state.tile.toggle();
-}
-
-pub(crate) fn toggle_wrap(state: &mut State) {
-  state.wrap.toggle();
 }
 
 pub(crate) fn x(state: &mut State) {

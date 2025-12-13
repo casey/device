@@ -37,17 +37,6 @@ pub(crate) struct Bindings {
 }
 
 impl Bindings {
-  pub(crate) fn new() -> Self {
-    let character = CHARACTER_BINDINGS
-      .iter()
-      .map(|(character, command)| (character.to_string(), *command))
-      .collect();
-
-    let named = NAMED_BINDINGS.iter().copied().collect();
-
-    Self { character, named }
-  }
-
   pub(crate) fn key(&self, key: &Key) -> Option<fn(&mut State)> {
     let command = match key {
       Key::Character(character) => self.character.get(&character.to_uppercase()).copied(),
@@ -60,6 +49,17 @@ impl Bindings {
     }
 
     command
+  }
+
+  pub(crate) fn new() -> Self {
+    let character = CHARACTER_BINDINGS
+      .iter()
+      .map(|(character, command)| (character.to_string(), *command))
+      .collect();
+
+    let named = NAMED_BINDINGS.iter().copied().collect();
+
+    Self { character, named }
   }
 }
 

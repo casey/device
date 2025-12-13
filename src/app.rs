@@ -221,45 +221,40 @@ impl App {
           _ => {}
         }
       }
-    } else {
-      if let Some(command) = self.bindings.key(&key) {
-        command(&mut self.state);
-      } else {
-        match &key {
-          Key::Character(c) => match c.as_str() {
-            ":" => {
-              self.command = Some(Vec::new());
-            }
-            ">" => {
-              if let Err(err) = self.capture() {
-                self.errors.push(err);
-                event_loop.exit();
-              }
-            }
-            "@" => {
-              for (key, repeat) in self.makro.clone() {
-                self.press(event_loop, key, repeat);
-              }
-              capture = false;
-            }
-            "p" => self.play = true,
-            "q" => {
-              if let Some(recording) = self.macro_recording.take() {
-                self.makro = recording;
-              } else {
-                self.macro_recording = Some(Vec::new());
-              }
-              capture = false;
-            }
-            "R" => {
-              if let Err(err) = self.renderer.as_mut().unwrap().reload_shader() {
-                eprintln!("failed to reload shader: {err}");
-              }
-            }
-            _ => {}
-          },
-          _ => {}
+    } else if let Some(command) = self.bindings.key(&key) {
+      command(&mut self.state);
+    } else if let Key::Character(c) = &key {
+      match c.as_str() {
+        ":" => {
+          self.command = Some(Vec::new());
         }
+        ">" => {
+          if let Err(err) = self.capture() {
+            self.errors.push(err);
+            event_loop.exit();
+          }
+        }
+        "@" => {
+          for (key, repeat) in self.makro.clone() {
+            self.press(event_loop, key, repeat);
+          }
+          capture = false;
+        }
+        "p" => self.play = true,
+        "q" => {
+          if let Some(recording) = self.macro_recording.take() {
+            self.makro = recording;
+          } else {
+            self.macro_recording = Some(Vec::new());
+          }
+          capture = false;
+        }
+        "R" => {
+          if let Err(err) = self.renderer.as_mut().unwrap().reload_shader() {
+            eprintln!("failed to reload shader: {err}");
+          }
+        }
+        _ => {}
       }
     }
 
