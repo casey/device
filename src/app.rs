@@ -271,6 +271,30 @@ impl App {
   fn redraw(&mut self) -> Result {
     for message in self.hub.messages().lock().unwrap().drain(..) {
       match message.tuple() {
+        (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
+          color: color::invert(),
+          field: Field::Top,
+          wrap: self.state.wrap,
+          ..default()
+        }),
+        (Controller::Spectra, 1, Event::Button(true)) => self.state.filters.push(Filter {
+          color: color::invert(),
+          field: Field::Bottom,
+          wrap: self.state.wrap,
+          ..default()
+        }),
+        (Controller::Spectra, 2, Event::Button(true)) => self.state.filters.push(Filter {
+          color: color::invert(),
+          field: Field::X,
+          wrap: self.state.wrap,
+          ..default()
+        }),
+        (Controller::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
+          color: color::invert(),
+          field: Field::Circle { size: None },
+          wrap: self.state.wrap,
+          ..default()
+        }),
         (Controller::Spectra, 4, Event::Button(true)) => self.state.filters.push(Filter {
           position: Mat3f::new_scaling(2.0),
           wrap: self.state.wrap,
