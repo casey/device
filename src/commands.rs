@@ -82,7 +82,7 @@ pub(crate) fn negative_x_translation(state: &mut State) {
     position: Mat3f::new_translation(&Vec2f::new(-0.1, 0.0)),
     wrap: state.wrap,
     ..default()
-  })
+  });
 }
 
 pub(crate) fn positive_x_translation(state: &mut State) {
@@ -90,7 +90,7 @@ pub(crate) fn positive_x_translation(state: &mut State) {
     position: Mat3f::new_translation(&Vec2f::new(0.1, 0.0)),
     wrap: state.wrap,
     ..default()
-  })
+  });
 }
 
 pub(crate) fn all(state: &mut State) {

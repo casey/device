@@ -280,20 +280,19 @@ impl App {
   fn process_messages(&mut self) {
     for message in self.hub.messages().lock().unwrap().drain(..) {
       match message.event {
-        Event::Button(true) => {
-          if let Some(command) = self.bindings.button(message.controller, message.control) {
+        Event::Button(press) => {
+          if let Some(command) = self
+            .bindings
+            .button(message.controller, message.control, press)
+          {
             command(&mut self.state);
           }
         }
-        Event::Button(false) => {}
-        Event::Encoder(parameter) => match (message.controller, message.control) {
-          (Controller::Twister, 0) => self.state.alpha = parameter,
-          (Controller::Twister, 1) => self.state.db = parameter.value() as f32,
-          (Controller::Twister, 4) => self.state.velocity.x = parameter.bipolar(),
-          (Controller::Twister, 5) => self.state.velocity.y = parameter.bipolar(),
-          (Controller::Twister, 6) => self.state.velocity.z = parameter.bipolar(),
-          (_, _) => {}
-        },
+        Event::Encoder(parameter) => {
+          if let Some(command) = self.bindings.encoder(message.controller, message.control) {
+            command(&mut self.state, parameter);
+          }
+        }
       }
     }
   }
