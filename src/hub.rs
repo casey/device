@@ -3,16 +3,16 @@ use super::*;
 pub(crate) struct Hub {
   #[allow(unused)]
   connections: Vec<midir::MidiInputConnection<()>>,
-  messages: Arc<Mutex<VecDeque<Message>>>,
+  messages: Arc<Mutex<Vec<Message>>>,
 }
 
 impl Hub {
-  pub(crate) fn messages(&mut self) -> &Mutex<VecDeque<Message>> {
+  pub(crate) fn messages(&mut self) -> &Mutex<Vec<Message>> {
     &self.messages
   }
 
   pub(crate) fn new() -> Result<Self> {
-    let messages = Arc::new(Mutex::new(VecDeque::new()));
+    let messages = Arc::new(Mutex::new(Vec::new()));
 
     let mut connections = Vec::new();
 
@@ -27,7 +27,7 @@ impl Hub {
             &port,
             &name,
             move |_timestamp, event, ()| match Message::parse(event) {
-              Ok(message) => messages.lock().unwrap().push_back(message),
+              Ok(message) => messages.lock().unwrap().push(message),
               Err(err) => log::warn!("MIDI event parse error: {err}"),
             },
             (),
