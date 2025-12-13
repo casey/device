@@ -27,8 +27,8 @@ static RENDERER: LazyLock<Mutex<Renderer>> = LazyLock::new(|| {
 });
 
 enum Error {
-  Missing,
   Mismatch,
+  Missing,
 }
 
 impl Display for Error {
@@ -73,10 +73,15 @@ impl Test {
   fn run(self) {
     if let Err(err) = self.try_run() {
       match err {
-        Error::Missing => panic!("no reference image found"),
         Error::Mismatch => panic!("reference image mismatch"),
+        Error::Missing => panic!("no reference image found"),
       }
     }
+  }
+
+  fn state(mut self, state: State) -> Self {
+    self.state = state;
+    self
   }
 
   #[track_caller]
@@ -122,11 +127,6 @@ impl Test {
     }
 
     Ok(())
-  }
-
-  fn state(mut self, state: State) -> Self {
-    self.state = state;
-    self
   }
 
   fn width(mut self, width: u32) -> Self {
@@ -591,6 +591,7 @@ fn presets() {
   use tabled::{Table, Tabled, settings::style::Style};
 
   #[derive(Tabled)]
+  #[allow(clippy::arbitrary_source_item_ordering)]
   struct Entry {
     name: &'static str,
     error: Error,
@@ -611,7 +612,9 @@ fn presets() {
     }
   }
 
-  if !errors.is_empty() {
-    panic!("{}", Table::new(&errors).with(Style::sharp()));
-  }
+  assert!(
+    errors.is_empty(),
+    "{}",
+    Table::new(&errors).with(Style::sharp()),
+  );
 }
