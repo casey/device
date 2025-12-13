@@ -1,5 +1,28 @@
 use super::*;
 
+const BUTTON_BINDINGS: &[(Controller, u8, fn(&mut State))] = {
+  use {Controller::*, commands::*};
+  &[
+    (Spectra, 0, top),
+    (Spectra, 1, bottom),
+    (Spectra, 2, x),
+    (Spectra, 3, circle),
+    (Spectra, 4, zoom_out),
+    (Spectra, 5, zoom_in),
+    (Spectra, 6, negative_x_translation),
+    (Spectra, 7, positive_x_translation),
+    (Spectra, 8, pop),
+    (Twister, 4, clear_transient_x_translation),
+    (Twister, 5, clear_transient_y_translation),
+    (Twister, 6, clear_transient_scale),
+  ]
+};
+
+const ENCODER_BINDINGS: &[(u8, fn(&mut State, Parameter))] = {
+  use commands::*;
+  &[]
+};
+
 const CHARACTER_BINDINGS: &[(char, fn(&mut State))] = {
   use commands::*;
   &[
@@ -18,7 +41,7 @@ const CHARACTER_BINDINGS: &[(char, fn(&mut State))] = {
     ('T', toggle_tile),
     ('W', toggle_wrap),
     ('X', x),
-    ('Z', zoom),
+    ('Z', zoom_out),
   ]
 };
 
@@ -49,6 +72,10 @@ impl Bindings {
     }
 
     command
+  }
+
+  pub(crate) fn button(&self, controller: Controller, button: u8) -> Option<fn(&mut State)> {
+    todo!()
   }
 
   pub(crate) fn new() -> Self {

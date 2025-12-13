@@ -45,6 +45,9 @@ commands! {
   blaster
   bottom
   circle
+  clear_transient_scale
+  clear_transient_x_translation
+  clear_transient_y_translation
   coordinates
   cross
   decrement_db
@@ -52,9 +55,11 @@ commands! {
   increment_db
   left
   negative_rotation
+  negative_x_translation
   none
   pop
   positive_rotation
+  positive_x_translation
   right
   samples
   spread
@@ -68,7 +73,24 @@ commands! {
   top
   triangle
   x
-  zoom
+  zoom_in
+  zoom_out
+}
+
+pub(crate) fn negative_x_translation(state: &mut State) {
+  state.filters.push(Filter {
+    position: Mat3f::new_translation(&Vec2f::new(-0.1, 0.0)),
+    wrap: state.wrap,
+    ..default()
+  })
+}
+
+pub(crate) fn positive_x_translation(state: &mut State) {
+  state.filters.push(Filter {
+    position: Mat3f::new_translation(&Vec2f::new(0.1, 0.0)),
+    wrap: state.wrap,
+    ..default()
+  })
 }
 
 pub(crate) fn all(state: &mut State) {
@@ -78,6 +100,18 @@ pub(crate) fn all(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
+}
+
+pub(crate) fn clear_transient_x_translation(state: &mut State) {
+  state.transient.x = 0.0;
+}
+
+pub(crate) fn clear_transient_y_translation(state: &mut State) {
+  state.transient.y = 0.0;
+}
+
+pub(crate) fn clear_transient_scale(state: &mut State) {
+  state.transient.z = 0.0;
 }
 
 pub(crate) fn blaster(state: &mut State) {
@@ -253,7 +287,15 @@ pub(crate) fn x(state: &mut State) {
   });
 }
 
-pub(crate) fn zoom(state: &mut State) {
+pub(crate) fn zoom_in(state: &mut State) {
+  state.filters.push(Filter {
+    position: Mat3f::new_scaling(0.5),
+    wrap: state.wrap,
+    ..default()
+  });
+}
+
+pub(crate) fn zoom_out(state: &mut State) {
   state.filters.push(Filter {
     position: Mat3f::new_scaling(2.0),
     wrap: state.wrap,
