@@ -1,7 +1,6 @@
 use super::*;
 
 pub(crate) struct Renderer {
-  bindings: Option<Bindings>,
   composite_pipeline: Pipeline,
   device: wgpu::Device,
   error_channel: mpsc::Receiver<wgpu::Error>,
@@ -19,16 +18,13 @@ pub(crate) struct Renderer {
   overlay_scene: vello::Scene,
   queue: Queue,
   resolution: NonZeroU32,
+  resources: Option<Resources>,
   samples: TextureView,
   size: Vector2<NonZeroU32>,
   surface: Option<(Surface<'static>, SurfaceConfiguration)>,
 }
 
 impl Renderer {
-  fn bindings(&self) -> &Bindings {
-    self.bindings.as_ref().unwrap()
-  }
-
   fn bytes_per_row_with_padding(&self) -> u32 {
     const MASK: u32 = COPY_BYTES_PER_ROW_ALIGNMENT - 1;
     (self.resolution.get() * COLOR_CHANNELS + MASK) & !MASK
@@ -41,7 +37,7 @@ impl Renderer {
       .device
       .create_command_encoder(&CommandEncoderDescriptor::default());
 
-    let captures = self.bindings().captures.clone();
+    let captures = self.resources().captures.clone();
 
     let capture = captures.lock().unwrap().pop().unwrap_or_else(|| {
       self.device.create_buffer(&BufferDescriptor {
@@ -54,7 +50,7 @@ impl Renderer {
 
     encoder.copy_texture_to_buffer(
       TexelCopyTextureInfo {
-        texture: self.bindings().targets[0].texture_view.texture(),
+        texture: self.resources().targets[0].texture_view.texture(),
         mip_level: 0,
         origin: Origin3d::ZERO,
         aspect: TextureAspect::All,
@@ -607,7 +603,6 @@ impl Renderer {
     .context(error::CreateOverlayRenderer)?;
 
     let mut renderer = Self {
-      bindings: None,
       composite_pipeline,
       device,
       error_channel,
@@ -625,6 +620,7 @@ impl Renderer {
       overlay_scene: vello::Scene::new(),
       queue,
       resolution,
+      resources: None,
       samples,
       size,
       surface,
@@ -858,7 +854,7 @@ impl Renderer {
       .map(|(surface, _config)| surface.get_current_texture().context(error::CurrentTexture))
       .transpose()?;
 
-    for target in &self.bindings().targets {
+    for target in &self.resources().targets {
       encoder.clear_texture(
         target.texture_view.texture(),
         &ImageSubresourceRange {
@@ -872,7 +868,7 @@ impl Renderer {
     }
 
     encoder.clear_texture(
-      self.bindings().tiling_view.texture(),
+      self.resources().tiling_view.texture(),
       &ImageSubresourceRange {
         array_layer_count: None,
         aspect: TextureAspect::All,
@@ -887,39 +883,39 @@ impl Renderer {
     for i in 0..filters {
       let i = u32::try_from(i).unwrap();
       Self::draw(
-        &self.bindings().targets[source].bind_group,
+        &self.resources().targets[source].bind_group,
         &mut encoder,
         Some((tiling, i)),
         i,
-        &self.bindings().targets[destination].texture_view,
+        &self.resources().targets[destination].texture_view,
         &self.filter_pipeline,
       );
       (source, destination) = (destination, source);
     }
 
     Self::draw(
-      &self.bindings().tiling_bind_group,
+      &self.resources().tiling_bind_group,
       &mut encoder,
       None,
       0,
-      &self.bindings().tiling_view,
+      &self.resources().tiling_view,
       &self.composite_pipeline,
     );
 
     self.render_overlay(state, fps)?;
 
     Self::draw(
-      &self.bindings().overlay_bind_group,
+      &self.resources().overlay_bind_group,
       &mut encoder,
       None,
       1,
-      &self.bindings().targets[0].texture_view,
+      &self.resources().targets[0].texture_view,
       &self.composite_pipeline,
     );
 
     if let Some(frame) = &frame {
       Self::draw(
-        &self.bindings().overlay_bind_group,
+        &self.resources().overlay_bind_group,
         &mut encoder,
         None,
         2,
@@ -1099,7 +1095,7 @@ impl Renderer {
         &self.device,
         &self.queue,
         &self.overlay_scene,
-        &self.bindings.as_ref().unwrap().overlay_view,
+        &self.resources.as_ref().unwrap().overlay_view,
         &RenderParams {
           antialiasing_method: AaConfig::Msaa16,
           base_color: Color::TRANSPARENT,
@@ -1169,7 +1165,7 @@ impl Renderer {
 
     let overlay_bind_group = self.composite_bind_group(&tiling_view, &overlay_view);
 
-    self.bindings = Some(Bindings {
+    self.resources = Some(Resources {
       captures: Arc::new(Mutex::new(Vec::new())),
       overlay_bind_group,
       overlay_view,
@@ -1177,6 +1173,10 @@ impl Renderer {
       tiling_bind_group,
       tiling_view,
     });
+  }
+
+  fn resources(&self) -> &Resources {
+    self.resources.as_ref().unwrap()
   }
 
   fn target(&self) -> Target {
