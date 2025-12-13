@@ -4,7 +4,6 @@ use {
     app::App,
     arguments::Arguments,
     axis::Axis,
-    bindings::Bindings,
     bool_ext::BoolExt,
     command::Command,
     composite_uniforms::CompositeUniforms,
@@ -36,6 +35,7 @@ use {
     recorder::Recorder,
     renderer::Renderer,
     resampler_ext::ResamplerExt,
+    resources::Resources,
     scene::Scene,
     score::Score,
     shared::Shared,
@@ -131,7 +131,6 @@ mod analyzer;
 mod app;
 mod arguments;
 mod axis;
-mod bindings;
 mod bool_ext;
 mod color;
 mod command;
@@ -166,6 +165,7 @@ mod recorder;
 mod reference;
 mod renderer;
 mod resampler_ext;
+mod resources;
 mod scene;
 mod score;
 mod shared;

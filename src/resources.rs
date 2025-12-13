@@ -1,6 +1,6 @@
 use super::*;
 
-pub(crate) struct Bindings {
+pub(crate) struct Resources {
   pub(crate) captures: Arc<Mutex<Vec<Buffer>>>,
   pub(crate) overlay_bind_group: BindGroup,
   pub(crate) overlay_view: TextureView,
