@@ -164,4 +164,28 @@ mod tests {
       assert!(characters.insert(c));
     }
   }
+
+  #[test]
+  fn named_bindings_are_unique() {
+    let mut names = HashSet::new();
+    for (name, _command) in NAMED_BINDINGS {
+      assert!(names.insert(name));
+    }
+  }
+
+  #[test]
+  fn button_bindings_are_unique() {
+    let mut buttons = HashSet::new();
+    for (button, _command) in BUTTON_BINDINGS {
+      assert!(buttons.insert(button));
+    }
+  }
+
+  #[test]
+  fn encoder_bindings_are_unique() {
+    let mut encoders = HashSet::new();
+    for (encoder, _command) in ENCODER_BINDINGS {
+      assert!(encoders.insert(encoder));
+    }
+  }
 }
