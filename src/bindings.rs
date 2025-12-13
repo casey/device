@@ -18,25 +18,32 @@ const BUTTON_BINDINGS: &[((Controller, u8, bool), fn(&mut State))] = {
   ]
 };
 
-const CHARACTER_BINDINGS: &[(char, fn(&mut State))] = {
+const CHARACTER_BINDINGS: &[(char, ModifiersState, Foo)] = {
   use commands::*;
+
+  const NONE: ModifiersState = ModifiersState::empty();
+
+  const CONTROL: ModifiersState = ModifiersState::CONTROL;
+  const SUPER: ModifiersState = ModifiersState::SUPER;
+
   &[
-    ('+', increment_db),
-    ('-', decrement_db),
-    ('A', all),
-    ('B', blaster),
-    ('C', circle),
-    ('D', coordinates),
-    ('F', toggle_fit),
-    ('I', toggle_interpolate),
-    ('L', frequencies),
-    ('N', none),
-    ('R', toggle_repeat),
-    ('S', samples),
-    ('T', toggle_tile),
-    ('W', toggle_wrap),
-    ('X', x),
-    ('Z', zoom_out),
+    // ('+', NONE, increment_db),
+    // ('-', NONE, decrement_db),
+    // ('A', NONE, all),
+    // ('B', NONE, blaster),
+    // ('C', NONE, circle),
+    // ('D', NONE, coordinates),
+    // ('F', NONE, toggle_fit),
+    ('F', CONTROL.union(SUPER), generated::TOGGLE_FULLSCREEN),
+    // ('I', NONE, toggle_interpolate),
+    // ('L', NONE, frequencies),
+    // ('N', NONE, none),
+    // ('R', NONE, toggle_repeat),
+    // ('S', NONE, samples),
+    // ('T', NONE, toggle_tile),
+    // ('W', NONE, toggle_wrap),
+    // ('X', NONE, x),
+    // ('Z', NONE, zoom_out),
   ]
 };
 
@@ -83,7 +90,7 @@ const NAMED_BINDINGS: &[(NamedKey, fn(&mut State))] = {
 
 pub(crate) struct Bindings {
   button: HashMap<(Controller, u8, bool), fn(&mut State)>,
-  character: HashMap<String, fn(&mut State)>,
+  character: HashMap<(String, ModifiersState), Foo>,
   encoder: HashMap<(Controller, u8), fn(&mut State, Parameter)>,
   named: HashMap<NamedKey, fn(&mut State)>,
 }
@@ -118,15 +125,18 @@ impl Bindings {
     command
   }
 
-  pub(crate) fn key(&self, key: &Key) -> Option<fn(&mut State)> {
+  pub(crate) fn key(&self, key: &Key, modifiers: Modifiers) -> Option<Foo> {
     let command = match key {
-      Key::Character(character) => self.character.get(&character.to_uppercase()).copied(),
-      Key::Named(named) => self.named.get(named).copied(),
+      Key::Character(character) => self
+        .character
+        .get(&(character.to_uppercase(), modifiers.state()))
+        .copied(),
+      // Key::Named(named) => self.named.get(named).copied(),
       _ => None,
     };
 
     if command.is_none() {
-      log::info!("unbound key: {key:?}");
+      log::info!("unbound key: {key:?} {modifiers:?}");
     }
 
     command
@@ -137,7 +147,7 @@ impl Bindings {
       button: BUTTON_BINDINGS.iter().copied().collect(),
       character: CHARACTER_BINDINGS
         .iter()
-        .map(|(character, command)| (character.to_string(), *command))
+        .map(|(character, modifiers, command)| ((character.to_string(), *modifiers), *command))
         .collect(),
       encoder: ENCODER_BINDINGS.iter().copied().collect(),
       named: NAMED_BINDINGS.iter().copied().collect(),
@@ -151,7 +161,7 @@ mod tests {
 
   #[test]
   fn character_bindings_are_uppercase() {
-    for (c, _command) in CHARACTER_BINDINGS {
+    for (c, _, _command) in CHARACTER_BINDINGS {
       let s = c.to_string();
       assert_eq!(s.to_uppercase(), s);
     }
@@ -160,7 +170,7 @@ mod tests {
   #[test]
   fn character_bindings_are_unique() {
     let mut characters = HashSet::new();
-    for (c, _command) in CHARACTER_BINDINGS {
+    for (c, _, _command) in CHARACTER_BINDINGS {
       assert!(characters.insert(c));
     }
   }

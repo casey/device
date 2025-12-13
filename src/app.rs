@@ -10,12 +10,14 @@ pub(crate) struct App {
   config: Config,
   deadline: Instant,
   errors: Vec<Error>,
+  fullscreen: bool,
   hub: Hub,
   input: Option<Input>,
   last: Instant,
   macro_recording: Option<Vec<(Key, bool)>>,
   makro: Vec<(Key, bool)>,
   mode: Mode,
+  modifiers: Modifiers,
   options: Options,
   patch: Patch,
   present_mode: Option<PresentMode>,
@@ -152,12 +154,14 @@ impl App {
       config,
       deadline: now,
       errors: Vec::new(),
+      fullscreen: false,
       hub: Hub::new()?,
       input,
       last: now,
       macro_recording: None,
       makro: Vec::new(),
       mode: Mode::Normal,
+      modifiers: Modifiers::default(),
       options,
       patch: Patch::default(),
       present_mode,
@@ -198,7 +202,10 @@ impl App {
       Key::Named(NamedKey::Enter) => {
         let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
         if let Some(command) = self.commands.name(command.as_str()) {
-          command(&mut self.state);
+          match command {
+            Foo::State(command) => command(&mut self.state),
+            Foo::App(command) => todo!(),
+          }
         } else {
           eprintln!("unknown command: {command}");
         }
@@ -221,8 +228,11 @@ impl App {
   }
 
   fn press_normal(&mut self, capture: &mut bool, event_loop: &ActiveEventLoop, key: &Key) {
-    if let Some(command) = self.bindings.key(key) {
-      command(&mut self.state);
+    if let Some(command) = self.bindings.key(key, self.modifiers) {
+      match command {
+        Foo::State(command) => command(&mut self.state),
+        Foo::App(command) => command(self),
+      }
     } else if let Key::Character(c) = &key {
       match c.as_str() {
         ":" => {
@@ -240,6 +250,13 @@ impl App {
           }
           *capture = false;
         }
+        // "e" => {
+        //   self.fullscreen.toggle();
+        //   self
+        //     .window()
+        //     .set_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)));
+        //   eprintln!("setting fullscreen: {}", self.fullscreen);
+        // }
         "p" => self.mode = Mode::Play,
         "q" => {
           if let Some(recording) = self.macro_recording.take() {
@@ -428,6 +445,13 @@ impl App {
     }
   }
 
+  pub(crate) fn toggle_fullscreen(&mut self) {
+    self.fullscreen.toggle();
+    self
+      .window()
+      .set_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)));
+  }
+
   fn window(&self) -> &Window {
     self.window.as_ref().unwrap()
   }
@@ -531,6 +555,7 @@ impl ApplicationHandler for App {
       WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
         self.press(event_loop, event.logical_key, event.repeat);
       }
+      WindowEvent::ModifiersChanged(modifiers) => self.modifiers = modifiers,
       WindowEvent::RedrawRequested => {
         if let Err(err) = self.redraw() {
           self.errors.push(err);

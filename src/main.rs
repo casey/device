@@ -116,12 +116,18 @@ use {
   winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
-    event::{ElementState, WindowEvent},
+    event::{ElementState, Modifiers, WindowEvent},
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
-    keyboard::{Key, NamedKey},
-    window::{Window, WindowAttributes, WindowId},
+    keyboard::{Key, ModifiersState, NamedKey},
+    window::{Fullscreen, Window, WindowAttributes, WindowId},
   },
 };
+
+#[derive(Clone, Copy)]
+enum Foo {
+  App(fn(&mut App)),
+  State(fn(&mut State)),
+}
 
 #[cfg(test)]
 use std::collections::HashSet;
@@ -152,6 +158,7 @@ mod filter_uniforms;
 mod format;
 mod fps;
 mod frame;
+mod generated;
 mod hub;
 mod image;
 mod input;

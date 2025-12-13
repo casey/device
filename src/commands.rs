@@ -1,7 +1,7 @@
 use super::*;
 
 pub(crate) struct Commands {
-  map: BTreeMap<String, fn(&mut State)>,
+  map: BTreeMap<String, Foo>,
 }
 
 impl Commands {
@@ -13,68 +13,23 @@ impl Commands {
       .and_then(|(name, _command)| name.strip_prefix(prefix))
   }
 
-  pub(crate) fn name(&self, s: &str) -> Option<fn(&mut State)> {
-    self.map.get(s).copied()
+  pub(crate) fn name(&self, s: &str) -> Option<&Foo> {
+    self.map.get(s)
   }
 
   pub(crate) fn new() -> Self {
     let mut map = BTreeMap::new();
 
-    for (name, command) in COMMANDS {
-      map.insert(name.replace('_', "-"), *command);
+    for (name, command) in generated::COMMANDS {
+      map.insert(name.replace('_', "-"), command.clone());
     }
 
     Self { map }
   }
 }
 
-macro_rules! commands {
-  {
-    $($command:ident)*
-  } => {
-    const COMMANDS: &[(&'static str, fn(&mut State))] = &[
-      $(
-        (stringify!($command), $command),
-      )*
-    ];
-  }
-}
-
-commands! {
-  all
-  blaster
-  bottom
-  circle
-  clear_transient_scale
-  clear_transient_x_translation
-  clear_transient_y_translation
-  coordinates
-  cross
-  decrement_db
-  frequencies
-  increment_db
-  left
-  negative_rotation
-  negative_x_translation
-  none
-  pop
-  positive_rotation
-  positive_x_translation
-  right
-  samples
-  spread
-  square
-  status
-  toggle_fit
-  toggle_interpolate
-  toggle_repeat
-  toggle_tile
-  toggle_wrap
-  top
-  triangle
-  x
-  zoom_in
-  zoom_out
+pub(crate) fn toggle_fullscreen(app: &mut App) {
+  app.toggle_fullscreen();
 }
 
 pub(crate) fn negative_x_translation(state: &mut State) {
@@ -301,42 +256,4 @@ pub(crate) fn zoom_out(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn commands_are_lowercase() {
-    for (name, _command) in COMMANDS {
-      assert_eq!(name.to_lowercase(), *name);
-    }
-  }
-
-  #[test]
-  fn commands_are_unique() {
-    let mut names = HashSet::new();
-    for (name, _command) in COMMANDS {
-      assert!(names.insert(name), "duplicate command: {name}");
-    }
-  }
-
-  #[test]
-  fn all_commands_are_mapped() {
-    let commands = Commands::new();
-
-    let s = include_str!("commands.rs");
-
-    for m in Regex::new(r"(?m)^(?:pub\(crate\)\s*)?fn (.*?)\(")
-      .unwrap()
-      .captures_iter(s)
-    {
-      let name = m[1].replace('_', "-");
-      assert!(
-        commands.map.contains_key(&name),
-        "unmapped commmand: {name}",
-      );
-    }
-  }
 }
