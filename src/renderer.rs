@@ -930,7 +930,7 @@ impl Renderer {
       frame.present();
     }
 
-    log::info!(
+    log::trace!(
       "{}",
       Frame {
         filters,

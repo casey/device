@@ -4,8 +4,9 @@ use {
     app::App,
     arguments::Arguments,
     axis::Axis,
+    bindings::Bindings,
     bool_ext::BoolExt,
-    command::Command,
+    commands::Commands,
     composite_uniforms::CompositeUniforms,
     config::Config,
     controller::Controller,
@@ -73,15 +74,15 @@ use {
   std::{
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
-    collections::{BTreeMap, VecDeque},
+    collections::{BTreeMap, HashMap, VecDeque},
     env, f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
-    ops::{Add, AddAssign, SubAssign},
-    process::{self, ExitStatus, Stdio},
+    ops::{Add, AddAssign, Bound, SubAssign},
+    process::{self, Command, ExitStatus, Stdio},
     str::FromStr,
     sync::{
       Arc, Mutex,
@@ -121,6 +122,9 @@ use {
   },
 };
 
+#[cfg(test)]
+use std::collections::HashSet;
+
 macro_rules! label {
   () => {
     Some(concat!(file!(), ":", line!(), ":", column!()))
@@ -131,9 +135,10 @@ mod analyzer;
 mod app;
 mod arguments;
 mod axis;
+mod bindings;
 mod bool_ext;
 mod color;
-mod command;
+mod commands;
 mod composite_uniforms;
 mod config;
 mod controller;

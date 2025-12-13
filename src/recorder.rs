@@ -1,4 +1,4 @@
-use {super::*, std::process::Command};
+use super::*;
 
 pub(crate) struct Recorder {
   sounds: Vec<(u64, Sound)>,

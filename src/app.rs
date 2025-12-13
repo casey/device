@@ -2,11 +2,12 @@ use super::*;
 
 pub(crate) struct App {
   analyzer: Analyzer,
+  bindings: Bindings,
   capture_rx: mpsc::Receiver<Result>,
   capture_tx: mpsc::Sender<Result>,
   captures_pending: u64,
   command: Option<Vec<String>>,
-  commands: BTreeMap<&'static str, Command>,
+  commands: Commands,
   config: Config,
   deadline: Instant,
   errors: Vec<Error>,
@@ -144,11 +145,12 @@ impl App {
 
     Ok(Self {
       analyzer: Analyzer::new(),
+      bindings: Bindings::new(),
       capture_rx,
       capture_tx,
       captures_pending: 0,
       command: None,
-      commands: Command::map(),
+      commands: Commands::new(),
       config,
       deadline: now,
       errors: Vec::new(),
@@ -182,8 +184,8 @@ impl App {
         }
         Key::Named(NamedKey::Enter) => {
           let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-          if let Some(command) = self.commands.get(command.as_str()) {
-            command.call(&mut self.state);
+          if let Some(command) = self.commands.name(command.as_str()) {
+            command(&mut self.state);
           } else {
             eprintln!("unknown command: {command}");
           }
@@ -191,14 +193,10 @@ impl App {
         }
         Key::Named(NamedKey::Tab) => {
           let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
-          if let Some(suffix) = self
-            .commands
-            .range(prefix.as_str()..)
-            .next()
-            .and_then(|(name, _command)| name.strip_prefix(&prefix))
-          {
+
+          if let Some(suffix) = self.commands.complete(&prefix) {
             if !suffix.is_empty() {
-              eprintln!("completion: {suffix}");
+              eprintln!("completion: {prefix}{suffix}");
               command.push(suffix.into());
             }
           } else {
@@ -223,127 +221,39 @@ impl App {
           _ => {}
         }
       }
-    } else {
-      match &key {
-        Key::Character(c) => match c.as_str() {
-          "+" => {
-            self.state.db += 1.0;
+    } else if let Some(command) = self.bindings.key(&key) {
+      command(&mut self.state);
+    } else if let Key::Character(c) = &key {
+      match c.as_str() {
+        ":" => {
+          self.command = Some(Vec::new());
+        }
+        ">" => {
+          if let Err(err) = self.capture() {
+            self.errors.push(err);
+            event_loop.exit();
           }
-          "-" => {
-            self.state.db -= 1.0;
+        }
+        "@" => {
+          for (key, repeat) in self.makro.clone() {
+            self.press(event_loop, key, repeat);
           }
-          ":" => {
-            self.command = Some(Vec::new());
+          capture = false;
+        }
+        "p" => self.play = true,
+        "q" => {
+          if let Some(recording) = self.macro_recording.take() {
+            self.makro = recording;
+          } else {
+            self.macro_recording = Some(Vec::new());
           }
-          ">" => {
-            if let Err(err) = self.capture() {
-              self.errors.push(err);
-              event_loop.exit();
-            }
+          capture = false;
+        }
+        "R" => {
+          if let Err(err) = self.renderer.as_mut().unwrap().reload_shader() {
+            eprintln!("failed to reload shader: {err}");
           }
-          "@" => {
-            for (key, repeat) in self.makro.clone() {
-              self.press(event_loop, key, repeat);
-            }
-            capture = false;
-          }
-          "a" => self.state.filters.push(Filter {
-            color: color::invert(),
-            field: Field::All,
-            wrap: self.state.wrap,
-            ..default()
-          }),
-          "b" => {
-            self.state.filters = Scene::Blaster.state().filters;
-          }
-          "c" => self.state.filters.push(Filter {
-            color: color::invert(),
-            field: Field::Circle { size: None },
-            wrap: self.state.wrap,
-            ..default()
-          }),
-          "d" => self.state.filters.push(Filter {
-            coordinates: true,
-            wrap: self.state.wrap,
-            ..default()
-          }),
-          "f" => {
-            self.state.fit.toggle();
-          }
-          "i" => {
-            self.state.interpolate.toggle();
-          }
-          "l" => self.state.filters.push(Filter {
-            color: color::invert(),
-            field: Field::Frequencies,
-            wrap: self.state.wrap,
-            ..default()
-          }),
-          "n" => self.state.filters.push(Filter {
-            field: Field::None,
-            wrap: self.state.wrap,
-            ..default()
-          }),
-          "p" => self.play = true,
-          "q" => {
-            if let Some(recording) = self.macro_recording.take() {
-              self.makro = recording;
-            } else {
-              self.macro_recording = Some(Vec::new());
-            }
-            capture = false;
-          }
-          "R" => {
-            if let Err(err) = self.renderer.as_mut().unwrap().reload_shader() {
-              eprintln!("failed to reload shader: {err}");
-            }
-          }
-          "r" => {
-            self.state.filter.repeat.toggle();
-          }
-          "s" => self.state.filters.push(Filter {
-            color: color::invert(),
-            field: Field::Samples,
-            wrap: self.state.wrap,
-            ..default()
-          }),
-          "t" => {
-            self.state.tile.toggle();
-          }
-          "w" => {
-            self.state.wrap.toggle();
-          }
-          "x" => self.state.filters.push(Filter {
-            color: color::invert(),
-            field: Field::X,
-            wrap: self.state.wrap,
-            ..default()
-          }),
-          "z" => self.state.filters.push(Filter {
-            position: Mat3f::new_scaling(2.0),
-            wrap: self.state.wrap,
-            ..default()
-          }),
-          _ => {}
-        },
-        Key::Named(key) => match key {
-          NamedKey::Backspace => {
-            self.state.pop();
-          }
-          NamedKey::ArrowLeft => {
-            self.state.filters.push(Filter {
-              position: Mat3f::new_rotation(-0.01),
-              ..default()
-            });
-          }
-          NamedKey::ArrowRight => {
-            self.state.filters.push(Filter {
-              position: Mat3f::new_rotation(0.01),
-              ..default()
-            });
-          }
-          _ => {}
-        },
+        }
         _ => {}
       }
     }
