@@ -42,6 +42,27 @@ const CHARACTER_BINDINGS: &[(char, fn(&mut State))] = {
 
 const ENCODER_BINDINGS: &[((Controller, u8), fn(&mut State, Parameter))] = {
   use Controller::*;
+
+  fn set_alpha(state: &mut State, parameter: Parameter) {
+    state.alpha = parameter;
+  }
+
+  fn set_db(state: &mut State, parameter: Parameter) {
+    state.db = parameter.value() as f32;
+  }
+
+  fn set_velocity_x(state: &mut State, parameter: Parameter) {
+    state.velocity.x = parameter.bipolar();
+  }
+
+  fn set_velocity_y(state: &mut State, parameter: Parameter) {
+    state.velocity.y = parameter.bipolar();
+  }
+
+  fn set_velocity_z(state: &mut State, parameter: Parameter) {
+    state.velocity.z = parameter.bipolar();
+  }
+
   &[
     ((Twister, 0), set_alpha),
     ((Twister, 1), set_db),
@@ -59,26 +80,6 @@ const NAMED_BINDINGS: &[(NamedKey, fn(&mut State))] = {
     (Backspace, pop),
   ]
 };
-
-fn set_alpha(state: &mut State, parameter: Parameter) {
-  state.alpha = parameter;
-}
-
-fn set_db(state: &mut State, parameter: Parameter) {
-  state.db = parameter.value() as f32;
-}
-
-fn set_velocity_x(state: &mut State, parameter: Parameter) {
-  state.velocity.x = parameter.bipolar();
-}
-
-fn set_velocity_y(state: &mut State, parameter: Parameter) {
-  state.velocity.y = parameter.bipolar();
-}
-
-fn set_velocity_z(state: &mut State, parameter: Parameter) {
-  state.velocity.z = parameter.bipolar();
-}
 
 pub(crate) struct Bindings {
   button: HashMap<(Controller, u8, bool), fn(&mut State)>,
