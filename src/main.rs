@@ -6,6 +6,7 @@ use {
     axis::Axis,
     bindings::Bindings,
     bool_ext::BoolExt,
+    command::Command,
     commands::Commands,
     composite_uniforms::CompositeUniforms,
     config::Config,
@@ -83,7 +84,7 @@ use {
     mem,
     num::NonZeroU32,
     ops::{Add, AddAssign, Bound, SubAssign},
-    process::{self, Command, ExitStatus, Stdio},
+    process::{self, ExitStatus, Stdio},
     str::FromStr,
     sync::{
       Arc, Mutex,
@@ -123,12 +124,6 @@ use {
   },
 };
 
-#[derive(Clone, Copy)]
-enum Foo {
-  App(fn(&mut App)),
-  State(fn(&mut State)),
-}
-
 #[cfg(test)]
 use std::collections::HashSet;
 
@@ -145,6 +140,7 @@ mod axis;
 mod bindings;
 mod bool_ext;
 mod color;
+mod command;
 mod commands;
 mod composite_uniforms;
 mod config;

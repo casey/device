@@ -1,4 +1,4 @@
-use super::*;
+use {super::*, std::process::Command};
 
 const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 

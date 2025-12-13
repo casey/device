@@ -18,32 +18,35 @@ const BUTTON_BINDINGS: &[((Controller, u8, bool), fn(&mut State))] = {
   ]
 };
 
-const CHARACTER_BINDINGS: &[(char, ModifiersState, Foo)] = {
-  use commands::*;
+#[rustfmt::skip]
+const CHARACTER_BINDINGS: &[(char, ModifiersState, Command)] = {
+  use generated::*;
 
-  const NONE: ModifiersState = ModifiersState::empty();
+  const OFF: ModifiersState = ModifiersState::empty();
 
   const CONTROL: ModifiersState = ModifiersState::CONTROL;
   const SUPER: ModifiersState = ModifiersState::SUPER;
+  const CTRL_SUPER: ModifiersState = CONTROL.union(SUPER);
+
 
   &[
-    // ('+', NONE, increment_db),
-    // ('-', NONE, decrement_db),
-    // ('A', NONE, all),
-    // ('B', NONE, blaster),
-    // ('C', NONE, circle),
-    // ('D', NONE, coordinates),
-    // ('F', NONE, toggle_fit),
-    ('F', CONTROL.union(SUPER), generated::TOGGLE_FULLSCREEN),
-    // ('I', NONE, toggle_interpolate),
-    // ('L', NONE, frequencies),
-    // ('N', NONE, none),
-    // ('R', NONE, toggle_repeat),
-    // ('S', NONE, samples),
-    // ('T', NONE, toggle_tile),
-    // ('W', NONE, toggle_wrap),
-    // ('X', NONE, x),
-    // ('Z', NONE, zoom_out),
+    ('+', OFF,        INCREMENT_DB),
+    ('-', OFF,        DECREMENT_DB),
+    ('A', OFF,        ALL),
+    ('B', OFF,        BLASTER),
+    ('C', OFF,        CIRCLE),
+    ('D', OFF,        COORDINATES),
+    ('F', OFF,        TOGGLE_FIT),
+    ('F', CTRL_SUPER, TOGGLE_FULLSCREEN),
+    ('I', OFF,        TOGGLE_INTERPOLATE),
+    ('L', OFF,        FREQUENCIES),
+    ('N', OFF,        NONE),
+    ('R', OFF,        TOGGLE_REPEAT),
+    ('S', OFF,        SAMPLES),
+    ('T', OFF,        TOGGLE_TILE),
+    ('W', OFF,        TOGGLE_WRAP),
+    ('X', OFF,        X),
+    ('Z', OFF,        ZOOM_OUT),
   ]
 };
 
@@ -79,20 +82,20 @@ const ENCODER_BINDINGS: &[((Controller, u8), fn(&mut State, Parameter))] = {
   ]
 };
 
-const NAMED_BINDINGS: &[(NamedKey, fn(&mut State))] = {
-  use {NamedKey::*, commands::*};
+const NAMED_BINDINGS: &[(NamedKey, Command)] = {
+  use {NamedKey::*, generated::*};
   &[
-    (ArrowLeft, negative_rotation),
-    (ArrowRight, positive_rotation),
-    (Backspace, pop),
+    (ArrowLeft, NEGATIVE_ROTATION),
+    (ArrowRight, POSITIVE_ROTATION),
+    (Backspace, POP),
   ]
 };
 
 pub(crate) struct Bindings {
   button: HashMap<(Controller, u8, bool), fn(&mut State)>,
-  character: HashMap<(String, ModifiersState), Foo>,
+  character: HashMap<(String, ModifiersState), Command>,
   encoder: HashMap<(Controller, u8), fn(&mut State, Parameter)>,
-  named: HashMap<NamedKey, fn(&mut State)>,
+  named: HashMap<NamedKey, Command>,
 }
 
 impl Bindings {
@@ -125,13 +128,13 @@ impl Bindings {
     command
   }
 
-  pub(crate) fn key(&self, key: &Key, modifiers: Modifiers) -> Option<Foo> {
+  pub(crate) fn key(&self, key: &Key, modifiers: Modifiers) -> Option<Command> {
     let command = match key {
       Key::Character(character) => self
         .character
         .get(&(character.to_uppercase(), modifiers.state()))
         .copied(),
-      // Key::Named(named) => self.named.get(named).copied(),
+      Key::Named(named) => self.named.get(named).copied(),
       _ => None,
     };
 
@@ -170,8 +173,8 @@ mod tests {
   #[test]
   fn character_bindings_are_unique() {
     let mut characters = HashSet::new();
-    for (c, _, _command) in CHARACTER_BINDINGS {
-      assert!(characters.insert(c));
+    for (c, modifiers, _command) in CHARACTER_BINDINGS {
+      assert!(characters.insert((c, modifiers)));
     }
   }
 

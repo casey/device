@@ -1,7 +1,7 @@
 use super::*;
 
 pub(crate) struct Commands {
-  map: BTreeMap<String, Foo>,
+  map: BTreeMap<String, Command>,
 }
 
 impl Commands {
@@ -13,7 +13,7 @@ impl Commands {
       .and_then(|(name, _command)| name.strip_prefix(prefix))
   }
 
-  pub(crate) fn name(&self, s: &str) -> Option<&Foo> {
+  pub(crate) fn name(&self, s: &str) -> Option<&Command> {
     self.map.get(s)
   }
 

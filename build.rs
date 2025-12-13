@@ -87,12 +87,12 @@ fn main() {
 
   for (name, variant) in &commands {
     lines.push(format!(
-      "pub(crate) const {}: Foo = Foo::{variant}(commands::{name});",
+      "pub(crate) const {}: Command = Command::{variant}(commands::{name});",
       name.to_uppercase(),
     ));
   }
 
-  lines.push("pub(crate) const COMMANDS: &[(&'static str, Foo)] = &[".into());
+  lines.push("pub(crate) const COMMANDS: &[(&'static str, Command)] = &[".into());
 
   for (name, variant) in commands {
     lines.push(format!(

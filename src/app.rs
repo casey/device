@@ -203,8 +203,8 @@ impl App {
         let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
         if let Some(command) = self.commands.name(command.as_str()) {
           match command {
-            Foo::State(command) => command(&mut self.state),
-            Foo::App(command) => todo!(),
+            Command::State(command) => command(&mut self.state),
+            Command::App(command) => todo!(),
           }
         } else {
           eprintln!("unknown command: {command}");
@@ -230,8 +230,8 @@ impl App {
   fn press_normal(&mut self, capture: &mut bool, event_loop: &ActiveEventLoop, key: &Key) {
     if let Some(command) = self.bindings.key(key, self.modifiers) {
       match command {
-        Foo::State(command) => command(&mut self.state),
-        Foo::App(command) => command(self),
+        Command::State(command) => command(&mut self.state),
+        Command::App(command) => command(self),
       }
     } else if let Key::Character(c) = &key {
       match c.as_str() {
