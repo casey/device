@@ -184,7 +184,7 @@ impl App {
         }
         Key::Named(NamedKey::Enter) => {
           let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-          if let Some(command) = self.commands.command(command.as_str()) {
+          if let Some(command) = self.commands.name(command.as_str()) {
             command(&mut self.state);
           } else {
             eprintln!("unknown command: {command}");

@@ -15,7 +15,7 @@ impl Commands {
     Self { map }
   }
 
-  pub(crate) fn command(&self, s: &str) -> Option<fn(&mut State)> {
+  pub(crate) fn name(&self, s: &str) -> Option<fn(&mut State)> {
     self.map.get(s).copied()
   }
 
