@@ -26,6 +26,20 @@ static RENDERER: LazyLock<Mutex<Renderer>> = LazyLock::new(|| {
   )
 });
 
+enum Error {
+  Missing,
+  Mismatch,
+}
+
+impl Display for Error {
+  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    match self {
+      Self::Missing => f.write_str("missing"),
+      Self::Mismatch => f.write_str("mismatch"),
+    }
+  }
+}
+
 struct Test {
   height: Option<u32>,
   name: String,
@@ -57,6 +71,16 @@ impl Test {
 
   #[track_caller]
   fn run(self) {
+    if let Err(err) = self.try_run() {
+      match err {
+        Error::Missing => panic!("no reference image found"),
+        Error::Mismatch => panic!("reference image mismatch"),
+      }
+    }
+  }
+
+  #[track_caller]
+  fn try_run(self) -> Result<(), Error> {
     let mut renderer = RENDERER.lock().unwrap();
 
     let resolution = self.resolution.unwrap_or(256);
@@ -89,14 +113,15 @@ impl Test {
 
     let actual = rx.recv().unwrap();
 
-    if expected.try_exists().unwrap() {
-      assert!(
-        actual == Image::load(&expected).unwrap(),
-        "reference image mismatch",
-      );
-    } else {
-      panic!("no reference image found for {}", self.name);
+    if !expected.try_exists().unwrap() {
+      return Err(Error::Missing);
     }
+
+    if actual != Image::load(&expected).unwrap() {
+      return Err(Error::Mismatch);
+    }
+
+    Ok(())
   }
 
   fn state(mut self, state: State) -> Self {
@@ -558,4 +583,35 @@ fn rotation() {
     .push();
 
   Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn presets() {
+  use tabled::{Table, Tabled, settings::style::Style};
+
+  #[derive(Tabled)]
+  struct Entry {
+    name: &'static str,
+    error: Error,
+  }
+
+  let mut errors = Vec::new();
+
+  for preset in Preset::iter() {
+    let mut state = State::default();
+    state.filters.push(Preset::Test.filter());
+    state.filters.push(preset.filter());
+
+    if let Err(err) = Test::new(format!("preset-{preset}")).state(state).try_run() {
+      errors.push(Entry {
+        name: preset.name(),
+        error: err,
+      });
+    }
+  }
+
+  if !errors.is_empty() {
+    panic!("{}", Table::new(&errors).with(Style::sharp()));
+  }
 }

@@ -1,6 +1,7 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, ValueEnum)]
+#[derive(Clone, Copy, Debug, EnumIter, ValueEnum, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
 pub(crate) enum Preset {
   Circle,
   Desaturate,
@@ -131,5 +132,15 @@ impl Preset {
         ..default()
       },
     }
+  }
+
+  pub(crate) fn name(self) -> &'static str {
+    self.into()
+  }
+}
+
+impl Display for Preset {
+  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    f.write_str(self.name())
   }
 }
