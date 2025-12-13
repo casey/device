@@ -594,7 +594,8 @@ impl ApplicationHandler for App {
               width: 256,
               height: 256,
             })
-            .with_title("device"),
+            .with_title("device")
+            .with_platform_attributes(),
         )
         .context(error::CreateWindow)
       {
