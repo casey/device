@@ -51,6 +51,7 @@ use {
     tiling::Tiling,
     to_affine::ToAffine,
     uniforms::Uniforms,
+    window_attributes_ext::WindowAttributesExt,
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
@@ -180,6 +181,7 @@ mod text;
 mod tiling;
 mod to_affine;
 mod uniforms;
+mod window_attributes_ext;
 
 const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
