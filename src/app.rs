@@ -6,7 +6,6 @@ pub(crate) struct App {
   capture_rx: mpsc::Receiver<Result>,
   capture_tx: mpsc::Sender<Result>,
   captures_pending: u64,
-  command: Option<Vec<String>>,
   commands: Commands,
   config: Config,
   deadline: Instant,
@@ -16,9 +15,9 @@ pub(crate) struct App {
   last: Instant,
   macro_recording: Option<Vec<(Key, bool)>>,
   makro: Vec<(Key, bool)>,
+  mode: Mode,
   options: Options,
   patch: Patch,
-  play: bool,
   present_mode: Option<PresentMode>,
   recorder: Option<Arc<Mutex<Recorder>>>,
   renderer: Option<Renderer>,
@@ -149,7 +148,6 @@ impl App {
       capture_rx,
       capture_tx,
       captures_pending: 0,
-      command: None,
       commands: Commands::new(),
       config,
       deadline: now,
@@ -159,9 +157,9 @@ impl App {
       last: now,
       macro_recording: None,
       makro: Vec::new(),
+      mode: Mode::Normal,
       options,
       patch: Patch::default(),
-      play: false,
       present_mode,
       recorder,
       renderer: None,
@@ -174,59 +172,61 @@ impl App {
   fn press(&mut self, event_loop: &ActiveEventLoop, key: Key, repeat: bool) {
     let mut capture = true;
 
-    if let Some(command) = self.command.as_mut() {
-      match &key {
-        Key::Character(c) => command.push(c.as_str().into()),
-        Key::Named(NamedKey::Backspace) => {
-          if command.pop().is_none() {
-            self.command = None;
-          }
-        }
-        Key::Named(NamedKey::Enter) => {
-          let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-          if let Some(command) = self.commands.name(command.as_str()) {
-            command(&mut self.state);
-          } else {
-            eprintln!("unknown command: {command}");
-          }
-          self.command = None;
-        }
-        Key::Named(NamedKey::Tab) => {
-          let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
+    match self.mode {
+      Mode::Command(_) => self.press_command(&key),
+      Mode::Normal => self.press_normal(&mut capture, event_loop, &key),
+      Mode::Play => self.press_play(&key, repeat),
+    }
 
-          if let Some(suffix) = self.commands.complete(&prefix) {
-            if !suffix.is_empty() {
-              eprintln!("completion: {prefix}{suffix}");
-              command.push(suffix.into());
-            }
-          } else {
-            eprintln!("no completion found for: {prefix}");
+    if capture && let Some(recording) = &mut self.macro_recording {
+      recording.push((key, repeat));
+    }
+  }
+
+  fn press_command(&mut self, key: &Key) {
+    let Mode::Command(command) = &mut self.mode else {
+      panic!("press_command called in wrong mode: {:?}", self.mode);
+    };
+
+    match &key {
+      Key::Character(c) => command.push(c.as_str().into()),
+      Key::Named(NamedKey::Backspace) => {
+        if command.pop().is_none() {
+          self.mode = Mode::Normal;
+        }
+      }
+      Key::Named(NamedKey::Enter) => {
+        let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
+        if let Some(command) = self.commands.name(command.as_str()) {
+          command(&mut self.state);
+        } else {
+          eprintln!("unknown command: {command}");
+        }
+        self.mode = Mode::Normal;
+      }
+      Key::Named(NamedKey::Tab) => {
+        let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
+
+        if let Some(suffix) = self.commands.complete(&prefix) {
+          if !suffix.is_empty() {
+            eprintln!("completion: {prefix}{suffix}");
+            command.push(suffix.into());
           }
-        }
-        _ => {}
-      }
-    } else if self.play {
-      if !repeat {
-        match &key {
-          Key::Named(NamedKey::Escape) => self.play = false,
-          Key::Character(c) => match c.as_str() {
-            "1" => self.patch = Patch::Sine,
-            "2" => self.patch = Patch::Saw,
-            _ => {
-              if let Some(semitones) = Self::semitones(c) {
-                self.patch.sequence(semitones, &mut self.tap);
-              }
-            }
-          },
-          _ => {}
+        } else {
+          eprintln!("no completion found for: {prefix}");
         }
       }
-    } else if let Some(command) = self.bindings.key(&key) {
+      _ => {}
+    }
+  }
+
+  fn press_normal(&mut self, capture: &mut bool, event_loop: &ActiveEventLoop, key: &Key) {
+    if let Some(command) = self.bindings.key(key) {
       command(&mut self.state);
     } else if let Key::Character(c) = &key {
       match c.as_str() {
         ":" => {
-          self.command = Some(Vec::new());
+          self.mode = Mode::Command(Vec::new());
         }
         ">" => {
           if let Err(err) = self.capture() {
@@ -238,16 +238,16 @@ impl App {
           for (key, repeat) in self.makro.clone() {
             self.press(event_loop, key, repeat);
           }
-          capture = false;
+          *capture = false;
         }
-        "p" => self.play = true,
+        "p" => self.mode = Mode::Play,
         "q" => {
           if let Some(recording) = self.macro_recording.take() {
             self.makro = recording;
           } else {
             self.macro_recording = Some(Vec::new());
           }
-          capture = false;
+          *capture = false;
         }
         "R" => {
           if let Err(err) = self.renderer.as_mut().unwrap().reload_shader() {
@@ -257,9 +257,23 @@ impl App {
         _ => {}
       }
     }
+  }
 
-    if capture && let Some(recording) = &mut self.macro_recording {
-      recording.push((key, repeat));
+  fn press_play(&mut self, key: &Key, repeat: bool) {
+    if !repeat {
+      match &key {
+        Key::Named(NamedKey::Escape) => self.mode = Mode::Normal,
+        Key::Character(c) => match c.as_str() {
+          "1" => self.patch = Patch::Sine,
+          "2" => self.patch = Patch::Saw,
+          _ => {
+            if let Some(semitones) = Self::semitones(c) {
+              self.patch.sequence(semitones, &mut self.tap);
+            }
+          }
+        },
+        _ => {}
+      }
     }
   }
 

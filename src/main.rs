@@ -26,6 +26,7 @@ use {
     into_utf8_path::IntoUtf8Path,
     message::Message,
     mirror::Mirror,
+    mode::Mode,
     options::Options,
     parameter::Parameter,
     patch::Patch,
@@ -158,6 +159,7 @@ mod into_stereo;
 mod into_utf8_path;
 mod message;
 mod mirror;
+mod mode;
 mod options;
 mod parameter;
 mod patch;
