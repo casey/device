@@ -91,8 +91,4 @@ impl Message {
       event,
     })
   }
-
-  pub(crate) fn tuple(self) -> (Controller, u8, Event) {
-    (self.controller, self.control, self.event)
-  }
 }

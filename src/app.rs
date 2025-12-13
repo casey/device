@@ -277,76 +277,28 @@ impl App {
     }
   }
 
-  fn redraw(&mut self) -> Result {
+  fn process_messages(&mut self) {
     for message in self.hub.messages().lock().unwrap().drain(..) {
-      match message.tuple() {
-        (Controller::Spectra, 0, Event::Button(true)) => self.state.filters.push(Filter {
-          color: color::invert(),
-          field: Field::Top,
-          wrap: self.state.wrap,
-          ..default()
-        }),
-        (Controller::Spectra, 1, Event::Button(true)) => self.state.filters.push(Filter {
-          color: color::invert(),
-          field: Field::Bottom,
-          wrap: self.state.wrap,
-          ..default()
-        }),
-        (Controller::Spectra, 2, Event::Button(true)) => self.state.filters.push(Filter {
-          color: color::invert(),
-          field: Field::X,
-          wrap: self.state.wrap,
-          ..default()
-        }),
-        (Controller::Spectra, 3, Event::Button(true)) => self.state.filters.push(Filter {
-          color: color::invert(),
-          field: Field::Circle { size: None },
-          wrap: self.state.wrap,
-          ..default()
-        }),
-        (Controller::Spectra, 4, Event::Button(true)) => self.state.filters.push(Filter {
-          position: Mat3f::new_scaling(2.0),
-          wrap: self.state.wrap,
-          ..default()
-        }),
-        (Controller::Spectra, 5, Event::Button(true)) => self.state.filters.push(Filter {
-          position: Mat3f::new_scaling(0.5),
-          wrap: self.state.wrap,
-          ..default()
-        }),
-        (Controller::Spectra, 6, Event::Button(true)) => self.state.filters.push(Filter {
-          position: Mat3f::new_translation(&Vec2f::new(-0.1, 0.0)),
-          wrap: self.state.wrap,
-          ..default()
-        }),
-        (Controller::Spectra, 7, Event::Button(true)) => self.state.filters.push(Filter {
-          position: Mat3f::new_translation(&Vec2f::new(0.1, 0.0)),
-          wrap: self.state.wrap,
-          ..default()
-        }),
-        (Controller::Spectra, 8, Event::Button(true)) => {
-          self.state.filters.pop();
-        }
-        (Controller::Twister, control, Event::Button(true)) => match control {
-          4 => self.state.transient.x = 0.0,
-          5 => self.state.transient.y = 0.0,
-          6 => self.state.transient.z = 0.0,
-          _ => {}
-        },
-        (Controller::Twister, control, Event::Encoder(parameter)) => {
-          self.state.parameter = parameter;
-          match control {
-            0 => self.state.alpha = parameter,
-            1 => self.state.db = parameter.value() as f32,
-            4 => self.state.velocity.x = parameter.bipolar(),
-            5 => self.state.velocity.y = parameter.bipolar(),
-            6 => self.state.velocity.z = parameter.bipolar(),
-            _ => {}
+      match message.event {
+        Event::Button(press) => {
+          if let Some(command) = self
+            .bindings
+            .button(message.controller, message.control, press)
+          {
+            command(&mut self.state);
           }
         }
-        _ => {}
+        Event::Encoder(parameter) => {
+          if let Some(command) = self.bindings.encoder(message.controller, message.control) {
+            command(&mut self.state, parameter);
+          }
+        }
       }
     }
+  }
+
+  fn redraw(&mut self) -> Result {
+    self.process_messages();
 
     let sound = if let Some(input) = &self.input {
       input.drain()
