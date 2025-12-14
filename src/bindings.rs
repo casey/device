@@ -50,6 +50,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
     (Normal, 'W', OFF,        TOGGLE_WRAP),
     (Normal, 'X', OFF,        X),
     (Normal, 'Z', OFF,        ZOOM_OUT),
+    (Normal, 'Z', SUPER,      UNDO),
     (Play,   '1', OFF,        SET_PATCH_SINE),
     (Play,   '2', OFF,        SET_PATCH_SAW),
   ]

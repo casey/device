@@ -1,8 +1,9 @@
 use super::*;
 
+#[derive(Clone)]
 pub(crate) struct State {
   pub(crate) alpha: Parameter,
-  pub(crate) callback: Option<Box<dyn FnMut(&mut Self, f32)>>,
+  pub(crate) callback: Option<Box<dyn Callback>>,
   pub(crate) db: f32,
   pub(crate) filter: Filter,
   pub(crate) filters: Vec<Filter>,
@@ -68,7 +69,10 @@ impl State {
     self
   }
 
-  pub(crate) fn callback(&mut self, callback: impl FnMut(&mut State, f32) + 'static) -> &mut Self {
+  pub(crate) fn callback(
+    &mut self,
+    callback: impl FnMut(&mut State, f32) + Clone + 'static,
+  ) -> &mut Self {
     self.callback = Some(Box::new(callback));
     self
   }
