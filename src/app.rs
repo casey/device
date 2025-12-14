@@ -1,65 +1,34 @@
 use super::*;
 
 pub(crate) struct App {
-  analyzer: Analyzer,
-  bindings: Bindings,
-  capture_rx: mpsc::Receiver<Result>,
-  capture_tx: mpsc::Sender<Result>,
-  captures_pending: u64,
-  commands: Commands,
-  config: Config,
-  deadline: Instant,
-  errors: Vec<Error>,
-  fullscreen: bool,
-  history: Vec<State>,
-  hub: Hub,
-  input: Option<Input>,
-  last: Instant,
-  mode: Mode,
-  modifiers: Modifiers,
-  options: Options,
-  patch: Patch,
-  present_mode: Option<PresentMode>,
-  recorder: Option<Arc<Mutex<Recorder>>>,
-  renderer: Option<Renderer>,
-  state: State,
-  tap: Tap,
-  window: Option<Arc<Window>>,
+  pub(crate) analyzer: Analyzer,
+  pub(crate) bindings: Bindings,
+  pub(crate) capture_rx: mpsc::Receiver<Result>,
+  pub(crate) capture_tx: mpsc::Sender<Result>,
+  pub(crate) captures_pending: u64,
+  pub(crate) commands: Commands,
+  pub(crate) config: Config,
+  pub(crate) deadline: Instant,
+  pub(crate) errors: Vec<Error>,
+  pub(crate) fullscreen: bool,
+  pub(crate) history: Vec<State>,
+  pub(crate) hub: Hub,
+  pub(crate) input: Option<Input>,
+  pub(crate) last: Instant,
+  pub(crate) mode: Mode,
+  pub(crate) modifiers: Modifiers,
+  pub(crate) options: Options,
+  pub(crate) patch: Patch,
+  pub(crate) present_mode: Option<PresentMode>,
+  pub(crate) recorder: Option<Arc<Mutex<Recorder>>>,
+  pub(crate) renderer: Option<Renderer>,
+  pub(crate) state: State,
+  pub(crate) tap: Tap,
+  pub(crate) window: Option<Arc<Window>>,
 }
 
 impl App {
-  pub(crate) fn capture(&mut self) -> Result {
-    let destination = self.config.capture("png");
-    let tx = self.capture_tx.clone();
-    self.renderer.as_ref().unwrap().capture(move |capture| {
-      if let Err(err) = tx.send(capture.save(&destination)) {
-        eprintln!("failed to send capture result: {err}");
-      }
-    })?;
-
-    self.captures_pending += 1;
-
-    Ok(())
-  }
-
-  pub(crate) fn complete_command(&mut self) {
-    let Mode::Command(command) = &mut self.mode else {
-      return;
-    };
-
-    let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
-
-    if let Some(suffix) = self.commands.complete(&prefix) {
-      if !suffix.is_empty() {
-        eprintln!("completion: {prefix}{suffix}");
-        command.push(suffix.into());
-      }
-    } else {
-      eprintln!("no completion found for: {prefix}");
-    }
-  }
-
-  fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command) {
+  pub(crate) fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command) {
     match command {
       Command::App(command) => command(self),
       Command::AppEventLoop(command) => command(self, event_loop),
@@ -76,10 +45,6 @@ impl App {
     }
   }
 
-  pub(crate) fn enter_mode(&mut self, mode: Mode) {
-    self.mode = mode;
-  }
-
   pub(crate) fn errors(self) -> Result {
     let mut errors = self.errors.into_iter();
 
@@ -93,20 +58,6 @@ impl App {
     } else {
       Ok(())
     }
-  }
-
-  pub(crate) fn execute_command(&mut self, event_loop: &ActiveEventLoop) {
-    let Mode::Command(command) = &mut self.mode else {
-      return;
-    };
-
-    let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-    if let Some(command) = self.commands.name(command.as_str()) {
-      self.dispatch(event_loop, command);
-    } else {
-      eprintln!("unknown command: {command}");
-    }
-    self.mode = Mode::Normal;
   }
 
   fn exit(&mut self) -> Result {
@@ -223,16 +174,6 @@ impl App {
     })
   }
 
-  pub(crate) fn pop_command(&mut self) {
-    let Mode::Command(command) = &mut self.mode else {
-      return;
-    };
-
-    if command.pop().is_none() {
-      self.mode = Mode::Normal;
-    }
-  }
-
   fn press(&mut self, event_loop: &ActiveEventLoop, key: Key) {
     if let Mode::Play = self.mode
       && let Key::Character(c) = &key
@@ -333,12 +274,6 @@ impl App {
     Ok(())
   }
 
-  pub(crate) fn reload_shaders(&mut self) {
-    if let Err(err) = self.renderer.as_mut().unwrap().reload_shaders() {
-      eprintln!("failed to reload shader: {err}");
-    }
-  }
-
   fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
     let size = Vector2::<NonZeroU32>::new(
       size.width.max(1).try_into().unwrap(),
@@ -411,24 +346,7 @@ impl App {
     }
   }
 
-  pub(crate) fn set_patch(&mut self, patch: Patch) {
-    self.patch = patch;
-  }
-
-  pub(crate) fn toggle_fullscreen(&mut self) {
-    self.fullscreen.toggle();
-    self
-      .window()
-      .set_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)));
-  }
-
-  pub(crate) fn undo(&mut self) {
-    if let Some(state) = self.history.pop() {
-      self.state = state;
-    }
-  }
-
-  fn window(&self) -> &Window {
+  pub(crate) fn window(&self) -> &Window {
     self.window.as_ref().unwrap()
   }
 }
