@@ -11,6 +11,7 @@ pub(crate) struct App {
   deadline: Instant,
   errors: Vec<Error>,
   fullscreen: bool,
+  history: Vec<State>,
   hub: Hub,
   input: Option<Input>,
   last: Instant,
@@ -68,7 +69,10 @@ impl App {
           event_loop.exit();
         }
       }
-      Command::State(command) => command(&mut self.state),
+      Command::State(command) => {
+        self.history.push(self.state.clone());
+        command(&mut self.state);
+      }
     }
   }
 
@@ -202,6 +206,7 @@ impl App {
       deadline: now,
       errors: Vec::new(),
       fullscreen: false,
+      history: Vec::new(),
       hub: Hub::new()?,
       input,
       last: now,
@@ -415,6 +420,12 @@ impl App {
     self
       .window()
       .set_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)));
+  }
+
+  pub(crate) fn undo(&mut self) {
+    if let Some(state) = self.history.pop() {
+      self.state = state;
+    }
   }
 
   fn window(&self) -> &Window {

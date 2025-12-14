@@ -6,6 +6,7 @@ use {
     axis::Axis,
     bindings::Bindings,
     bool_ext::BoolExt,
+    callback::Callback,
     command::Command,
     commands::Commands,
     composite_uniforms::CompositeUniforms,
@@ -139,6 +140,7 @@ mod arguments;
 mod axis;
 mod bindings;
 mod bool_ext;
+mod callback;
 mod color;
 mod command;
 mod commands;

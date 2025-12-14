@@ -32,6 +32,10 @@ pub(crate) fn pop_command(app: &mut App) {
   app.pop_command();
 }
 
+pub(crate) fn undo(app: &mut App) {
+  app.undo();
+}
+
 pub(crate) fn complete_command(app: &mut App) {
   app.complete_command();
 }
