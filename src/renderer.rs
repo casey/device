@@ -960,7 +960,6 @@ impl Renderer {
     let text = if let Some(text) = state.text.clone() {
       text
     } else if state.status {
-      dbg!("status");
       let mut items = Vec::new();
 
       if let Some(fps) = fps {
