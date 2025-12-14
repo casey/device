@@ -4,9 +4,9 @@ pub(crate) trait Callback: FnMut(&mut State, f32) {
   fn clone_box(&self) -> Box<dyn Callback>;
 }
 
-impl<F> Callback for F
+impl<T> Callback for T
 where
-  F: FnMut(&mut State, f32) + Clone + 'static,
+  T: FnMut(&mut State, f32) + Clone + 'static,
 {
   fn clone_box(&self) -> Box<dyn Callback> {
     Box::new(self.clone())
