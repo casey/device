@@ -77,6 +77,8 @@ impl Scene {
           Preset::ZoomOutNe,
         ];
 
+        state.interpolate = rng.random();
+
         state
           .filters
           .extend((0..16).map(|_| PRESETS.choose(&mut rng).unwrap().filter()));
