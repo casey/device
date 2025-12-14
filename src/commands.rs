@@ -28,110 +28,6 @@ impl Commands {
   }
 }
 
-pub(crate) fn undo(app: &mut App) {
-  if let Some(state) = app.history.pop() {
-    app.state = state;
-  }
-}
-
-pub(crate) fn pop_command(app: &mut App) {
-  let Mode::Command(command) = &mut app.mode else {
-    return;
-  };
-
-  if command.pop().is_none() {
-    app.mode = Mode::Normal;
-  }
-}
-
-pub(crate) fn complete_command(app: &mut App) {
-  let Mode::Command(command) = &mut app.mode else {
-    return;
-  };
-
-  let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
-
-  if let Some(suffix) = app.commands.complete(&prefix) {
-    if !suffix.is_empty() {
-      eprintln!("completion: {prefix}{suffix}");
-      command.push(suffix.into());
-    }
-  } else {
-    eprintln!("no completion found for: {prefix}");
-  }
-}
-
-pub(crate) fn execute_command(app: &mut App, event_loop: &ActiveEventLoop) {
-  let Mode::Command(command) = &mut app.mode else {
-    return;
-  };
-
-  let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-  if let Some(command) = app.commands.name(command.as_str()) {
-    app.dispatch(event_loop, command);
-  } else {
-    eprintln!("unknown command: {command}");
-  }
-  app.mode = Mode::Normal;
-}
-
-pub(crate) fn capture(app: &mut App) -> Result {
-  let destination = app.config.capture("png");
-  let tx = app.capture_tx.clone();
-  app.renderer.as_ref().unwrap().capture(move |capture| {
-    if let Err(err) = tx.send(capture.save(&destination)) {
-      eprintln!("failed to send capture result: {err}");
-    }
-  })?;
-
-  app.captures_pending += 1;
-
-  Ok(())
-}
-
-pub(crate) fn enter_command_mode(app: &mut App) {
-  app.mode = Mode::Command(Vec::new());
-}
-
-pub(crate) fn enter_play_mode(app: &mut App) {
-  app.mode = Mode::Play;
-}
-
-pub(crate) fn enter_normal_mode(app: &mut App) {
-  app.mode = Mode::Normal;
-}
-
-pub(crate) fn toggle_fullscreen(app: &mut App) {
-  app.fullscreen.toggle();
-  app
-    .window()
-    .set_fullscreen(app.fullscreen.then_some(Fullscreen::Borderless(None)));
-}
-
-pub(crate) fn set_patch_sine(app: &mut App) {
-  app.patch = Patch::Sine;
-}
-
-pub(crate) fn set_patch_saw(app: &mut App) {
-  app.patch = Patch::Saw;
-}
-
-pub(crate) fn negative_x_translation(state: &mut State) {
-  state.filters.push(Filter {
-    position: Mat3f::new_translation(&Vec2f::new(-0.1, 0.0)),
-    wrap: state.wrap,
-    ..default()
-  });
-}
-
-pub(crate) fn positive_x_translation(state: &mut State) {
-  state.filters.push(Filter {
-    position: Mat3f::new_translation(&Vec2f::new(0.1, 0.0)),
-    wrap: state.wrap,
-    ..default()
-  });
-}
-
 pub(crate) fn all(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
@@ -139,18 +35,6 @@ pub(crate) fn all(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
-}
-
-pub(crate) fn clear_transient_x_translation(state: &mut State) {
-  state.transient.x = 0.0;
-}
-
-pub(crate) fn clear_transient_y_translation(state: &mut State) {
-  state.transient.y = 0.0;
-}
-
-pub(crate) fn clear_transient_scale(state: &mut State) {
-  state.transient.z = 0.0;
 }
 
 pub(crate) fn blaster(state: &mut State) {
@@ -166,6 +50,18 @@ pub(crate) fn bottom(state: &mut State) {
   });
 }
 
+pub(crate) fn capture(app: &mut App) -> Result {
+  let destination = app.config.capture("png");
+  let tx = app.capture_tx.clone();
+  app.renderer.as_ref().unwrap().capture(move |capture| {
+    if let Err(err) = tx.send(capture.save(&destination)) {
+      eprintln!("failed to send capture result: {err}");
+    }
+  })?;
+  app.captures_pending += 1;
+  Ok(())
+}
+
 pub(crate) fn circle(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
@@ -173,6 +69,33 @@ pub(crate) fn circle(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
+}
+
+pub(crate) fn clear_transient_scale(state: &mut State) {
+  state.transient.z = 0.0;
+}
+
+pub(crate) fn clear_transient_x_translation(state: &mut State) {
+  state.transient.x = 0.0;
+}
+
+pub(crate) fn clear_transient_y_translation(state: &mut State) {
+  state.transient.y = 0.0;
+}
+
+pub(crate) fn complete_command(app: &mut App) {
+  let Mode::Command(command) = &mut app.mode else {
+    return;
+  };
+  let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
+  if let Some(suffix) = app.commands.complete(&prefix) {
+    if !suffix.is_empty() {
+      eprintln!("completion: {prefix}{suffix}");
+      command.push(suffix.into());
+    }
+  } else {
+    eprintln!("no completion found for: {prefix}");
+  }
 }
 
 pub(crate) fn coordinates(state: &mut State) {
@@ -194,6 +117,31 @@ pub(crate) fn cross(state: &mut State) {
 
 pub(crate) fn decrement_db(state: &mut State) {
   state.db -= 1.0;
+}
+
+pub(crate) fn enter_command_mode(app: &mut App) {
+  app.mode = Mode::Command(Vec::new());
+}
+
+pub(crate) fn enter_normal_mode(app: &mut App) {
+  app.mode = Mode::Normal;
+}
+
+pub(crate) fn enter_play_mode(app: &mut App) {
+  app.mode = Mode::Play;
+}
+
+pub(crate) fn execute_command(app: &mut App, event_loop: &ActiveEventLoop) {
+  let Mode::Command(command) = &mut app.mode else {
+    return;
+  };
+  let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
+  if let Some(command) = app.commands.name(command.as_str()) {
+    app.dispatch(event_loop, command);
+  } else {
+    eprintln!("unknown command: {command}");
+  }
+  app.mode = Mode::Normal;
 }
 
 pub(crate) fn frequencies(state: &mut State) {
@@ -225,6 +173,14 @@ pub(crate) fn negative_rotation(state: &mut State) {
   });
 }
 
+pub(crate) fn negative_x_translation(state: &mut State) {
+  state.filters.push(Filter {
+    position: Mat3f::new_translation(&Vec2f::new(-0.1, 0.0)),
+    wrap: state.wrap,
+    ..default()
+  });
+}
+
 pub(crate) fn none(state: &mut State) {
   state.filters.push(Filter {
     field: Field::None,
@@ -237,9 +193,26 @@ pub(crate) fn pop(state: &mut State) {
   state.pop();
 }
 
+pub(crate) fn pop_command(app: &mut App) {
+  let Mode::Command(command) = &mut app.mode else {
+    return;
+  };
+  if command.pop().is_none() {
+    app.mode = Mode::Normal;
+  }
+}
+
 pub(crate) fn positive_rotation(state: &mut State) {
   state.filters.push(Filter {
     position: Mat3f::new_rotation(0.01),
+    ..default()
+  });
+}
+
+pub(crate) fn positive_x_translation(state: &mut State) {
+  state.filters.push(Filter {
+    position: Mat3f::new_translation(&Vec2f::new(0.1, 0.0)),
+    wrap: state.wrap,
     ..default()
   });
 }
@@ -268,6 +241,14 @@ pub(crate) fn samples(state: &mut State) {
   });
 }
 
+pub(crate) fn set_patch_saw(app: &mut App) {
+  app.patch = Patch::Saw;
+}
+
+pub(crate) fn set_patch_sine(app: &mut App) {
+  app.patch = Patch::Sine;
+}
+
 pub(crate) fn spread(state: &mut State) {
   state.spread ^= true;
 }
@@ -287,6 +268,13 @@ pub(crate) fn status(state: &mut State) {
 
 pub(crate) fn toggle_fit(state: &mut State) {
   state.fit.toggle();
+}
+
+pub(crate) fn toggle_fullscreen(app: &mut App) {
+  app.fullscreen.toggle();
+  app
+    .window()
+    .set_fullscreen(app.fullscreen.then_some(Fullscreen::Borderless(None)));
 }
 
 pub(crate) fn toggle_interpolate(state: &mut State) {
@@ -321,6 +309,12 @@ pub(crate) fn triangle(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
+}
+
+pub(crate) fn undo(app: &mut App) {
+  if let Some(state) = app.history.pop() {
+    app.state = state;
+  }
 }
 
 pub(crate) fn x(state: &mut State) {
