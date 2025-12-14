@@ -97,3 +97,11 @@ record-curtains:
     --verbose \
     run \
     --record
+
+record-blaster:
+  cargo run --release -- \
+    --fps 60 \
+    --resolution 2048 \
+    --program blaster \
+    run \
+    --record
