@@ -48,6 +48,10 @@ impl App {
     }
   }
 
+  pub(crate) fn enter_mode(&mut self, mode: Mode) {
+    self.mode = mode;
+  }
+
   pub(crate) fn errors(self) -> Result {
     let mut errors = self.errors.into_iter();
 
@@ -221,23 +225,15 @@ impl App {
     }
   }
 
-  pub(crate) fn enter_mode(&mut self, mode: Mode) {
-    self.mode = mode;
-  }
-
   fn press_normal(&mut self, event_loop: &ActiveEventLoop, key: &Key) {
     if let Some(command) = self.bindings.key(key, self.modifiers) {
       self.dispatch(command);
-    } else if let Key::Character(c) = &key {
-      match c.as_str() {
-        ">" => {
-          if let Err(err) = self.capture() {
-            self.errors.push(err);
-            event_loop.exit();
-          }
-        }
-        _ => {}
-      }
+    } else if let Key::Character(c) = &key
+      && c.as_str() == ">"
+      && let Err(err) = self.capture()
+    {
+      self.errors.push(err);
+      event_loop.exit();
     }
   }
 

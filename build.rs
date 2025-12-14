@@ -69,9 +69,10 @@ fn main() {
       );
     };
 
-    if p.qself.is_some() {
-      panic!("command function {name} has qualified argument");
-    }
+    assert!(
+      p.qself.is_none(),
+      "command function {name} has qualified argument",
+    );
 
     let ident = p.path.get_ident().unwrap();
 
