@@ -41,6 +41,23 @@ impl App {
     Ok(())
   }
 
+  pub(crate) fn complete_command(&mut self) {
+    let Mode::Command(command) = &mut self.mode else {
+      return;
+    };
+
+    let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
+
+    if let Some(suffix) = self.commands.complete(&prefix) {
+      if !suffix.is_empty() {
+        eprintln!("completion: {prefix}{suffix}");
+        command.push(suffix.into());
+      }
+    } else {
+      eprintln!("no completion found for: {prefix}");
+    }
+  }
+
   fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command) {
     match command {
       Command::App(command) => command(self),
@@ -72,6 +89,20 @@ impl App {
     } else {
       Ok(())
     }
+  }
+
+  pub(crate) fn execute_command(&mut self, event_loop: &ActiveEventLoop) {
+    let Mode::Command(command) = &mut self.mode else {
+      return;
+    };
+
+    let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
+    if let Some(command) = self.commands.name(command.as_str()) {
+      self.dispatch(event_loop, command);
+    } else {
+      eprintln!("unknown command: {command}");
+    }
+    self.mode = Mode::Normal;
   }
 
   fn exit(&mut self) -> Result {
@@ -187,6 +218,16 @@ impl App {
     })
   }
 
+  pub(crate) fn pop_command(&mut self) {
+    let Mode::Command(command) = &mut self.mode else {
+      return;
+    };
+
+    if command.pop().is_none() {
+      self.mode = Mode::Normal;
+    }
+  }
+
   fn press(&mut self, event_loop: &ActiveEventLoop, key: Key) {
     if let Mode::Play = self.mode
       && let Key::Character(c) = &key
@@ -206,47 +247,6 @@ impl App {
     if let Some(command) = self.bindings.key((&self.mode).into(), &key, self.modifiers) {
       self.dispatch(event_loop, command);
     }
-  }
-
-  pub(crate) fn pop_command(&mut self) {
-    let Mode::Command(command) = &mut self.mode else {
-      return;
-    };
-
-    if command.pop().is_none() {
-      self.mode = Mode::Normal;
-    }
-  }
-
-  pub(crate) fn complete_command(&mut self) {
-    let Mode::Command(command) = &mut self.mode else {
-      return;
-    };
-
-    let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
-
-    if let Some(suffix) = self.commands.complete(&prefix) {
-      if !suffix.is_empty() {
-        eprintln!("completion: {prefix}{suffix}");
-        command.push(suffix.into());
-      }
-    } else {
-      eprintln!("no completion found for: {prefix}");
-    }
-  }
-
-  pub(crate) fn execute_command(&mut self, event_loop: &ActiveEventLoop) {
-    let Mode::Command(command) = &mut self.mode else {
-      return;
-    };
-
-    let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-    if let Some(command) = self.commands.name(command.as_str()) {
-      self.dispatch(event_loop, command);
-    } else {
-      eprintln!("unknown command: {command}");
-    }
-    self.mode = Mode::Normal;
   }
 
   fn process_messages(&mut self, event_loop: &ActiveEventLoop) {

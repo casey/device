@@ -85,10 +85,7 @@ fn main() {
       }
     };
 
-    let inputs = inputs
-      .iter()
-      .map(|input| input.as_str())
-      .collect::<Vec<&str>>();
+    let inputs = inputs.iter().map(String::as_str).collect::<Vec<&str>>();
 
     let variant = match (inputs.as_slice(), fallible) {
       (["app"], false) => "App",
