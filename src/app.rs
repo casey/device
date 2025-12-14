@@ -24,6 +24,7 @@ pub(crate) struct App {
   pub(crate) renderer: Option<Renderer>,
   pub(crate) state: State,
   pub(crate) tap: Tap,
+  pub(crate) unwind: bool,
   pub(crate) window: Option<Arc<Window>>,
 }
 
@@ -170,16 +171,19 @@ impl App {
       renderer: None,
       state,
       tap,
+      unwind: false,
       window: None,
     })
   }
 
-  fn press(&mut self, event_loop: &ActiveEventLoop, key: Key) {
+  fn press(&mut self, event_loop: &ActiveEventLoop, key: Key, repeat: bool) {
     if let Mode::Play = self.mode
       && let Key::Character(c) = &key
       && let Some(semitones) = Self::semitones(c)
     {
-      self.patch.sequence(semitones, &mut self.tap);
+      if !repeat {
+        self.patch.sequence(semitones, &mut self.tap);
+      }
       return;
     }
 
@@ -233,6 +237,14 @@ impl App {
     let now = Instant::now();
     let elapsed = now - self.last;
     self.last = now;
+
+    if self.unwind {
+      if let Some(last) = self.history.pop() {
+        self.state = last;
+      } else {
+        self.unwind = false;
+      }
+    }
 
     self.state.tick(elapsed);
 
@@ -446,10 +458,8 @@ impl ApplicationHandler for App {
       WindowEvent::Destroyed => {
         log::info!("window destroyed");
       }
-      WindowEvent::KeyboardInput { event, .. }
-        if event.state == ElementState::Pressed && !event.repeat =>
-      {
-        self.press(event_loop, event.logical_key);
+      WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
+        self.press(event_loop, event.logical_key, event.repeat);
       }
       WindowEvent::ModifiersChanged(modifiers) => self.modifiers = modifiers,
       WindowEvent::RedrawRequested => {

@@ -70,7 +70,7 @@ use {
   indicatif::{ProgressBar, ProgressStyle},
   nalgebra::{Vector2, matrix, vector},
   parley::{FontContext, LayoutContext},
-  rand::{Rng, SeedableRng, rngs::SmallRng, seq::IndexedRandom},
+  rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,

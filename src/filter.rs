@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct Filter {
   pub(crate) alpha: f32,
   pub(crate) base: f32,
@@ -11,6 +11,7 @@ pub(crate) struct Filter {
   pub(crate) grid_alpha: f32,
   pub(crate) mirror: Vector2<Mirror>,
   pub(crate) position: Mat3f,
+  pub(crate) preset: Option<Preset>,
   pub(crate) repeat: bool,
   pub(crate) rms: Mat1x2f,
   pub(crate) rotation: f32,
@@ -29,6 +30,7 @@ impl Default for Filter {
       grid_alpha: 0.0,
       mirror: Vector2::default(),
       position: Mat3f::identity(),
+      preset: None,
       repeat: true,
       rms: Mat1x2f::identity(),
       rotation: 0.0,

@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Copy, EnumIter, IntoStaticStr)]
+#[derive(Clone, Copy, Debug, EnumIter, IntoStaticStr)]
 #[repr(u32)]
 pub(crate) enum Field {
   All,

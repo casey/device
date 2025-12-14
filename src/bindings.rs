@@ -1,20 +1,26 @@
 use super::*;
 
+#[rustfmt::skip]
 const BUTTON_BINDINGS: &[(Controller, u8, bool, Command)] = {
   use {Controller::*, generated::*};
   &[
-    (Spectra, 0, true, TOP),
-    (Spectra, 1, true, BOTTOM),
-    (Spectra, 2, true, X),
-    (Spectra, 3, true, CIRCLE),
-    (Spectra, 4, true, ZOOM_OUT),
-    (Spectra, 5, true, ZOOM_IN),
-    (Spectra, 6, true, NEGATIVE_X_TRANSLATION),
-    (Spectra, 7, true, POSITIVE_X_TRANSLATION),
-    (Spectra, 8, true, POP),
-    (Twister, 4, true, CLEAR_TRANSIENT_X_TRANSLATION),
-    (Twister, 5, true, CLEAR_TRANSIENT_Y_TRANSLATION),
-    (Twister, 6, true, CLEAR_TRANSIENT_SCALE),
+    (Spectra,  0, true, PUSH_TOP),
+    (Spectra,  1, true, PUSH_BOTTOM),
+    (Spectra,  2, true, CYCLE),
+    (Spectra,  3, true, CYCLE_ZOOM),
+
+    (Spectra,  4, true, ROTATE_LEFT),
+    (Spectra,  5, true, ROTATE_RIGHT),
+    (Spectra,  6, true, SHUFFLE),
+    (Spectra,  7, true, SWAP),
+
+    (Spectra,  8, true, ADVANCE),
+    (Spectra,  9, true, BLASTER),
+    (Spectra, 10, true, WAFFLE),
+
+    (Twister,  4, true, CLEAR_TRANSIENT_X_TRANSLATION),
+    (Twister,  5, true, CLEAR_TRANSIENT_Y_TRANSLATION),
+    (Twister,  6, true, CLEAR_TRANSIENT_SCALE),
   ]
 };
 
@@ -33,6 +39,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
     (Normal, '-', OFF,        DECREMENT_DB),
     (Normal, ':', SHIFT,      ENTER_COMMAND_MODE),
     (Normal, '>', SHIFT,      CAPTURE),
+    (Normal, '?', SHIFT,      PRINT),
     (Normal, 'A', OFF,        ALL),
     (Normal, 'B', OFF,        BLASTER),
     (Normal, 'C', OFF,        CIRCLE),
@@ -47,6 +54,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
     (Normal, 'R', SHIFT,      RELOAD_SHADERS),
     (Normal, 'S', OFF,        SAMPLES),
     (Normal, 'T', OFF,        TOGGLE_TILE),
+    (Normal, 'U', SUPER,      UNWIND),
     (Normal, 'W', OFF,        TOGGLE_WRAP),
     (Normal, 'X', OFF,        X),
     (Normal, 'Z', OFF,        ZOOM_OUT),

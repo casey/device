@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct Text {
   pub(crate) size: f32,
   pub(crate) string: String,

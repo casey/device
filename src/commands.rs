@@ -28,6 +28,130 @@ impl Commands {
   }
 }
 
+const LIMIT: usize = 16;
+
+pub(crate) fn print(state: &mut State) {
+  eprintln!(
+    "{}",
+    state
+      .filters
+      .iter()
+      .map(|filter| filter
+        .preset
+        .map(|preset| preset.name())
+        .unwrap_or("unknown"))
+      .collect::<Vec<&str>>()
+      .join(" ")
+  );
+}
+
+pub(crate) fn advance(state: &mut State) {
+  if state.beat % 4 == 3 {
+    state.pop();
+    state.pop();
+  } else {
+    push_top(state)
+  }
+  state.beat += 1;
+}
+
+pub(crate) fn cycle(state: &mut State) {
+  if state.beat % 4 == 3 {
+    state.pop();
+    state.pop();
+    state.pop();
+  } else {
+    push_top(state)
+  }
+  state.beat += 1;
+}
+
+pub(crate) fn swap(state: &mut State) {
+  if state.filters.len() > 2 {
+    let a = state.filters.pop().unwrap();
+    let b = state.filters.pop().unwrap();
+    state.filters.push(a);
+    state.filters.push(b);
+  }
+}
+
+pub(crate) fn shuffle(state: &mut State) {
+  state.filters.shuffle(&mut state.rng);
+}
+
+pub(crate) fn waffle(app: &mut App) {
+  if let Some(mut state) = app.history.pop() {
+    mem::swap(&mut state, &mut app.state);
+    app.history.push(state);
+  }
+}
+
+pub(crate) fn cycle_zoom(state: &mut State) {
+  if state.beat % 4 == 3 {
+    state.pop();
+    state.pop();
+    state.pop();
+  } else {
+    zoom_out(state)
+  }
+  state.beat += 1;
+}
+
+pub(crate) fn rotate_left(state: &mut State) {
+  state.filters.rotate_left(1);
+}
+
+pub(crate) fn rotate_right(state: &mut State) {
+  state.filters.rotate_right(1);
+}
+
+pub(crate) fn push_top(state: &mut State) {
+  state
+    .filters
+    .push(Preset::random(&mut state.rng, state.filters.len()).filter());
+
+  while state.filters.len() > LIMIT {
+    state.filters.remove(0);
+  }
+}
+
+pub(crate) fn push_bottom(state: &mut State) {
+  state.filters.insert(
+    0,
+    Preset::random(&mut state.rng, state.filters.len()).filter(),
+  );
+
+  while state.filters.len() > LIMIT {
+    state.filters.pop();
+  }
+}
+
+pub(crate) fn blaster(state: &mut State) {
+  let presets = (0..LIMIT)
+    .map(|i| Preset::random(&mut state.rng, i))
+    .collect::<Vec<Preset>>();
+
+  if log::log_enabled!(log::Level::Info) {
+    let presets = presets
+      .iter()
+      .map(|preset| preset.name())
+      .collect::<Vec<&str>>();
+    log::info!("stack: {}", presets.join(" "));
+  }
+
+  state.truncate(0);
+
+  state
+    .filters
+    .extend(presets.into_iter().map(Preset::filter));
+}
+
+pub(crate) fn unwind(app: &mut App) {
+  app.unwind = true;
+}
+
+// ---
+
 pub(crate) fn all(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
@@ -35,10 +159,6 @@ pub(crate) fn all(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
-}
-
-pub(crate) fn blaster(state: &mut State) {
-  state.filters = Scene::Blaster.state(None).filters;
 }
 
 pub(crate) fn bottom(state: &mut State) {

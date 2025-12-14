@@ -52,36 +52,11 @@ impl Scene {
         state.invert().all().push();
       }
       Self::Blaster => {
-        const PRESETS: [Preset; 22] = [
-          Preset::Circle,
-          Preset::Desaturate,
-          Preset::FlipH,
-          Preset::FlipV,
-          Preset::InvertB,
-          Preset::InvertF,
-          Preset::InvertG,
-          Preset::InvertR,
-          Preset::Left,
-          Preset::MirrorH,
-          Preset::MirrorV,
-          Preset::Rotate,
-          Preset::RotateBlaster,
-          Preset::Spin,
-          Preset::Square,
-          Preset::Test,
-          Preset::Top,
-          Preset::X,
-          Preset::ZoomIn,
-          Preset::ZoomInNe,
-          Preset::ZoomOut,
-          Preset::ZoomOutNe,
-        ];
-
         state.interpolate = rng.random();
 
         state
           .filters
-          .extend((0..16).map(|_| PRESETS.choose(&mut rng).unwrap().filter()));
+          .extend((0..16).map(|i| Preset::random(&mut rng, i).filter()));
       }
       Self::Bottom => {
         state.invert().bottom().push();
