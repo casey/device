@@ -28,6 +28,10 @@ impl Commands {
   }
 }
 
+pub(crate) fn capture(app: &mut App) -> Result {
+  app.capture()
+}
+
 pub(crate) fn enter_command_mode(app: &mut App) {
   app.enter_mode(Mode::Command(Vec::new()));
 }

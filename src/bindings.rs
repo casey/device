@@ -32,6 +32,7 @@ const CHARACTER_BINDINGS: &[(char, ModifiersState, Command)] = {
     ('+', OFF,        INCREMENT_DB),
     ('-', OFF,        DECREMENT_DB),
     (':', SHIFT,      ENTER_COMMAND_MODE),
+    ('>', SHIFT,      CAPTURE),
     ('A', OFF,        ALL),
     ('B', OFF,        BLASTER),
     ('C', OFF,        CIRCLE),

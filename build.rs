@@ -41,12 +41,33 @@ fn main() {
       function.sig.inputs.len(),
     );
 
-    assert_eq!(
-      function.sig.output,
-      ReturnType::Default,
-      "command function {name} has non-default return type: {}",
-      function.sig.output.to_token_stream(),
-    );
+    let fallible = match &function.sig.output {
+      ReturnType::Default => false,
+      ReturnType::Type(_, ty) => {
+        let Type::Path(p) = ty.as_ref() else {
+          panic!(
+            "command function {name} has unexpected return type: {}",
+            ty.to_token_stream(),
+          );
+        };
+
+        assert!(
+          p.qself.is_none(),
+          "command function {name} has qualified return type",
+        );
+
+        let ident = p.path.get_ident().unwrap();
+
+        if ident != "Result" {
+          panic!(
+            "command function {name} has unexpected return type: {}",
+            ty.to_token_stream(),
+          );
+        }
+
+        true
+      }
+    };
 
     let FnArg::Typed(PatType { ty, .. }) = function.sig.inputs.first().unwrap() else {
       panic!(
@@ -76,13 +97,15 @@ fn main() {
 
     let ident = p.path.get_ident().unwrap();
 
-    let command = match ident.to_string().as_str() {
-      "State" => "State",
-      "App" => "App",
-      other => panic!("command {name} has unexpected argument type {other}"),
+    let variant = match (ident.to_string().as_str(), fallible) {
+      ("State", false) => "State",
+      ("State", true) => panic!("command {name} takes state but is fallible"),
+      ("App", false) => "App",
+      ("App", true) => "AppFallible",
+      (other, _) => panic!("command {name} has unexpected argument type {other}"),
     };
 
-    commands.insert(name, command);
+    commands.insert(name, variant);
   }
 
   let mut lines = Vec::new();
