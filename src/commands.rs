@@ -29,11 +29,11 @@ impl Commands {
 }
 
 pub(crate) fn enter_command_mode(app: &mut App) {
-  app.enter_command_mode();
+  app.enter_mode(Mode::Command(Vec::new()));
 }
 
 pub(crate) fn enter_play_mode(app: &mut App) {
-  app.enter_play_mode();
+  app.enter_mode(Mode::Play);
 }
 
 pub(crate) fn toggle_fullscreen(app: &mut App) {

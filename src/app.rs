@@ -221,12 +221,8 @@ impl App {
     }
   }
 
-  pub(crate) fn enter_command_mode(&mut self) {
-    self.mode = Mode::Command(Vec::new());
-  }
-
-  pub(crate) fn enter_play_mode(&mut self) {
-    self.mode = Mode::Play;
+  pub(crate) fn enter_mode(&mut self, mode: Mode) {
+    self.mode = mode;
   }
 
   fn press_normal(&mut self, event_loop: &ActiveEventLoop, key: &Key) {
