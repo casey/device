@@ -27,7 +27,7 @@ pub(crate) struct App {
 }
 
 impl App {
-  fn capture(&mut self) -> Result {
+  pub(crate) fn capture(&mut self) -> Result {
     let destination = self.config.capture("png");
     let tx = self.capture_tx.clone();
     self.renderer.as_ref().unwrap().capture(move |capture| {
@@ -41,10 +41,16 @@ impl App {
     Ok(())
   }
 
-  fn dispatch(&mut self, command: Command) {
+  fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command) {
     match command {
       Command::App(command) => command(self),
       Command::State(command) => command(&mut self.state),
+      Command::AppFallible(command) => {
+        if let Err(err) = command(self) {
+          self.errors.push(err);
+          event_loop.exit();
+        }
+      }
     }
   }
 
@@ -182,13 +188,13 @@ impl App {
 
   fn press(&mut self, event_loop: &ActiveEventLoop, key: Key, repeat: bool) {
     match self.mode {
-      Mode::Command(_) => self.press_command(&key),
+      Mode::Command(_) => self.press_command(event_loop, &key),
       Mode::Normal => self.press_normal(event_loop, &key),
       Mode::Play => self.press_play(&key, repeat),
     }
   }
 
-  fn press_command(&mut self, key: &Key) {
+  fn press_command(&mut self, event_loop: &ActiveEventLoop, key: &Key) {
     let Mode::Command(command) = &mut self.mode else {
       panic!("press_command called in wrong mode: {:?}", self.mode);
     };
@@ -203,7 +209,7 @@ impl App {
       Key::Named(NamedKey::Enter) => {
         let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
         if let Some(command) = self.commands.name(command.as_str()) {
-          self.dispatch(command);
+          self.dispatch(event_loop, command);
         } else {
           eprintln!("unknown command: {command}");
         }
@@ -227,13 +233,7 @@ impl App {
 
   fn press_normal(&mut self, event_loop: &ActiveEventLoop, key: &Key) {
     if let Some(command) = self.bindings.key(key, self.modifiers) {
-      self.dispatch(command);
-    } else if let Key::Character(c) = &key
-      && c.as_str() == ">"
-      && let Err(err) = self.capture()
-    {
-      self.errors.push(err);
-      event_loop.exit();
+      self.dispatch(event_loop, command);
     }
   }
 
@@ -255,7 +255,7 @@ impl App {
     }
   }
 
-  fn process_messages(&mut self) {
+  fn process_messages(&mut self, event_loop: &ActiveEventLoop) {
     for message in self.hub.drain() {
       match message.event {
         Event::Button(press) => {
@@ -263,7 +263,7 @@ impl App {
             .bindings
             .button(message.controller, message.control, press)
           {
-            self.dispatch(command);
+            self.dispatch(event_loop, command);
           }
         }
         Event::Encoder(parameter) => {
@@ -275,8 +275,8 @@ impl App {
     }
   }
 
-  fn redraw(&mut self) -> Result {
-    self.process_messages();
+  fn redraw(&mut self, event_loop: &ActiveEventLoop) -> Result {
+    self.process_messages(event_loop);
 
     let sound = if let Some(input) = &self.input {
       input.drain()
@@ -524,7 +524,7 @@ impl ApplicationHandler for App {
       }
       WindowEvent::ModifiersChanged(modifiers) => self.modifiers = modifiers,
       WindowEvent::RedrawRequested => {
-        if let Err(err) = self.redraw() {
+        if let Err(err) = self.redraw(event_loop) {
           self.errors.push(err);
           event_loop.exit();
         }
