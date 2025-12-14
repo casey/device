@@ -422,14 +422,14 @@ impl App {
       .set_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)));
   }
 
-  fn window(&self) -> &Window {
-    self.window.as_ref().unwrap()
-  }
-
   pub(crate) fn undo(&mut self) {
     if let Some(state) = self.history.pop() {
-      self.state = state
+      self.state = state;
     }
+  }
+
+  fn window(&self) -> &Window {
+    self.window.as_ref().unwrap()
   }
 }
 
