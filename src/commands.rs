@@ -374,6 +374,10 @@ pub(crate) fn toggle_fit(state: &mut State) {
   state.fit.toggle();
 }
 
+pub(crate) fn toggle_muted(app: &mut App) {
+  app.tap.toggle_muted();
+}
+
 pub(crate) fn toggle_fullscreen(app: &mut App) {
   app.fullscreen.toggle();
   app

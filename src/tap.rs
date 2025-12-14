@@ -17,6 +17,7 @@ use {
 pub(crate) struct Tap {
   backend: Arc<Mutex<Backend>>,
   done: f64,
+  muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
   sample_rate: u32,
   sequencer: Sequencer,
@@ -110,16 +111,18 @@ impl Tap {
     sequencer.set_sample_rate(sample_rate.into());
     let sequencer_backend = sequencer.backend();
     let paused = Arc::new(AtomicBool::new(false));
+    let muted = Arc::new(AtomicBool::new(options.mute));
     Self {
       backend: Arc::new(Mutex::new(Backend {
         buffer: BufferVec::new(Self::CHANNELS.into()),
-        mute: options.mute,
+        muted: muted.clone(),
         paused: paused.clone(),
         sample: 0,
         samples: Vec::new(),
         sequencer_backend,
       })),
       done: 0.0,
+      muted,
       paused,
       sample_rate,
       sequencer,
@@ -202,6 +205,10 @@ impl Tap {
     Ok(())
   }
 
+  pub(crate) fn toggle_muted(&self) {
+    self.muted.fetch_xor(true, atomic::Ordering::Relaxed);
+  }
+
   pub(crate) fn write(&self, buffer: &mut [f32]) {
     self.backend.lock().unwrap().write(buffer);
   }
@@ -209,7 +216,7 @@ impl Tap {
 
 struct Backend {
   buffer: BufferVec,
-  mute: bool,
+  muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
   sample: u64,
   samples: Vec<f32>,
@@ -240,7 +247,11 @@ impl Backend {
         (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE,
       );
 
-      *slot = if self.mute { 0.0 } else { sample };
+      *slot = if self.muted.load(atomic::Ordering::Relaxed) {
+        0.0
+      } else {
+        sample
+      };
 
       self.samples.push(sample);
 
