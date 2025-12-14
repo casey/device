@@ -226,6 +226,12 @@ impl Display for Preset {
   }
 }
 
+impl From<Preset> for Filter {
+  fn from(preset: Preset) -> Self {
+    preset.filter()
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use {super::*, pretty_assertions::assert_eq};

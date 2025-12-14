@@ -21,6 +21,7 @@ pub(crate) enum Scene {
   Samples,
   Starburst,
   StarburstRandom,
+  Test,
   Top,
   X,
 }
@@ -28,9 +29,11 @@ pub(crate) enum Scene {
 impl Scene {
   pub(crate) fn format(self) -> Option<Format> {
     match self {
-      Self::Kaleidoscope | Self::Starburst | Self::StarburstRandom | Self::Pattern => {
-        Some(Format::Bgra8Unorm)
-      }
+      Self::Blaster
+      | Self::Kaleidoscope
+      | Self::Pattern
+      | Self::Starburst
+      | Self::StarburstRandom => Some(Format::Bgra8Unorm),
       _ => None,
     }
   }
@@ -256,6 +259,9 @@ impl Scene {
         for _ in 0..10 {
           state.field(*FIELDS.choose(&mut rng).unwrap()).push();
         }
+      }
+      Self::Test => {
+        state.filters.push(Preset::Test.into());
       }
       Self::X => {
         state.invert().x().push();

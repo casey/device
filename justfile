@@ -57,6 +57,7 @@ noise: (program "noise")
 expo: (program "expo")
 transit: (program "transit")
 radio: (program "radio")
+blaster: (program "blaster")
 
 curtains:
   cargo run --release -- --song 'curtains closing' run
@@ -64,20 +65,15 @@ curtains:
 maria:
   cargo run --release -- --song 'total 4/13 maria' run
 
-blaster:
-  cargo run --release -- --format bgra8unorm --song 'total 4/13 maria' --db -15 --preset test
+nobrain:
+  cargo run --release -- --song 'no brain$' run
 
 preset preset:
   cargo run --release -- \
-    --format bgra8unorm \
-    --song 'total 4/13 maria' \
+    --program blaster \
     --mute \
-    --preset test \
     --preset {{preset}} \
     run
-
-nobrain:
-  cargo run --release -- --song 'no brain$' run
 
 capture program:
   cargo run --release -- \
