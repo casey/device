@@ -23,12 +23,10 @@ const CHARACTER_BINDINGS: &[(char, ModifiersState, Command)] = {
   use generated::*;
 
   const OFF: ModifiersState = ModifiersState::empty();
-
   const CTRL: ModifiersState = ModifiersState::CONTROL;
   const CTRL_SUPER: ModifiersState = CTRL.union(SUPER);
   const SHIFT: ModifiersState = ModifiersState::SHIFT;
   const SUPER: ModifiersState = ModifiersState::SUPER;
-
 
   &[
     ('+', OFF,        INCREMENT_DB),
