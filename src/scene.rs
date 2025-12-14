@@ -56,7 +56,7 @@ impl Scene {
 
         state
           .filters
-          .extend((0..16).map(|i| Preset::random(&mut rng, i).filter()));
+          .extend((0..Preset::LIMIT).map(|i| Preset::random(&mut rng, i).filter()));
       }
       Self::Bottom => {
         state.invert().bottom().push();

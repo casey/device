@@ -32,6 +32,8 @@ pub(crate) enum Preset {
 }
 
 impl Preset {
+  pub(crate) const LIMIT: usize = 16;
+
   pub(crate) fn filter(self) -> Filter {
     let mut filter = match self {
       Self::Circle => Filter {

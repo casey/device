@@ -13,6 +13,7 @@ pub(crate) struct State {
   pub(crate) interpolate: bool,
   pub(crate) parameter: Parameter,
   pub(crate) resolution: Option<NonZeroU32>,
+  pub(crate) rng: SmallRng,
   pub(crate) spread: bool,
   pub(crate) status: bool,
   pub(crate) text: Option<Text>,
@@ -20,7 +21,6 @@ pub(crate) struct State {
   pub(crate) transient: Vec4f,
   pub(crate) velocity: Vec4f,
   pub(crate) wrap: bool,
-  pub(crate) rng: SmallRng,
 }
 
 impl Default for State {
