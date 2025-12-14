@@ -186,11 +186,22 @@ impl App {
     })
   }
 
-  fn press(&mut self, event_loop: &ActiveEventLoop, key: Key, repeat: bool) {
+  fn press(&mut self, event_loop: &ActiveEventLoop, key: Key) {
+    if let Mode::Play = self.mode
+      && let Key::Character(c) = &key
+      && let Some(semitones) = Self::semitones(c)
+    {
+      self.patch.sequence(semitones, &mut self.tap);
+      return;
+    }
+
     match self.mode {
       Mode::Command(_) => self.press_command(event_loop, &key),
-      Mode::Normal => self.press_normal(event_loop, &key),
-      Mode::Play => self.press_play(&key, repeat),
+      Mode::Normal | Mode::Play => {
+        if let Some(command) = self.bindings.key((&self.mode).into(), &key, self.modifiers) {
+          self.dispatch(event_loop, command);
+        }
+      }
     }
   }
 
@@ -228,30 +239,6 @@ impl App {
         }
       }
       _ => {}
-    }
-  }
-
-  fn press_normal(&mut self, event_loop: &ActiveEventLoop, key: &Key) {
-    if let Some(command) = self.bindings.key(key, self.modifiers) {
-      self.dispatch(event_loop, command);
-    }
-  }
-
-  fn press_play(&mut self, key: &Key, repeat: bool) {
-    if !repeat {
-      match &key {
-        Key::Named(NamedKey::Escape) => self.mode = Mode::Normal,
-        Key::Character(c) => match c.as_str() {
-          "1" => self.patch = Patch::Sine,
-          "2" => self.patch = Patch::Saw,
-          _ => {
-            if let Some(semitones) = Self::semitones(c) {
-              self.patch.sequence(semitones, &mut self.tap);
-            }
-          }
-        },
-        _ => {}
-      }
     }
   }
 
@@ -412,6 +399,10 @@ impl App {
     }
   }
 
+  pub(crate) fn set_patch(&mut self, patch: Patch) {
+    self.patch = patch;
+  }
+
   pub(crate) fn toggle_fullscreen(&mut self) {
     self.fullscreen.toggle();
     self
@@ -519,8 +510,10 @@ impl ApplicationHandler for App {
       WindowEvent::Destroyed => {
         log::info!("window destroyed");
       }
-      WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
-        self.press(event_loop, event.logical_key, event.repeat);
+      WindowEvent::KeyboardInput { event, .. }
+        if event.state == ElementState::Pressed && !event.repeat =>
+      {
+        self.press(event_loop, event.logical_key);
       }
       WindowEvent::ModifiersChanged(modifiers) => self.modifiers = modifiers,
       WindowEvent::RedrawRequested => {
