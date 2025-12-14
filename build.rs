@@ -58,12 +58,12 @@ fn main() {
 
         let ident = p.path.get_ident().unwrap();
 
-        if ident != "Result" {
-          panic!(
-            "command function {name} has unexpected return type: {}",
-            ty.to_token_stream(),
-          );
-        }
+        assert_eq!(
+          ident,
+          "Result",
+          "command function {name} has unexpected return type: {}",
+          ty.to_token_stream(),
+        );
 
         true
       }
