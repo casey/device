@@ -88,6 +88,12 @@ const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
     value
   }
 
+  fn set_complexity(state: &mut State, value: u7) -> f32 {
+    let value = u8::from(value).into();
+    state.complexity = value;
+    value as f32
+  }
+
   fn set_db(state: &mut State, value: u7) -> f32 {
     let value = integer(value);
     state.db = value;
@@ -118,6 +124,7 @@ const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
     (Twister, 4, set_velocity_x),
     (Twister, 5, set_velocity_y),
     (Twister, 6, set_velocity_z),
+    (Twister, 8, set_complexity),
   ]
 };
 

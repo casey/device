@@ -5,6 +5,7 @@ pub(crate) struct State {
   pub(crate) alpha: f32,
   pub(crate) beat: u64,
   pub(crate) callback: Option<Box<dyn Callback>>,
+  pub(crate) complexity: usize,
   pub(crate) db: f32,
   pub(crate) encoder: f32,
   pub(crate) filter: Filter,
@@ -44,6 +45,7 @@ impl Default for State {
       tile: false,
       transient: Self::TRANSIENT_IDENTITY,
       velocity: Vec4f::zeros(),
+      complexity: Preset::LIMIT,
       wrap: true,
     }
   }

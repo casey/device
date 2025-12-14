@@ -48,7 +48,7 @@ pub(crate) fn all(state: &mut State) {
 }
 
 pub(crate) fn blaster(state: &mut State) {
-  let presets = (0..Preset::LIMIT)
+  let presets = (0..state.complexity)
     .map(|i| Preset::random(&mut state.rng, i))
     .collect::<Vec<Preset>>();
 
