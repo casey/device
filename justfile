@@ -56,6 +56,7 @@ busy: (program "busy")
 noise: (program "noise")
 expo: (program "expo")
 transit: (program "transit")
+radio: (program "radio")
 
 curtains:
   cargo run --release -- --song 'curtains closing' run
@@ -90,6 +91,7 @@ capture-busy: (capture "busy")
 capture-noise: (capture "noise")
 capture-expo: (capture "expo")
 capture-transit: (capture "transit")
+capture-radio: (capture "radio")
 
 record-curtains:
   cargo run --release -- \
