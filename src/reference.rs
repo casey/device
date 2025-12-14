@@ -621,10 +621,6 @@ fn presets() {
   );
 }
 
-// todo:
-// - frequencies, hello need some data
-// - blaster needs locked rng
-
 #[test]
 #[ignore]
 fn scenes() {
