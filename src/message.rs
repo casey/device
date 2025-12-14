@@ -1,4 +1,4 @@
-use {super::*, midly::num::u7};
+use super::*;
 
 #[derive(Debug, Snafu)]
 #[snafu(context(suffix(Error)))]
