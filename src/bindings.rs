@@ -221,8 +221,8 @@ mod tests {
   #[test]
   fn encoder_bindings_are_unique() {
     let mut encoders = HashSet::new();
-    for (encoder, _command) in ENCODER_BINDINGS {
-      assert!(encoders.insert(encoder));
+    for (controller, control, _command) in ENCODER_BINDINGS {
+      assert!(encoders.insert((controller, control)));
     }
   }
 }
