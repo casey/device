@@ -191,12 +191,24 @@ impl App {
       && let Key::Character(c) = &key
     {
       command.push(c.as_str().into());
+      self.print_command();
       return;
     }
 
     if let Some(command) = self.bindings.key((&self.mode).into(), &key, self.modifiers) {
       self.dispatch(event_loop, command);
     }
+  }
+
+  pub(crate) fn print_command(&self) {
+    let Mode::Command(command) = &self.mode else {
+      return;
+    };
+
+    eprintln!(
+      ":{}",
+      command.iter().flat_map(|c| c.chars()).collect::<String>(),
+    );
   }
 
   fn process_messages(&mut self, event_loop: &ActiveEventLoop) {
@@ -212,7 +224,8 @@ impl App {
         }
         Event::Encoder(parameter) => {
           if let Some(command) = self.bindings.encoder(message.controller, message.control) {
-            command(&mut self.state, parameter);
+            let value = command(&mut self.state, parameter);
+            self.state.encoder = value;
           }
         }
       }

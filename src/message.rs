@@ -1,4 +1,4 @@
-use {super::*, midly::num::u7};
+use super::*;
 
 #[derive(Debug, Snafu)]
 #[snafu(context(suffix(Error)))]
@@ -21,7 +21,7 @@ pub(crate) struct Message {
 impl Message {
   pub(crate) fn parse(event: &[u8]) -> Result<Self, MessageParseError> {
     let event = midly::live::LiveEvent::parse(event).context(ParseError)?;
-    let (channel, key, parameter, press): (u8, u8, u7, bool) = match event {
+    let (channel, key, value, press): (u8, u8, u7, bool) = match event {
       midly::live::LiveEvent::Midi { channel, message } => match message {
         midly::MidiMessage::NoteOn { key, vel } => (channel.into(), key.into(), vel, true),
         midly::MidiMessage::NoteOff { key, vel } => (channel.into(), key.into(), vel, false),
@@ -39,7 +39,7 @@ impl Message {
     };
 
     let (controller, control, event) = match (channel, key) {
-      (0, 0..=15) => (Controller::Twister, key, Event::Encoder(parameter.into())),
+      (0, 0..=15) => (Controller::Twister, key, Event::Encoder(value)),
       (1, 0..=15) => (Controller::Twister, key, Event::Button(press)),
       (2, 36..=51) => (
         Controller::Spectra,

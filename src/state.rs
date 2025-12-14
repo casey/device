@@ -2,16 +2,16 @@ use super::*;
 
 #[derive(Clone)]
 pub(crate) struct State {
-  pub(crate) alpha: Parameter,
+  pub(crate) alpha: f32,
   pub(crate) beat: u64,
   pub(crate) callback: Option<Box<dyn Callback>>,
   pub(crate) db: f32,
+  pub(crate) encoder: f32,
   pub(crate) filter: Filter,
   pub(crate) filters: Vec<Filter>,
   pub(crate) fit: bool,
   pub(crate) fps: Option<Fps>,
   pub(crate) interpolate: bool,
-  pub(crate) parameter: Parameter,
   pub(crate) resolution: Option<NonZeroU32>,
   pub(crate) rng: SmallRng,
   pub(crate) spread: bool,
@@ -26,7 +26,7 @@ pub(crate) struct State {
 impl Default for State {
   fn default() -> Self {
     Self {
-      alpha: Parameter::default(),
+      alpha: 0.5,
       beat: 0,
       callback: None,
       db: 0.0,
@@ -35,7 +35,7 @@ impl Default for State {
       fit: false,
       fps: None,
       interpolate: false,
-      parameter: Parameter::default(),
+      encoder: 0.0,
       resolution: None,
       rng: SmallRng::from_rng(&mut rand::rng()),
       spread: false,

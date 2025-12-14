@@ -966,12 +966,7 @@ impl Renderer {
         items.push(format!("ƒ {}", fps.floor()));
       }
 
-      let parameter = state.parameter.value();
-      items.push(if parameter >= 0 {
-        format!("+{parameter}")
-      } else {
-        parameter.to_string()
-      });
+      items.push(format!("{:+.2}", state.encoder));
 
       for filter in &state.filters {
         items.push(filter.icon().into());
