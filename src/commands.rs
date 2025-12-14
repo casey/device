@@ -385,6 +385,10 @@ pub(crate) fn toggle_interpolate(state: &mut State) {
   state.interpolate.toggle();
 }
 
+pub(crate) fn toggle_muted(app: &mut App) {
+  app.tap.toggle_muted();
+}
+
 pub(crate) fn toggle_repeat(state: &mut State) {
   state.filter.repeat.toggle();
 }

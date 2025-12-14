@@ -35,6 +35,7 @@ use {
     pipeline::Pipeline,
     present_mode::PresentMode,
     preset::Preset,
+    press::Press,
     program::Program,
     recorder::Recorder,
     renderer::Renderer,
@@ -172,6 +173,7 @@ mod patch;
 mod pipeline;
 mod present_mode;
 mod preset;
+mod press;
 mod program;
 mod recorder;
 #[cfg(test)]

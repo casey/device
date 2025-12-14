@@ -21,10 +21,12 @@ pub(crate) struct Message {
 impl Message {
   pub(crate) fn parse(event: &[u8]) -> Result<Self, MessageParseError> {
     let event = midly::live::LiveEvent::parse(event).context(ParseError)?;
-    let (channel, key, value, press): (u8, u8, u7, bool) = match event {
+    let (channel, key, value, press): (u8, u8, u7, Press) = match event {
       midly::live::LiveEvent::Midi { channel, message } => match message {
-        midly::MidiMessage::NoteOn { key, vel } => (channel.into(), key.into(), vel, true),
-        midly::MidiMessage::NoteOff { key, vel } => (channel.into(), key.into(), vel, false),
+        midly::MidiMessage::NoteOn { key, vel } => (channel.into(), key.into(), vel, Press::Press),
+        midly::MidiMessage::NoteOff { key, vel } => {
+          (channel.into(), key.into(), vel, Press::Release)
+        }
         _ => {
           return Err(MessageParseError::Unrecognized {
             event: event.to_static(),
