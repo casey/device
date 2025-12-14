@@ -1,5 +1,24 @@
 use super::*;
 
+// - push new random if beat < 4, otherwise go back 3 (leave one behind)
+
+// - push a new random filter to the bottom stack
+// - push a new random filter to the top of the stack
+//   remove first if over limit
+// - reset beat to 0
+// - print out current stack
+// - push new random if beat < 4, otherwise go back 4
+// - roll stack one forward
+// - roll stack one back
+// - zoom out if beat < 4 otherwise go back 5
+// - replace stack with limit random presets
+// - save current stack
+// - recall current stack
+// - undo
+// - swap top two stack elements
+// - randomize order of filters on stack
+// - unwind: go back to previous state once per frame
+
 const BUTTON_BINDINGS: &[(Controller, u8, bool, Command)] = {
   use {Controller::*, generated::*};
   &[

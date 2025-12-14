@@ -28,6 +28,12 @@ impl Commands {
   }
 }
 
+pub(crate) fn undo(app: &mut App) {
+  if let Some(state) = app.history.pop() {
+    app.state = state;
+  }
+}
+
 pub(crate) fn pop_command(app: &mut App) {
   let Mode::Command(command) = &mut app.mode else {
     return;
@@ -35,12 +41,6 @@ pub(crate) fn pop_command(app: &mut App) {
 
   if command.pop().is_none() {
     app.mode = Mode::Normal;
-  }
-}
-
-pub(crate) fn undo(app: &mut App) {
-  if let Some(state) = app.history.pop() {
-    app.state = state;
   }
 }
 
