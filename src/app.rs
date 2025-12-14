@@ -10,12 +10,12 @@ pub(crate) struct App {
   config: Config,
   deadline: Instant,
   errors: Vec<Error>,
+  fullscreen: bool,
   hub: Hub,
   input: Option<Input>,
   last: Instant,
-  macro_recording: Option<Vec<(Key, bool)>>,
-  makro: Vec<(Key, bool)>,
   mode: Mode,
+  modifiers: Modifiers,
   options: Options,
   patch: Patch,
   present_mode: Option<PresentMode>,
@@ -39,6 +39,17 @@ impl App {
     self.captures_pending += 1;
 
     Ok(())
+  }
+
+  fn dispatch(&mut self, command: Command) {
+    match command {
+      Command::App(command) => command(self),
+      Command::State(command) => command(&mut self.state),
+    }
+  }
+
+  pub(crate) fn enter_mode(&mut self, mode: Mode) {
+    self.mode = mode;
   }
 
   pub(crate) fn errors(self) -> Result {
@@ -152,12 +163,12 @@ impl App {
       config,
       deadline: now,
       errors: Vec::new(),
+      fullscreen: false,
       hub: Hub::new()?,
       input,
       last: now,
-      macro_recording: None,
-      makro: Vec::new(),
       mode: Mode::Normal,
+      modifiers: Modifiers::default(),
       options,
       patch: Patch::default(),
       present_mode,
@@ -170,16 +181,10 @@ impl App {
   }
 
   fn press(&mut self, event_loop: &ActiveEventLoop, key: Key, repeat: bool) {
-    let mut capture = true;
-
     match self.mode {
       Mode::Command(_) => self.press_command(&key),
-      Mode::Normal => self.press_normal(&mut capture, event_loop, &key),
+      Mode::Normal => self.press_normal(event_loop, &key),
       Mode::Play => self.press_play(&key, repeat),
-    }
-
-    if capture && let Some(recording) = &mut self.macro_recording {
-      recording.push((key, repeat));
     }
   }
 
@@ -198,7 +203,7 @@ impl App {
       Key::Named(NamedKey::Enter) => {
         let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
         if let Some(command) = self.commands.name(command.as_str()) {
-          command(&mut self.state);
+          self.dispatch(command);
         } else {
           eprintln!("unknown command: {command}");
         }
@@ -220,42 +225,15 @@ impl App {
     }
   }
 
-  fn press_normal(&mut self, capture: &mut bool, event_loop: &ActiveEventLoop, key: &Key) {
-    if let Some(command) = self.bindings.key(key) {
-      command(&mut self.state);
-    } else if let Key::Character(c) = &key {
-      match c.as_str() {
-        ":" => {
-          self.mode = Mode::Command(Vec::new());
-        }
-        ">" => {
-          if let Err(err) = self.capture() {
-            self.errors.push(err);
-            event_loop.exit();
-          }
-        }
-        "@" => {
-          for (key, repeat) in self.makro.clone() {
-            self.press(event_loop, key, repeat);
-          }
-          *capture = false;
-        }
-        "p" => self.mode = Mode::Play,
-        "q" => {
-          if let Some(recording) = self.macro_recording.take() {
-            self.makro = recording;
-          } else {
-            self.macro_recording = Some(Vec::new());
-          }
-          *capture = false;
-        }
-        "R" => {
-          if let Err(err) = self.renderer.as_mut().unwrap().reload_shader() {
-            eprintln!("failed to reload shader: {err}");
-          }
-        }
-        _ => {}
-      }
+  fn press_normal(&mut self, event_loop: &ActiveEventLoop, key: &Key) {
+    if let Some(command) = self.bindings.key(key, self.modifiers) {
+      self.dispatch(command);
+    } else if let Key::Character(c) = &key
+      && c.as_str() == ">"
+      && let Err(err) = self.capture()
+    {
+      self.errors.push(err);
+      event_loop.exit();
     }
   }
 
@@ -278,14 +256,14 @@ impl App {
   }
 
   fn process_messages(&mut self) {
-    for message in self.hub.messages().lock().unwrap().drain(..) {
+    for message in self.hub.drain() {
       match message.event {
         Event::Button(press) => {
           if let Some(command) = self
             .bindings
             .button(message.controller, message.control, press)
           {
-            command(&mut self.state);
+            self.dispatch(command);
           }
         }
         Event::Encoder(parameter) => {
@@ -354,6 +332,12 @@ impl App {
     }
 
     Ok(())
+  }
+
+  pub(crate) fn reload_shaders(&mut self) {
+    if let Err(err) = self.renderer.as_mut().unwrap().reload_shaders() {
+      eprintln!("failed to reload shader: {err}");
+    }
   }
 
   fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
@@ -426,6 +410,13 @@ impl App {
       "\\" => Some(12 + 10),
       _ => None,
     }
+  }
+
+  pub(crate) fn toggle_fullscreen(&mut self) {
+    self.fullscreen.toggle();
+    self
+      .window()
+      .set_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)));
   }
 
   fn window(&self) -> &Window {
@@ -531,6 +522,7 @@ impl ApplicationHandler for App {
       WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
         self.press(event_loop, event.logical_key, event.repeat);
       }
+      WindowEvent::ModifiersChanged(modifiers) => self.modifiers = modifiers,
       WindowEvent::RedrawRequested => {
         if let Err(err) = self.redraw() {
           self.errors.push(err);

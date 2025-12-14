@@ -6,6 +6,7 @@ use {
     axis::Axis,
     bindings::Bindings,
     bool_ext::BoolExt,
+    command::Command,
     commands::Commands,
     composite_uniforms::CompositeUniforms,
     config::Config,
@@ -83,7 +84,7 @@ use {
     mem,
     num::NonZeroU32,
     ops::{Add, AddAssign, Bound, SubAssign},
-    process::{self, Command, ExitStatus, Stdio},
+    process::{self, ExitStatus, Stdio},
     str::FromStr,
     sync::{
       Arc, Mutex,
@@ -116,10 +117,10 @@ use {
   winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
-    event::{ElementState, WindowEvent},
+    event::{ElementState, Modifiers, WindowEvent},
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
-    keyboard::{Key, NamedKey},
-    window::{Window, WindowAttributes, WindowId},
+    keyboard::{Key, ModifiersState, NamedKey},
+    window::{Fullscreen, Window, WindowAttributes, WindowId},
   },
 };
 
@@ -139,6 +140,7 @@ mod axis;
 mod bindings;
 mod bool_ext;
 mod color;
+mod command;
 mod commands;
 mod composite_uniforms;
 mod config;
@@ -152,6 +154,7 @@ mod filter_uniforms;
 mod format;
 mod fps;
 mod frame;
+mod generated;
 mod hub;
 mod image;
 mod input;
