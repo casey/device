@@ -3,6 +3,7 @@ use super::*;
 #[derive(Clone)]
 pub(crate) struct State {
   pub(crate) alpha: Parameter,
+  pub(crate) beat: u64,
   pub(crate) callback: Option<Box<dyn Callback>>,
   pub(crate) db: f32,
   pub(crate) filter: Filter,
@@ -12,6 +13,7 @@ pub(crate) struct State {
   pub(crate) interpolate: bool,
   pub(crate) parameter: Parameter,
   pub(crate) resolution: Option<NonZeroU32>,
+  pub(crate) rng: SmallRng,
   pub(crate) spread: bool,
   pub(crate) status: bool,
   pub(crate) text: Option<Text>,
@@ -25,6 +27,7 @@ impl Default for State {
   fn default() -> Self {
     Self {
       alpha: Parameter::default(),
+      beat: 0,
       callback: None,
       db: 0.0,
       filter: Filter::default(),
@@ -33,12 +36,13 @@ impl Default for State {
       fps: None,
       interpolate: false,
       parameter: Parameter::default(),
-      transient: Self::TRANSIENT_IDENTITY,
       resolution: None,
+      rng: SmallRng::from_rng(&mut rand::rng()),
       spread: false,
       status: false,
       text: None,
       tile: false,
+      transient: Self::TRANSIENT_IDENTITY,
       velocity: Vec4f::zeros(),
       wrap: true,
     }

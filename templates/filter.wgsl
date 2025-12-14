@@ -110,9 +110,9 @@ fn field_top(p: vec2f) -> bool {
 }
 
 fn field_triangle(p: vec2f) -> bool {
-  return tan(radians(60)) * p.x - 0.5 < p.y
-    && tan(radians(-60)) * p.x - 0.5 < p.y
-    && p.y < 0.25;
+  return tan(radians(60)) * p.x - 0.5 * coefficient() < p.y
+    && tan(radians(-60)) * p.x - 0.5  * coefficient() < p.y
+    && p.y < 0.25 * coefficient();
 }
 
 fn field_x(p: vec2f) -> bool {

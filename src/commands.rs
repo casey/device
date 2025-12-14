@@ -28,6 +28,16 @@ impl Commands {
   }
 }
 
+pub(crate) fn advance(state: &mut State) {
+  if state.beat % 4 == 3 {
+    state.pop();
+    state.pop();
+  } else {
+    push_top(state);
+  }
+  state.beat += 1;
+}
+
 pub(crate) fn all(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
@@ -38,7 +48,23 @@ pub(crate) fn all(state: &mut State) {
 }
 
 pub(crate) fn blaster(state: &mut State) {
-  state.filters = Scene::Blaster.state(None).filters;
+  let presets = (0..Preset::LIMIT)
+    .map(|i| Preset::random(&mut state.rng, i))
+    .collect::<Vec<Preset>>();
+
+  if log::log_enabled!(log::Level::Info) {
+    let presets = presets
+      .iter()
+      .map(|preset| preset.name())
+      .collect::<Vec<&str>>();
+    log::info!("stack: {}", presets.join(" "));
+  }
+
+  state.truncate(0);
+
+  state
+    .filters
+    .extend(presets.into_iter().map(Preset::filter));
 }
 
 pub(crate) fn bottom(state: &mut State) {
@@ -113,6 +139,28 @@ pub(crate) fn cross(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
+}
+
+pub(crate) fn cycle(state: &mut State) {
+  if state.beat % 4 == 3 {
+    state.pop();
+    state.pop();
+    state.pop();
+  } else {
+    push_top(state);
+  }
+  state.beat += 1;
+}
+
+pub(crate) fn cycle_zoom(state: &mut State) {
+  if state.beat % 4 == 3 {
+    state.pop();
+    state.pop();
+    state.pop();
+  } else {
+    zoom_out(state);
+  }
+  state.beat += 1;
 }
 
 pub(crate) fn decrement_db(state: &mut State) {
@@ -217,6 +265,39 @@ pub(crate) fn positive_x_translation(state: &mut State) {
   });
 }
 
+pub(crate) fn print(state: &mut State) {
+  eprintln!(
+    "{}",
+    state
+      .filters
+      .iter()
+      .map(|filter| filter.preset.map_or("unknown", Preset::name))
+      .collect::<Vec<&str>>()
+      .join(" ")
+  );
+}
+
+pub(crate) fn push_bottom(state: &mut State) {
+  state.filters.insert(
+    0,
+    Preset::random(&mut state.rng, state.filters.len()).filter(),
+  );
+
+  while state.filters.len() > Preset::LIMIT {
+    state.filters.pop();
+  }
+}
+
+pub(crate) fn push_top(state: &mut State) {
+  state
+    .filters
+    .push(Preset::random(&mut state.rng, state.filters.len()).filter());
+
+  while state.filters.len() > Preset::LIMIT {
+    state.filters.remove(0);
+  }
+}
+
 pub(crate) fn reload_shaders(app: &mut App) {
   if let Err(err) = app.renderer.as_mut().unwrap().reload_shaders() {
     eprintln!("failed to reload shader: {err}");
@@ -230,6 +311,14 @@ pub(crate) fn right(state: &mut State) {
     wrap: state.wrap,
     ..default()
   });
+}
+
+pub(crate) fn rotate_left(state: &mut State) {
+  state.filters.rotate_left(1);
+}
+
+pub(crate) fn rotate_right(state: &mut State) {
+  state.filters.rotate_right(1);
 }
 
 pub(crate) fn samples(state: &mut State) {
@@ -249,6 +338,10 @@ pub(crate) fn set_patch_sine(app: &mut App) {
   app.patch = Patch::Sine;
 }
 
+pub(crate) fn shuffle(state: &mut State) {
+  state.filters.shuffle(&mut state.rng);
+}
+
 pub(crate) fn spread(state: &mut State) {
   state.spread ^= true;
 }
@@ -264,6 +357,15 @@ pub(crate) fn square(state: &mut State) {
 
 pub(crate) fn status(state: &mut State) {
   state.status ^= true;
+}
+
+pub(crate) fn swap(state: &mut State) {
+  if state.filters.len() > 2 {
+    let a = state.filters.pop().unwrap();
+    let b = state.filters.pop().unwrap();
+    state.filters.push(a);
+    state.filters.push(b);
+  }
 }
 
 pub(crate) fn toggle_fit(state: &mut State) {
@@ -314,6 +416,17 @@ pub(crate) fn triangle(state: &mut State) {
 pub(crate) fn undo(app: &mut App) {
   if let Some(state) = app.history.pop() {
     app.state = state;
+  }
+}
+
+pub(crate) fn unwind(app: &mut App) {
+  app.unwind = true;
+}
+
+pub(crate) fn waffle(app: &mut App) {
+  if let Some(mut state) = app.history.pop() {
+    mem::swap(&mut state, &mut app.state);
+    app.history.push(state);
   }
 }
 

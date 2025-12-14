@@ -4,6 +4,7 @@ use super::*;
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum Preset {
   Circle,
+  Cross,
   Desaturate,
   FlipH,
   FlipV,
@@ -22,6 +23,7 @@ pub(crate) enum Preset {
   Square,
   Test,
   Top,
+  Triangle,
   X,
   ZoomIn,
   ZoomInNe,
@@ -30,11 +32,18 @@ pub(crate) enum Preset {
 }
 
 impl Preset {
+  pub(crate) const LIMIT: usize = 16;
+
   pub(crate) fn filter(self) -> Filter {
-    match self {
+    let mut filter = match self {
       Self::Circle => Filter {
         color: color::invert(),
         field: Field::Circle { size: None },
+        ..default()
+      },
+      Self::Cross => Filter {
+        color: color::invert(),
+        field: Field::Cross,
         ..default()
       },
       Self::Desaturate => Filter {
@@ -110,6 +119,11 @@ impl Preset {
         field: Field::Top,
         ..default()
       },
+      Self::Triangle => Filter {
+        color: color::invert(),
+        field: Field::Triangle,
+        ..default()
+      },
       Self::X => Filter {
         color: color::invert(),
         field: Field::X,
@@ -131,11 +145,60 @@ impl Preset {
         position: Mat3f::new_scaling(2.0).prepend_translation(&Vec2f::new(0.5, 0.5)),
         ..default()
       },
-    }
+    };
+
+    filter.preset = Some(self);
+
+    filter
   }
 
   pub(crate) fn name(self) -> &'static str {
     self.into()
+  }
+
+  pub(crate) fn random(rng: &mut SmallRng, i: usize) -> Self {
+    const BASE: &[Preset] = &[
+      Preset::Circle,
+      Preset::Cross,
+      Preset::Left,
+      Preset::Square,
+      Preset::Test,
+      Preset::Top,
+      Preset::Triangle,
+      Preset::X,
+    ];
+
+    const BLASTER: &[Preset] = &[
+      Preset::Circle,
+      Preset::Cross,
+      Preset::FlipH,
+      Preset::FlipV,
+      Preset::InvertB,
+      Preset::InvertF,
+      Preset::InvertG,
+      Preset::InvertR,
+      Preset::Left,
+      Preset::MirrorH,
+      Preset::MirrorV,
+      Preset::Rotate,
+      Preset::RotateBlaster,
+      Preset::Spin,
+      Preset::Square,
+      Preset::Test,
+      Preset::Top,
+      Preset::Triangle,
+      Preset::X,
+      Preset::ZoomIn,
+      Preset::ZoomInNe,
+      Preset::ZoomOut,
+      Preset::ZoomOutNe,
+    ];
+
+    if i == 0 {
+      *BASE.choose(rng).unwrap()
+    } else {
+      *BLASTER.choose(rng).unwrap()
+    }
   }
 }
 
