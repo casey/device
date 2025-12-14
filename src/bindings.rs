@@ -55,7 +55,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
   ]
 };
 
-const ENCODER_BINDINGS: &[((Controller, u8), fn(&mut State, Parameter))] = {
+const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, Parameter))] = {
   use Controller::*;
 
   fn set_alpha(state: &mut State, parameter: Parameter) {
@@ -79,11 +79,11 @@ const ENCODER_BINDINGS: &[((Controller, u8), fn(&mut State, Parameter))] = {
   }
 
   &[
-    ((Twister, 0), set_alpha),
-    ((Twister, 1), set_db),
-    ((Twister, 4), set_velocity_x),
-    ((Twister, 5), set_velocity_y),
-    ((Twister, 6), set_velocity_z),
+    (Twister, 0, set_alpha),
+    (Twister, 1, set_db),
+    (Twister, 4, set_velocity_x),
+    (Twister, 5, set_velocity_y),
+    (Twister, 6, set_velocity_z),
   ]
 };
 
@@ -168,7 +168,11 @@ impl Bindings {
           ((*mode, character.to_string(), *modifiers), *command)
         })
         .collect(),
-      encoder: ENCODER_BINDINGS.iter().copied().collect(),
+      encoder: ENCODER_BINDINGS
+        .iter()
+        .copied()
+        .map(|(controller, control, command)| ((controller, control), command))
+        .collect(),
       named: NAMED_BINDINGS
         .iter()
         .copied()
@@ -217,8 +221,8 @@ mod tests {
   #[test]
   fn encoder_bindings_are_unique() {
     let mut encoders = HashSet::new();
-    for (encoder, _command) in ENCODER_BINDINGS {
-      assert!(encoders.insert(encoder));
+    for (controller, control, _command) in ENCODER_BINDINGS {
+      assert!(encoders.insert((controller, control)));
     }
   }
 }
