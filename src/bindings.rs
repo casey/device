@@ -1,26 +1,26 @@
 use super::*;
 
 #[rustfmt::skip]
-const BUTTON_BINDINGS: &[(Controller, u8, bool, Command)] = {
-  use {Controller::*, generated::*};
+const BUTTON_BINDINGS: &[(Controller, u8, Press, Command)] = {
+  use {Controller::*, generated::*, Press::Press};
   &[
-    (Spectra,  0, true, PUSH_TOP),
-    (Spectra,  1, true, PUSH_BOTTOM),
-    (Spectra,  2, true, CYCLE),
-    (Spectra,  3, true, CYCLE_ZOOM),
+    (Spectra,  0, Press, PUSH_TOP),
+    (Spectra,  1, Press, PUSH_BOTTOM),
+    (Spectra,  2, Press, CYCLE),
+    (Spectra,  3, Press, CYCLE_ZOOM),
 
-    (Spectra,  4, true, ROTATE_LEFT),
-    (Spectra,  5, true, ROTATE_RIGHT),
-    (Spectra,  6, true, SHUFFLE),
-    (Spectra,  7, true, SWAP),
+    (Spectra,  4, Press, ROTATE_LEFT),
+    (Spectra,  5, Press, ROTATE_RIGHT),
+    (Spectra,  6, Press, SHUFFLE),
+    (Spectra,  7, Press, SWAP),
 
-    (Spectra,  8, true, ADVANCE),
-    (Spectra,  9, true, BLASTER),
-    (Spectra, 10, true, WAFFLE),
+    (Spectra,  8, Press, ADVANCE),
+    (Spectra,  9, Press, BLASTER),
+    (Spectra, 10, Press, WAFFLE),
 
-    (Twister,  4, true, CLEAR_TRANSIENT_X_TRANSLATION),
-    (Twister,  5, true, CLEAR_TRANSIENT_Y_TRANSLATION),
-    (Twister,  6, true, CLEAR_TRANSIENT_SCALE),
+    (Twister,  4, Press, CLEAR_TRANSIENT_X_TRANSLATION),
+    (Twister,  5, Press, CLEAR_TRANSIENT_Y_TRANSLATION),
+    (Twister,  6, Press, CLEAR_TRANSIENT_SCALE),
   ]
 };
 
@@ -142,18 +142,18 @@ const NAMED_BINDINGS: &[(ModeKind, NamedKey, Command)] = {
 };
 
 pub(crate) struct Bindings {
-  button: HashMap<(Controller, u8, bool), Command>,
+  button: HashMap<(Controller, u8, Press), Command>,
   character: HashMap<(ModeKind, String, ModifiersState), Command>,
   encoder: HashMap<(Controller, u8), fn(&mut State, u7) -> f32>,
   named: HashMap<(ModeKind, NamedKey), Command>,
 }
 
 impl Bindings {
-  pub(crate) fn button(&self, controller: Controller, button: u8, press: bool) -> Option<Command> {
+  pub(crate) fn button(&self, controller: Controller, button: u8, press: Press) -> Option<Command> {
     let command = self.button.get(&(controller, button, press)).copied();
 
     if command.is_none() {
-      log::info!("unbound button: {controller:?} {button} {press}");
+      log::info!("unbound button: {controller:?} {button} {press:?}");
     }
 
     command

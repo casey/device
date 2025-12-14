@@ -2,6 +2,6 @@ use super::*;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) enum Event {
-  Button(bool),
+  Button(Press),
   Encoder(u7),
 }
