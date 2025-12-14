@@ -34,7 +34,7 @@ impl Default for State {
       filters: Vec::new(),
       fit: false,
       fps: None,
-      interpolate: true,
+      interpolate: false,
       parameter: Parameter::default(),
       resolution: None,
       rng: SmallRng::from_rng(&mut rand::rng()),
