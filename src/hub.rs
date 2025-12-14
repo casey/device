@@ -7,8 +7,8 @@ pub(crate) struct Hub {
 }
 
 impl Hub {
-  pub(crate) fn messages(&mut self) -> &Mutex<Vec<Message>> {
-    &self.messages
+  pub(crate) fn drain(&self) -> Vec<Message> {
+    self.messages.lock().unwrap().drain(..).collect()
   }
 
   pub(crate) fn new() -> Result<Self> {

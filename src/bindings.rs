@@ -1,20 +1,20 @@
 use super::*;
 
-const BUTTON_BINDINGS: &[((Controller, u8, bool), fn(&mut State))] = {
-  use {Controller::*, commands::*};
+const BUTTON_BINDINGS: &[((Controller, u8, bool), Command)] = {
+  use {Controller::*, generated::*};
   &[
-    ((Spectra, 0, true), top),
-    ((Spectra, 1, true), bottom),
-    ((Spectra, 2, true), x),
-    ((Spectra, 3, true), circle),
-    ((Spectra, 4, true), zoom_out),
-    ((Spectra, 5, true), zoom_in),
-    ((Spectra, 6, true), negative_x_translation),
-    ((Spectra, 7, true), positive_x_translation),
-    ((Spectra, 8, true), pop),
-    ((Twister, 4, true), clear_transient_x_translation),
-    ((Twister, 5, true), clear_transient_y_translation),
-    ((Twister, 6, true), clear_transient_scale),
+    ((Spectra, 0, true), TOP),
+    ((Spectra, 1, true), BOTTOM),
+    ((Spectra, 2, true), X),
+    ((Spectra, 3, true), CIRCLE),
+    ((Spectra, 4, true), ZOOM_OUT),
+    ((Spectra, 5, true), ZOOM_IN),
+    ((Spectra, 6, true), NEGATIVE_X_TRANSLATION),
+    ((Spectra, 7, true), POSITIVE_X_TRANSLATION),
+    ((Spectra, 8, true), POP),
+    ((Twister, 4, true), CLEAR_TRANSIENT_X_TRANSLATION),
+    ((Twister, 5, true), CLEAR_TRANSIENT_Y_TRANSLATION),
+    ((Twister, 6, true), CLEAR_TRANSIENT_SCALE),
   ]
 };
 
@@ -92,19 +92,14 @@ const NAMED_BINDINGS: &[(NamedKey, Command)] = {
 };
 
 pub(crate) struct Bindings {
-  button: HashMap<(Controller, u8, bool), fn(&mut State)>,
+  button: HashMap<(Controller, u8, bool), Command>,
   character: HashMap<(String, ModifiersState), Command>,
   encoder: HashMap<(Controller, u8), fn(&mut State, Parameter)>,
   named: HashMap<NamedKey, Command>,
 }
 
 impl Bindings {
-  pub(crate) fn button(
-    &self,
-    controller: Controller,
-    button: u8,
-    press: bool,
-  ) -> Option<fn(&mut State)> {
+  pub(crate) fn button(&self, controller: Controller, button: u8, press: bool) -> Option<Command> {
     let command = self.button.get(&(controller, button, press)).copied();
 
     if command.is_none() {

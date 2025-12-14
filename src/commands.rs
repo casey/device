@@ -13,15 +13,15 @@ impl Commands {
       .and_then(|(name, _command)| name.strip_prefix(prefix))
   }
 
-  pub(crate) fn name(&self, s: &str) -> Option<&Command> {
-    self.map.get(s)
+  pub(crate) fn name(&self, s: &str) -> Option<Command> {
+    self.map.get(s).copied()
   }
 
   pub(crate) fn new() -> Self {
     let mut map = BTreeMap::new();
 
     for (name, command) in generated::COMMANDS {
-      map.insert(name.replace('_', "-"), command.clone());
+      map.insert(name.replace('_', "-"), *command);
     }
 
     Self { map }

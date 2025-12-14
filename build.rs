@@ -4,17 +4,7 @@ use {
   syn::{FnArg, Item, ItemFn, PatType, ReturnType, Type},
 };
 
-// todo:
-// - can remove commands tests or put them here
-// - require pub(crate) visibility, since will get error otherwise
-// - replace _ with -
-
 const PATH: &str = "src/commands.rs";
-
-enum Command {
-  App,
-  State,
-}
 
 fn main() {
   println!("cargo:rerun-if-changed={PATH}");
@@ -44,28 +34,43 @@ fn main() {
   for function in functions {
     let name = function.sig.ident.to_string();
 
-    if function.sig.inputs.len() != 1 {
-      panic!("{}", function.sig.inputs.len());
-    }
+    assert_eq!(
+      function.sig.inputs.len(),
+      1,
+      "command function {name} has incorrect number of parameters: {}",
+      function.sig.inputs.len(),
+    );
 
-    if function.sig.output != ReturnType::Default {
-      panic!("{}", function.sig.output.to_token_stream());
-    }
+    assert_eq!(
+      function.sig.output,
+      ReturnType::Default,
+      "command function {name} has non-default return type: {}",
+      function.sig.output.to_token_stream(),
+    );
 
     let FnArg::Typed(PatType { ty, .. }) = function.sig.inputs.first().unwrap() else {
-      panic!("{}", function.sig.inputs.first().unwrap().to_token_stream());
+      panic!(
+        "command function {name} has self receiver: {}",
+        function.sig.inputs.first().unwrap().to_token_stream(),
+      );
     };
 
     let Type::Reference(r) = ty.as_ref() else {
-      todo!();
+      panic!(
+        "command function {name} has non-reference argument: {}",
+        ty.to_token_stream(),
+      );
     };
 
     let Type::Path(p) = r.elem.as_ref() else {
-      todo!();
+      panic!(
+        "command function {name} has non-path argument: {}",
+        r.elem.to_token_stream(),
+      );
     };
 
-    if !p.qself.is_none() {
-      todo!();
+    if p.qself.is_some() {
+      panic!("command function {name} has qualified argument");
     }
 
     let ident = p.path.get_ident().unwrap();
@@ -73,7 +78,7 @@ fn main() {
     let command = match ident.to_string().as_str() {
       "State" => "State",
       "App" => "App",
-      _ => todo!(),
+      other => panic!("command {name} has unexpected argument type {other}"),
     };
 
     commands.insert(name, command);
@@ -81,22 +86,24 @@ fn main() {
 
   let mut lines = Vec::new();
 
-  lines.push("use super::*;".into());
+  lines.push("use {super::*, commands::*, Command::*};".into());
 
-  lines.push("".into());
+  lines.push(String::new());
 
   for (name, variant) in &commands {
     lines.push(format!(
-      "pub(crate) const {}: Command = Command::{variant}(commands::{name});",
+      "pub(crate) const {}: Command = {variant}({name});",
       name.to_uppercase(),
     ));
   }
 
-  lines.push("pub(crate) const COMMANDS: &[(&'static str, Command)] = &[".into());
+  lines.push(String::new());
 
-  for (name, variant) in commands {
+  lines.push("pub(crate) const COMMANDS: &[(&str, Command)] = &[".into());
+
+  for name in commands.keys() {
     lines.push(format!(
-      "(\"{}\", {}),",
+      "  (\"{}\", {}),",
       name.replace('_', "-"),
       name.to_uppercase(),
     ));

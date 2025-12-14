@@ -43,6 +43,13 @@ impl App {
     Ok(())
   }
 
+  fn dispatch(&mut self, command: Command) {
+    match command {
+      Command::App(command) => command(self),
+      Command::State(command) => command(&mut self.state),
+    }
+  }
+
   pub(crate) fn errors(self) -> Result {
     let mut errors = self.errors.into_iter();
 
@@ -202,10 +209,7 @@ impl App {
       Key::Named(NamedKey::Enter) => {
         let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
         if let Some(command) = self.commands.name(command.as_str()) {
-          match command {
-            Command::State(command) => command(&mut self.state),
-            Command::App(command) => todo!(),
-          }
+          self.dispatch(command);
         } else {
           eprintln!("unknown command: {command}");
         }
@@ -229,10 +233,7 @@ impl App {
 
   fn press_normal(&mut self, capture: &mut bool, event_loop: &ActiveEventLoop, key: &Key) {
     if let Some(command) = self.bindings.key(key, self.modifiers) {
-      match command {
-        Command::State(command) => command(&mut self.state),
-        Command::App(command) => command(self),
-      }
+      self.dispatch(command);
     } else if let Key::Character(c) = &key {
       match c.as_str() {
         ":" => {
@@ -295,14 +296,14 @@ impl App {
   }
 
   fn process_messages(&mut self) {
-    for message in self.hub.messages().lock().unwrap().drain(..) {
+    for message in self.hub.drain() {
       match message.event {
         Event::Button(press) => {
           if let Some(command) = self
             .bindings
             .button(message.controller, message.control, press)
           {
-            command(&mut self.state);
+            self.dispatch(command);
           }
         }
         Event::Encoder(parameter) => {
