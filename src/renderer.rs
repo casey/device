@@ -960,18 +960,14 @@ impl Renderer {
     let text = if let Some(text) = state.text.clone() {
       text
     } else if state.status {
+      dbg!("status");
       let mut items = Vec::new();
 
       if let Some(fps) = fps {
         items.push(format!("ƒ {}", fps.floor()));
       }
 
-      let parameter = state.parameter.value();
-      items.push(if parameter >= 0 {
-        format!("+{parameter}")
-      } else {
-        parameter.to_string()
-      });
+      items.push(format!("{:+.2}", state.encoder));
 
       for filter in &state.filters {
         items.push(filter.icon().into());

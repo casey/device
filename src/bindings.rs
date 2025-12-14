@@ -64,27 +64,51 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
   ]
 };
 
-const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, Parameter))] = {
+const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
   use Controller::*;
 
-  fn set_alpha(state: &mut State, parameter: Parameter) {
-    state.alpha = parameter;
+  fn integer(value: u7) -> f32 {
+    let value = i8::try_from(u8::from(value)).unwrap() - 64;
+    if value == -1 { 0.0 } else { value as f32 }
   }
 
-  fn set_db(state: &mut State, parameter: Parameter) {
-    state.db = parameter.value() as f32;
+  fn float(value: u7) -> f32 {
+    let value = integer(value);
+    if value < 0.0 {
+      value / 64.0
+    } else {
+      value / 63.0
+    }
   }
 
-  fn set_velocity_x(state: &mut State, parameter: Parameter) {
-    state.velocity.x = parameter.bipolar();
+  fn set_alpha(state: &mut State, value: u7) -> f32 {
+    let value = float(value).midpoint(1.0);
+    state.alpha = value;
+    value
   }
 
-  fn set_velocity_y(state: &mut State, parameter: Parameter) {
-    state.velocity.y = parameter.bipolar();
+  fn set_db(state: &mut State, value: u7) -> f32 {
+    let value = integer(value);
+    state.db = value;
+    value
   }
 
-  fn set_velocity_z(state: &mut State, parameter: Parameter) {
-    state.velocity.z = parameter.bipolar();
+  fn set_velocity_x(state: &mut State, value: u7) -> f32 {
+    let value = float(value);
+    state.velocity.x = value;
+    value
+  }
+
+  fn set_velocity_y(state: &mut State, value: u7) -> f32 {
+    let value = float(value);
+    state.velocity.y = value;
+    value
+  }
+
+  fn set_velocity_z(state: &mut State, value: u7) -> f32 {
+    let value = float(value);
+    state.velocity.z = value;
+    value
   }
 
   &[
@@ -106,8 +130,9 @@ const NAMED_BINDINGS: &[(ModeKind, NamedKey, Command)] = {
 
   &[
     (Command, Backspace,  POP_COMMAND),
-    (Command, Tab,        COMPLETE_COMMAND),
+    (Command, Enter,      EXECUTE_COMMAND),
     (Command, Escape,     ENTER_NORMAL_MODE),
+    (Command, Tab,        COMPLETE_COMMAND),
     (Normal,  ArrowLeft,  NEGATIVE_ROTATION),
     (Normal,  ArrowRight, POSITIVE_ROTATION),
     (Normal,  Backspace,  POP),
@@ -118,7 +143,7 @@ const NAMED_BINDINGS: &[(ModeKind, NamedKey, Command)] = {
 pub(crate) struct Bindings {
   button: HashMap<(Controller, u8, bool), Command>,
   character: HashMap<(ModeKind, String, ModifiersState), Command>,
-  encoder: HashMap<(Controller, u8), fn(&mut State, Parameter)>,
+  encoder: HashMap<(Controller, u8), fn(&mut State, u7) -> f32>,
   named: HashMap<(ModeKind, NamedKey), Command>,
 }
 
@@ -137,7 +162,7 @@ impl Bindings {
     &self,
     controller: Controller,
     encoder: u8,
-  ) -> Option<fn(&mut State, Parameter)> {
+  ) -> Option<fn(&mut State, u7) -> f32> {
     let command = self.encoder.get(&(controller, encoder)).copied();
 
     if command.is_none() {

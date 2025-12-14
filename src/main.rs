@@ -31,7 +31,6 @@ use {
     mirror::Mirror,
     mode::{Mode, ModeKind},
     options::Options,
-    parameter::Parameter,
     patch::Patch,
     pipeline::Pipeline,
     present_mode::PresentMode,
@@ -68,6 +67,7 @@ use {
   },
   hound::{WavSpec, WavWriter},
   indicatif::{ProgressBar, ProgressStyle},
+  midly::num::u7,
   nalgebra::{Vector2, matrix, vector},
   parley::{FontContext, LayoutContext},
   rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
@@ -85,7 +85,7 @@ use {
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
-    ops::{Add, AddAssign, Bound, SubAssign},
+    ops::Bound,
     process::{self, ExitStatus, Stdio},
     str::FromStr,
     sync::{
@@ -168,7 +168,6 @@ mod message;
 mod mirror;
 mod mode;
 mod options;
-mod parameter;
 mod patch;
 mod pipeline;
 mod present_mode;

@@ -39,7 +39,7 @@ impl Message {
     };
 
     let (controller, control, event) = match (channel, key) {
-      (0, 0..=15) => (Controller::Twister, key, Event::Encoder(parameter.into())),
+      (0, 0..=15) => (Controller::Twister, key, Event::Encoder(parameter)),
       (1, 0..=15) => (Controller::Twister, key, Event::Button(press)),
       (2, 36..=51) => (
         Controller::Spectra,

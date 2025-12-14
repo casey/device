@@ -247,6 +247,8 @@ pub(crate) fn pop_command(app: &mut App) {
   };
   if command.pop().is_none() {
     app.mode = Mode::Normal;
+  } else {
+    app.print_command();
   }
 }
 
@@ -343,7 +345,7 @@ pub(crate) fn shuffle(state: &mut State) {
 }
 
 pub(crate) fn spread(state: &mut State) {
-  state.spread ^= true;
+  state.spread.toggle();
 }
 
 pub(crate) fn square(state: &mut State) {
@@ -356,7 +358,7 @@ pub(crate) fn square(state: &mut State) {
 }
 
 pub(crate) fn status(state: &mut State) {
-  state.status ^= true;
+  state.status.toggle();
 }
 
 pub(crate) fn swap(state: &mut State) {
