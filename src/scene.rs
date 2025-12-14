@@ -1,6 +1,7 @@
 use super::*;
 
-#[derive(Clone, Copy, ValueEnum)]
+#[derive(Clone, Copy, EnumIter, ValueEnum, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
 pub(crate) enum Scene {
   All,
   Blaster,
@@ -33,8 +34,18 @@ impl Scene {
     }
   }
 
-  pub(crate) fn state(self) -> State {
+  pub(crate) fn name(self) -> &'static str {
+    self.into()
+  }
+
+  pub(crate) fn state(self, seed: Option<u64>) -> State {
     let mut state = State::default();
+
+    let mut rng = if let Some(seed) = seed {
+      SmallRng::seed_from_u64(seed)
+    } else {
+      SmallRng::from_rng(&mut rand::rng())
+    };
 
     match self {
       Self::All => {
@@ -65,8 +76,6 @@ impl Scene {
           Preset::ZoomOut,
           Preset::ZoomOutNe,
         ];
-
-        let mut rng = SmallRng::from_rng(&mut rand::rng());
 
         state
           .filters
@@ -238,8 +247,6 @@ impl Scene {
           Field::X,
         ];
 
-        let mut rng = SmallRng::from_rng(&mut rand::rng());
-
         state
           .repeat(false)
           .wrap(false)
@@ -265,5 +272,11 @@ impl Scene {
     }
 
     state
+  }
+}
+
+impl Display for Scene {
+  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    f.write_str(self.name())
   }
 }
