@@ -741,7 +741,6 @@ dependencies = [
  "midly",
  "nalgebra",
  "parley",
- "paste",
  "png 0.18.0",
  "pollster",
  "quote",
