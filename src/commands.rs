@@ -110,7 +110,7 @@ pub(crate) fn clear_transient_scale(state: &mut State) {
 }
 
 pub(crate) fn blaster(state: &mut State) {
-  state.filters = Scene::Blaster.state().filters;
+  state.filters = Scene::Blaster.state(None).filters;
 }
 
 pub(crate) fn bottom(state: &mut State) {

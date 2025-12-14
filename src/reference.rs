@@ -1,4 +1,8 @@
-use {super::*, std::sync::LazyLock};
+use {
+  super::*,
+  std::sync::LazyLock,
+  tabled::{Table, Tabled, settings::style::Style},
+};
 
 macro_rules! name {
   () => {{
@@ -588,8 +592,6 @@ fn rotation() {
 #[test]
 #[ignore]
 fn presets() {
-  use tabled::{Table, Tabled, settings::style::Style};
-
   #[derive(Tabled)]
   #[allow(clippy::arbitrary_source_item_ordering)]
   struct Entry {
@@ -607,6 +609,40 @@ fn presets() {
     if let Err(err) = Test::new(format!("preset-{preset}")).state(state).try_run() {
       errors.push(Entry {
         name: preset.name(),
+        error: err,
+      });
+    }
+  }
+
+  assert!(
+    errors.is_empty(),
+    "{}",
+    Table::new(&errors).with(Style::sharp()),
+  );
+}
+
+// todo:
+// - frequencies, hello need some data
+// - blaster needs locked rng
+
+#[test]
+#[ignore]
+fn scenes() {
+  #[derive(Tabled)]
+  #[allow(clippy::arbitrary_source_item_ordering)]
+  struct Entry {
+    name: &'static str,
+    error: Error,
+  }
+
+  let mut errors = Vec::new();
+
+  for scene in Scene::iter() {
+    let state = scene.state(Some(0));
+
+    if let Err(err) = Test::new(format!("scene-{scene}")).state(state).try_run() {
+      errors.push(Entry {
+        name: scene.name(),
         error: err,
       });
     }

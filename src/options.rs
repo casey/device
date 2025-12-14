@@ -40,6 +40,8 @@ pub(crate) struct Options {
   pub(crate) scene: Option<Scene>,
   #[arg(group = AUDIO, long)]
   pub(crate) score: Option<Score>,
+  #[arg(long)]
+  pub(crate) seed: Option<u64>,
   #[arg(group = AUDIO, long)]
   pub(crate) song: Option<String>,
   #[arg(group = AUDIO, long)]
@@ -82,9 +84,9 @@ impl Options {
 
   pub(crate) fn state(&self) -> State {
     let mut state = if let Some(scene) = self.scene {
-      scene.state()
+      scene.state(self.seed)
     } else if let Some(program) = self.program {
-      program.scene().state()
+      program.scene().state(self.seed)
     } else {
       default()
     };
