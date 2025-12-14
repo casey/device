@@ -86,7 +86,11 @@ impl Options {
     let mut state = if let Some(scene) = self.scene {
       scene.state(self.seed)
     } else if let Some(program) = self.program {
-      program.scene().state(self.seed)
+      let mut state = program.scene().state(self.seed);
+      if let Some(db) = program.db() {
+        state.db = db;
+      }
+      state
     } else {
       default()
     };

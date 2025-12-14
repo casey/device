@@ -8,6 +8,7 @@ pub(crate) enum Program {
   Noise,
   Expo,
   Transit,
+  Radio,
 }
 
 impl Program {
@@ -27,8 +28,19 @@ impl Program {
         let wave = tap.load_wave(&config.find_song("in transit corrente")?)?;
         tap.sequence_wave(&wave, 0.0, 0.0);
       }
+      Self::Radio => {
+        let wave = tap.load_wave(&config.find_song("next sun")?)?;
+        tap.sequence_wave(&wave, 0.0, 0.0);
+      }
     }
     Ok(())
+  }
+
+  pub(crate) fn db(self) -> Option<f32> {
+    match self {
+      Self::Radio => Some(-10.0),
+      _ => None,
+    }
   }
 
   pub(crate) fn scene(self) -> Scene {
@@ -38,6 +50,7 @@ impl Program {
       Self::Noise => Scene::Noise,
       Self::Expo => Scene::Starburst,
       Self::Transit => Scene::Kaleidoscope,
+      Self::Radio => Scene::BlackHole,
     }
   }
 }
