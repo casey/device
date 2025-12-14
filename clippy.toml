@@ -9,4 +9,10 @@ module-item-order-groupings = [
   ["PascalCase",       ["ty_alias", "enum", "struct", "union", "trait", "trait_alias", "impl"]], ["lower_snake_case", ["fn"]],
 ]
 
-module-items-ordered-within-groupings = ["use", "macros", "modules", "global_asm", "lower_snake_case"]
+module-items-ordered-within-groupings = [
+  "use",
+  "macros",
+  "modules",
+  "global_asm",
+  "lower_snake_case",
+]
