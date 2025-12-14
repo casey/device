@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, EnumIter, ValueEnum, IntoStaticStr)]
+#[derive(Clone, Copy, Debug, EnumIter, ValueEnum, IntoStaticStr, PartialEq)]
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum Preset {
   Circle,
@@ -18,6 +18,9 @@ pub(crate) enum Preset {
   MirrorV,
   Off,
   Rotate,
+  RotateR,
+  RotateG,
+  RotateB,
   RotateBlaster,
   Spin,
   Square,
@@ -32,7 +35,47 @@ pub(crate) enum Preset {
 }
 
 impl Preset {
+  const BASE: &[Preset] = &[
+    Preset::Circle,
+    Preset::Cross,
+    Preset::Left,
+    Preset::Square,
+    Preset::Test,
+    Preset::Top,
+    Preset::Triangle,
+    Preset::X,
+  ];
+
   pub(crate) const LIMIT: usize = 16;
+
+  const REST: &[Self] = &[
+    Preset::Circle,
+    Preset::Cross,
+    Preset::FlipH,
+    Preset::FlipV,
+    Preset::InvertB,
+    Preset::InvertF,
+    Preset::InvertG,
+    Preset::InvertR,
+    Preset::Left,
+    Preset::MirrorH,
+    Preset::MirrorV,
+    Preset::Rotate,
+    Preset::RotateR,
+    Preset::RotateG,
+    Preset::RotateB,
+    Preset::RotateBlaster,
+    Preset::Spin,
+    Preset::Square,
+    Preset::Test,
+    Preset::Top,
+    Preset::Triangle,
+    Preset::X,
+    Preset::ZoomIn,
+    Preset::ZoomInNe,
+    Preset::ZoomOut,
+    Preset::ZoomOutNe,
+  ];
 
   pub(crate) fn filter(self) -> Filter {
     let mut filter = match self {
@@ -96,6 +139,18 @@ impl Preset {
         color: color::rotate_hue_yiq(0.38 * TAU),
         ..default()
       },
+      Self::RotateR => Filter {
+        color: Axis::Red.rotate(0.38 * TAU),
+        ..default()
+      },
+      Self::RotateG => Filter {
+        color: Axis::Green.rotate(0.38 * TAU),
+        ..default()
+      },
+      Self::RotateB => Filter {
+        color: Axis::Blue.rotate(0.38 * TAU),
+        ..default()
+      },
       Self::RotateBlaster => Filter {
         color: color::rotate_hue_blaster(0.38 * TAU),
         ..default()
@@ -157,47 +212,10 @@ impl Preset {
   }
 
   pub(crate) fn random(rng: &mut SmallRng, i: usize) -> Self {
-    const BASE: &[Preset] = &[
-      Preset::Circle,
-      Preset::Cross,
-      Preset::Left,
-      Preset::Square,
-      Preset::Test,
-      Preset::Top,
-      Preset::Triangle,
-      Preset::X,
-    ];
-
-    const BLASTER: &[Preset] = &[
-      Preset::Circle,
-      Preset::Cross,
-      Preset::FlipH,
-      Preset::FlipV,
-      Preset::InvertB,
-      Preset::InvertF,
-      Preset::InvertG,
-      Preset::InvertR,
-      Preset::Left,
-      Preset::MirrorH,
-      Preset::MirrorV,
-      Preset::Rotate,
-      Preset::RotateBlaster,
-      Preset::Spin,
-      Preset::Square,
-      Preset::Test,
-      Preset::Top,
-      Preset::Triangle,
-      Preset::X,
-      Preset::ZoomIn,
-      Preset::ZoomInNe,
-      Preset::ZoomOut,
-      Preset::ZoomOutNe,
-    ];
-
     if i == 0 {
-      *BASE.choose(rng).unwrap()
+      *Self::BASE.choose(rng).unwrap()
     } else {
-      *BLASTER.choose(rng).unwrap()
+      *Self::REST.choose(rng).unwrap()
     }
   }
 }
@@ -205,5 +223,57 @@ impl Preset {
 impl Display for Preset {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     f.write_str(self.name())
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use {super::*, pretty_assertions::assert_eq};
+
+  #[test]
+  fn base() {
+    use Preset::*;
+
+    let presets = Preset::iter()
+      .filter(|preset| {
+        !matches!(
+          preset,
+          Desaturate
+            | FlipH
+            | FlipV
+            | Identity
+            | InvertB
+            | InvertF
+            | InvertG
+            | InvertR
+            | MirrorH
+            | MirrorV
+            | Off
+            | Rotate
+            | RotateB
+            | RotateBlaster
+            | RotateG
+            | RotateR
+            | Spin
+            | ZoomIn
+            | ZoomInNe
+            | ZoomOut
+            | ZoomOutNe
+        )
+      })
+      .collect::<Vec<Preset>>();
+
+    assert_eq!(Preset::BASE, presets);
+  }
+
+  #[test]
+  fn rest() {
+    use Preset::*;
+
+    let presets = Preset::iter()
+      .filter(|preset| !matches!(preset, Desaturate | Identity | Off))
+      .collect::<Vec<Preset>>();
+
+    assert_eq!(Preset::REST, presets);
   }
 }
