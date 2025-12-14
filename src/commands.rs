@@ -40,8 +40,20 @@ pub(crate) fn enter_play_mode(app: &mut App) {
   app.enter_mode(Mode::Play);
 }
 
+pub(crate) fn enter_normal_mode(app: &mut App) {
+  app.enter_mode(Mode::Normal);
+}
+
 pub(crate) fn toggle_fullscreen(app: &mut App) {
   app.toggle_fullscreen();
+}
+
+pub(crate) fn set_patch_sine(app: &mut App) {
+  app.set_patch(Patch::Sine);
+}
+
+pub(crate) fn set_patch_saw(app: &mut App) {
+  app.set_patch(Patch::Saw);
 }
 
 pub(crate) fn negative_x_translation(state: &mut State) {
