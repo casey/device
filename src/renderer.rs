@@ -639,7 +639,7 @@ impl Renderer {
       .context(error::RenderPoll)
   }
 
-  pub(crate) fn reload_shader(&mut self) -> Result {
+  pub(crate) fn reload_shaders(&mut self) -> Result {
     let vertex = VertexWgsl
       .reload_from_path()
       .context(error::ShaderReload {
