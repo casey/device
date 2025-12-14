@@ -28,6 +28,18 @@ impl Commands {
   }
 }
 
+pub(crate) fn pop_command(app: &mut App) {
+  app.pop_command();
+}
+
+pub(crate) fn complete_command(app: &mut App) {
+  app.complete_command();
+}
+
+pub(crate) fn execute_command(app: &mut App, event_loop: &ActiveEventLoop) {
+  app.execute_command(event_loop);
+}
+
 pub(crate) fn capture(app: &mut App) -> Result {
   app.capture()
 }

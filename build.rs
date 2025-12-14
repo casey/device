@@ -1,7 +1,7 @@
 use {
   quote::ToTokens,
   std::{collections::BTreeMap, env, fs, path::PathBuf},
-  syn::{FnArg, Item, ItemFn, PatType, ReturnType, Type},
+  syn::{FnArg, Item, ItemFn, Pat, PatType, ReturnType, Type},
 };
 
 const PATH: &str = "src/commands.rs";
@@ -34,12 +34,28 @@ fn main() {
   for function in functions {
     let name = function.sig.ident.to_string();
 
-    assert_eq!(
-      function.sig.inputs.len(),
-      1,
-      "command function {name} has incorrect number of parameters: {}",
-      function.sig.inputs.len(),
-    );
+    let inputs = function
+      .sig
+      .inputs
+      .iter()
+      .map(|input| {
+        let FnArg::Typed(PatType { pat, .. }) = input else {
+          panic!(
+            "command function {name} has self receiver: {}",
+            input.to_token_stream(),
+          );
+        };
+
+        let Pat::Ident(pat_ident) = pat.as_ref() else {
+          panic!(
+            "command function {name} has input without ident pattern: {}",
+            input.to_token_stream(),
+          );
+        };
+
+        pat_ident.ident.to_string()
+      })
+      .collect::<Vec<String>>();
 
     let fallible = match &function.sig.output {
       ReturnType::Default => false,
@@ -69,40 +85,20 @@ fn main() {
       }
     };
 
-    let FnArg::Typed(PatType { ty, .. }) = function.sig.inputs.first().unwrap() else {
-      panic!(
-        "command function {name} has self receiver: {}",
-        function.sig.inputs.first().unwrap().to_token_stream(),
-      );
-    };
+    let inputs = inputs
+      .iter()
+      .map(|input| input.as_str())
+      .collect::<Vec<&str>>();
 
-    let Type::Reference(r) = ty.as_ref() else {
-      panic!(
-        "command function {name} has non-reference argument: {}",
-        ty.to_token_stream(),
-      );
-    };
-
-    let Type::Path(p) = r.elem.as_ref() else {
-      panic!(
-        "command function {name} has non-path argument: {}",
-        r.elem.to_token_stream(),
-      );
-    };
-
-    assert!(
-      p.qself.is_none(),
-      "command function {name} has qualified argument",
-    );
-
-    let ident = p.path.get_ident().unwrap();
-
-    let variant = match (ident.to_string().as_str(), fallible) {
-      ("State", false) => "State",
-      ("State", true) => panic!("command {name} takes state but is fallible"),
-      ("App", false) => "App",
-      ("App", true) => "AppFallible",
-      (other, _) => panic!("command {name} has unexpected argument type {other}"),
+    let variant = match (inputs.as_slice(), fallible) {
+      (["app"], false) => "App",
+      (["app"], true) => "AppFallible",
+      (["app", "event_loop"], false) => "AppEventLoop",
+      (["state"], false) => "State",
+      _ => panic!(
+        "unsupported combination of inputs and fallibility: ({}, {fallible}",
+        inputs.join(" ")
+      ),
     };
 
     commands.insert(name, variant);
