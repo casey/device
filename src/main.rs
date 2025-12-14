@@ -21,6 +21,7 @@ use {
     format::Format,
     fps::Fps,
     frame::Frame,
+    functions::{default, display, pad},
     hub::Hub,
     image::Image,
     input::Input,
@@ -156,6 +157,7 @@ mod filter_uniforms;
 mod format;
 mod fps;
 mod frame;
+mod functions;
 mod generated;
 mod hub;
 mod image;
@@ -216,19 +218,6 @@ type Rot2f = nalgebra::Rotation2<f32>;
 type Vec2f = nalgebra::Vector2<f32>;
 type Vec3f = nalgebra::Vector3<f32>;
 type Vec4f = nalgebra::Vector4<f32>;
-
-fn default<T: Default>() -> T {
-  T::default()
-}
-
-fn display<'a, T: Display + 'a>(t: T) -> Box<dyn Display + 'a> {
-  Box::new(t)
-}
-
-fn pad(i: usize, alignment: usize) -> usize {
-  assert!(alignment.is_power_of_two());
-  (i + alignment - 1) & !(alignment - 1)
-}
 
 fn main() {
   env_logger::init();

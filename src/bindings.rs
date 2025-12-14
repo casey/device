@@ -188,10 +188,10 @@ mod tests {
   use super::*;
 
   #[test]
-  fn character_bindings_are_uppercase() {
-    for (_, c, _, _command) in CHARACTER_BINDINGS {
-      let s = c.to_string();
-      assert_eq!(s.to_uppercase(), s);
+  fn button_bindings_are_unique() {
+    let mut buttons = HashSet::new();
+    for (controller, control, pressed, _command) in BUTTON_BINDINGS {
+      assert!(buttons.insert((controller, control, pressed)));
     }
   }
 
@@ -204,18 +204,10 @@ mod tests {
   }
 
   #[test]
-  fn named_bindings_are_unique() {
-    let mut names = HashSet::new();
-    for (mode, name, _command) in NAMED_BINDINGS {
-      assert!(names.insert((mode, name)));
-    }
-  }
-
-  #[test]
-  fn button_bindings_are_unique() {
-    let mut buttons = HashSet::new();
-    for (controller, control, pressed, _command) in BUTTON_BINDINGS {
-      assert!(buttons.insert((controller, control, pressed)));
+  fn character_bindings_are_uppercase() {
+    for (_, c, _, _command) in CHARACTER_BINDINGS {
+      let s = c.to_string();
+      assert_eq!(s.to_uppercase(), s);
     }
   }
 
@@ -224,6 +216,14 @@ mod tests {
     let mut encoders = HashSet::new();
     for (controller, control, _command) in ENCODER_BINDINGS {
       assert!(encoders.insert((controller, control)));
+    }
+  }
+
+  #[test]
+  fn named_bindings_are_unique() {
+    let mut names = HashSet::new();
+    for (mode, name, _command) in NAMED_BINDINGS {
+      assert!(names.insert((mode, name)));
     }
   }
 }

@@ -3,14 +3,14 @@ use {
   png::{BitDepth, ColorType, Compression, Decoder, Encoder},
 };
 
+const OPAQUE: u8 = u8::MAX;
+
 #[derive(Default, Debug, PartialEq)]
 pub(crate) struct Image {
   data: Vec<u8>,
   height: u32,
   width: u32,
 }
-
-const OPAQUE: u8 = u8::MAX;
 
 impl Image {
   pub(crate) fn data(&self) -> &[u8] {
