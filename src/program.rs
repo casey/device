@@ -9,6 +9,7 @@ pub(crate) enum Program {
   Expo,
   Transit,
   Radio,
+  Blaster,
 }
 
 impl Program {
@@ -32,6 +33,10 @@ impl Program {
         let wave = tap.load_wave(&config.find_song("next sun")?)?;
         tap.sequence_wave(&wave, 0.0, 0.0);
       }
+      Self::Blaster => {
+        let wave = tap.load_wave(&config.find_song("total 4/13 maria")?)?;
+        tap.sequence_wave(&wave, 0.0, 0.0);
+      }
     }
     Ok(())
   }
@@ -39,6 +44,7 @@ impl Program {
   pub(crate) fn db(self) -> Option<f32> {
     match self {
       Self::Radio => Some(-10.0),
+      Self::Blaster => Some(-15.0),
       _ => None,
     }
   }
@@ -51,6 +57,7 @@ impl Program {
       Self::Expo => Scene::Starburst,
       Self::Transit => Scene::Kaleidoscope,
       Self::Radio => Scene::BlackHole,
+      Self::Blaster => Scene::Test,
     }
   }
 }
