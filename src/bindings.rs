@@ -119,7 +119,7 @@ impl Bindings {
     let command = self.button.get(&(controller, button, press)).copied();
 
     if command.is_none() {
-      log::info!("unbound button: {controller:?} {button}");
+      log::info!("unbound button: {controller:?} {button} {press}");
     }
 
     command

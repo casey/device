@@ -29,47 +29,91 @@ impl Commands {
 }
 
 pub(crate) fn pop_command(app: &mut App) {
-  app.pop_command();
+  let Mode::Command(command) = &mut app.mode else {
+    return;
+  };
+
+  if command.pop().is_none() {
+    app.mode = Mode::Normal;
+  }
 }
 
 pub(crate) fn undo(app: &mut App) {
-  app.undo();
+  if let Some(state) = app.history.pop() {
+    app.state = state;
+  }
 }
 
 pub(crate) fn complete_command(app: &mut App) {
-  app.complete_command();
+  let Mode::Command(command) = &mut app.mode else {
+    return;
+  };
+
+  let prefix = command.iter().flat_map(|c| c.chars()).collect::<String>();
+
+  if let Some(suffix) = app.commands.complete(&prefix) {
+    if !suffix.is_empty() {
+      eprintln!("completion: {prefix}{suffix}");
+      command.push(suffix.into());
+    }
+  } else {
+    eprintln!("no completion found for: {prefix}");
+  }
 }
 
 pub(crate) fn execute_command(app: &mut App, event_loop: &ActiveEventLoop) {
-  app.execute_command(event_loop);
+  let Mode::Command(command) = &mut app.mode else {
+    return;
+  };
+
+  let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
+  if let Some(command) = app.commands.name(command.as_str()) {
+    app.dispatch(event_loop, command);
+  } else {
+    eprintln!("unknown command: {command}");
+  }
+  app.mode = Mode::Normal;
 }
 
 pub(crate) fn capture(app: &mut App) -> Result {
-  app.capture()
+  let destination = app.config.capture("png");
+  let tx = app.capture_tx.clone();
+  app.renderer.as_ref().unwrap().capture(move |capture| {
+    if let Err(err) = tx.send(capture.save(&destination)) {
+      eprintln!("failed to send capture result: {err}");
+    }
+  })?;
+
+  app.captures_pending += 1;
+
+  Ok(())
 }
 
 pub(crate) fn enter_command_mode(app: &mut App) {
-  app.enter_mode(Mode::Command(Vec::new()));
+  app.mode = Mode::Command(Vec::new());
 }
 
 pub(crate) fn enter_play_mode(app: &mut App) {
-  app.enter_mode(Mode::Play);
+  app.mode = Mode::Play;
 }
 
 pub(crate) fn enter_normal_mode(app: &mut App) {
-  app.enter_mode(Mode::Normal);
+  app.mode = Mode::Normal;
 }
 
 pub(crate) fn toggle_fullscreen(app: &mut App) {
-  app.toggle_fullscreen();
+  app.fullscreen.toggle();
+  app
+    .window()
+    .set_fullscreen(app.fullscreen.then_some(Fullscreen::Borderless(None)));
 }
 
 pub(crate) fn set_patch_sine(app: &mut App) {
-  app.set_patch(Patch::Sine);
+  app.patch = Patch::Sine;
 }
 
 pub(crate) fn set_patch_saw(app: &mut App) {
-  app.set_patch(Patch::Saw);
+  app.patch = Patch::Saw;
 }
 
 pub(crate) fn negative_x_translation(state: &mut State) {
@@ -201,7 +245,9 @@ pub(crate) fn positive_rotation(state: &mut State) {
 }
 
 pub(crate) fn reload_shaders(app: &mut App) {
-  app.reload_shaders();
+  if let Err(err) = app.renderer.as_mut().unwrap().reload_shaders() {
+    eprintln!("failed to reload shader: {err}");
+  }
 }
 
 pub(crate) fn right(state: &mut State) {
