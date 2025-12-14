@@ -4,6 +4,7 @@ use super::*;
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum Scene {
   All,
+  BlackHole,
   Blaster,
   Bottom,
   Circle,
@@ -50,6 +51,19 @@ impl Scene {
     match self {
       Self::All => {
         state.invert().all().push();
+      }
+      Self::BlackHole => {
+        state.filters.extend(
+          [
+            Preset::Circle,
+            Preset::Spin,
+            Preset::Circle,
+            Preset::ZoomInNe,
+          ]
+          .iter()
+          .copied()
+          .map(Preset::filter),
+        );
       }
       Self::Blaster => {
         state.interpolate = rng.random();
