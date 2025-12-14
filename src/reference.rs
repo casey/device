@@ -141,9 +141,95 @@ impl Test {
 
 #[test]
 #[ignore]
+#[cfg(false)]
+fn mirror_tile() {
+  let mut state = State::default();
+  state
+    .invert()
+    .left()
+    .push()
+    .top()
+    .push()
+    .mirror_x(Mirror::Triangle)
+    .mirror_y(Mirror::Triangle)
+    .circle()
+    .push()
+    .push()
+    .push()
+    .tile(true);
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+#[cfg(false)]
+fn zoom_tile() {
+  let mut state = State::default();
+  state
+    .invert()
+    .x()
+    .push()
+    .circle()
+    .push()
+    .square()
+    .push()
+    .position(Mat3f::new_scaling(2.0))
+    .all()
+    .push()
+    .tile(true);
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn all() {
+  let mut state = State::default();
+  state.invert().all().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
 fn circle() {
   let mut state = State::default();
   state.invert().circle().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn circle_medium_even() {
+  let mut state = State::default();
+  state.invert().circle().push();
+  Test::new(name!()).resolution(32).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn circle_medium_odd() {
+  let mut state = State::default();
+  state.invert().circle().push();
+  Test::new(name!()).resolution(31).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn circle_scale() {
+  let mut state = State::default();
+  state.invert().circle().scale(2.0).times(2);
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn circle_scale_interpolated() {
+  let mut state = State::default();
+  state
+    .invert()
+    .circle()
+    .scale(2.0)
+    .times(2)
+    .interpolate(true);
   Test::new(name!()).state(state).run();
 }
 
@@ -165,184 +251,9 @@ fn circle_small_odd() {
 
 #[test]
 #[ignore]
-fn circle_medium_even() {
+fn coordinates() {
   let mut state = State::default();
-  state.invert().circle().push();
-  Test::new(name!()).resolution(32).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn circle_medium_odd() {
-  let mut state = State::default();
-  state.invert().circle().push();
-  Test::new(name!()).resolution(31).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn default() {
-  Test::new(name!()).state(State::default()).run();
-}
-
-#[test]
-#[ignore]
-fn left() {
-  let mut state = State::default();
-  state.invert().left().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x() {
-  let mut state = State::default();
-  state.invert().x().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x_oblong() {
-  let mut state = State::default();
-  state.invert().x().push();
-  Test::new(name!()).width(256).height(128).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x_small_even() {
-  let mut state = State::default();
-  state.invert().x().push();
-  Test::new(name!()).resolution(10).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x_small_odd() {
-  let mut state = State::default();
-  state.invert().x().push();
-  Test::new(name!()).resolution(9).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x_medium_even() {
-  let mut state = State::default();
-  state.invert().x().push();
-  Test::new(name!()).resolution(32).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x_medium_odd() {
-  let mut state = State::default();
-  state.invert().x().push();
-  Test::new(name!()).resolution(31).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn tile() {
-  let mut state = State::default();
-
-  state
-    .invert()
-    .x()
-    .push()
-    .circle()
-    .push()
-    .x()
-    .push()
-    .square()
-    .push()
-    .circle()
-    .push()
-    .triangle()
-    .push()
-    .square()
-    .push()
-    .tile(true);
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn circle_scale() {
-  let mut state = State::default();
-  state.invert().circle().scale(2.0).times(2);
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x_scale() {
-  let mut state = State::default();
-  state.repeat(false).invert().x().scale(2.0).times(2);
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x_scale_repeat() {
-  let mut state = State::default();
-  state.repeat(true).invert().x().scale(2.0).times(2);
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn circle_scale_interpolated() {
-  let mut state = State::default();
-  state
-    .invert()
-    .circle()
-    .scale(2.0)
-    .times(2)
-    .interpolate(true);
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn x_scale_interpolated() {
-  let mut state = State::default();
-  state
-    .repeat(false)
-    .invert()
-    .x()
-    .scale(2.0)
-    .times(2)
-    .interpolate(true);
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn sampling_repeat_on() {
-  let mut state = State::default();
-  state
-    .repeat(true)
-    .rotate_position(0.2 * TAU)
-    .rotate_color(Axis::Green, 0.1 * TAU)
-    .all()
-    .push()
-    .push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn sampling_repeat_off() {
-  let mut state = State::default();
-
-  state
-    .repeat(false)
-    .rotate_position(0.2 * TAU)
-    .rotate_color(Axis::Green, 0.1 * TAU)
-    .all()
-    .push()
-    .push();
+  state.coordinates(true).all().push();
   Test::new(name!()).state(state).run();
 }
 
@@ -356,65 +267,15 @@ fn cross() {
 
 #[test]
 #[ignore]
-fn square() {
-  let mut state = State::default();
-  state.invert().square().push();
-  Test::new(name!()).state(state).run();
+fn default() {
+  Test::new(name!()).state(State::default()).run();
 }
 
 #[test]
 #[ignore]
-fn triangle() {
+fn left() {
   let mut state = State::default();
-  state.invert().triangle().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn all() {
-  let mut state = State::default();
-  state.invert().all().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn none() {
-  let mut state = State::default();
-  state.invert().none().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn rotate_red() {
-  let mut state = State::default();
-  state.rotate_color(Axis::Red, TAU / 2.0).all().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn rotate_green() {
-  let mut state = State::default();
-  state.rotate_color(Axis::Green, TAU / 2.0).all().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn rotate_blue() {
-  let mut state = State::default();
-  state.rotate_color(Axis::Blue, TAU / 2.0).all().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn coordinates() {
-  let mut state = State::default();
-  state.coordinates(true).all().push();
+  state.invert().left().push();
   Test::new(name!()).state(state).run();
 }
 
@@ -445,23 +306,6 @@ fn mirror_x() {
 
 #[test]
 #[ignore]
-fn mirror_y() {
-  let mut state = State::default();
-  state
-    .invert()
-    .left()
-    .push()
-    .top()
-    .push()
-    .mirror_y(Mirror::Triangle)
-    .identity()
-    .all()
-    .push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
 fn mirror_x_inverse() {
   let mut state = State::default();
   state
@@ -471,23 +315,6 @@ fn mirror_x_inverse() {
     .top()
     .push()
     .mirror_x(Mirror::Inverse)
-    .identity()
-    .all()
-    .push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn mirror_y_inverse() {
-  let mut state = State::default();
-  state
-    .invert()
-    .left()
-    .push()
-    .top()
-    .push()
-    .mirror_y(Mirror::Inverse)
     .identity()
     .all()
     .push();
@@ -531,61 +358,43 @@ fn mirror_xy_field() {
 
 #[test]
 #[ignore]
-#[cfg(false)]
-fn mirror_tile() {
+fn mirror_y() {
   let mut state = State::default();
-
   state
     .invert()
     .left()
     .push()
     .top()
     .push()
-    .mirror_x(Mirror::Triangle)
     .mirror_y(Mirror::Triangle)
-    .circle()
-    .push()
-    .push()
-    .push()
-    .tile(true);
-
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-#[cfg(false)]
-fn zoom_tile() {
-  let mut state = State::default();
-
-  state
-    .invert()
-    .x()
-    .push()
-    .circle()
-    .push()
-    .square()
-    .push()
-    .position(Mat3f::new_scaling(2.0))
+    .identity()
     .all()
-    .push()
-    .tile(true);
-
+    .push();
   Test::new(name!()).state(state).run();
 }
 
 #[test]
 #[ignore]
-fn rotation() {
+fn mirror_y_inverse() {
   let mut state = State::default();
-
   state
-    .rotation(TAU)
-    .rms(Mat1x2f::new(0.0, 0.1))
     .invert()
-    .x()
+    .left()
+    .push()
+    .top()
+    .push()
+    .mirror_y(Mirror::Inverse)
+    .identity()
+    .all()
     .push();
+  Test::new(name!()).state(state).run();
+}
 
+#[test]
+#[ignore]
+fn none() {
+  let mut state = State::default();
+  state.invert().none().push();
   Test::new(name!()).state(state).run();
 }
 
@@ -598,14 +407,11 @@ fn presets() {
     name: &'static str,
     error: Error,
   }
-
   let mut errors = Vec::new();
-
   for preset in Preset::iter() {
     let mut state = State::default();
     state.filters.push(Preset::Test.filter());
     state.filters.push(preset.filter());
-
     if let Err(err) = Test::new(format!("preset-{preset}")).state(state).try_run() {
       errors.push(Entry {
         name: preset.name(),
@@ -613,12 +419,76 @@ fn presets() {
       });
     }
   }
-
   assert!(
     errors.is_empty(),
     "{}",
     Table::new(&errors).with(Style::sharp()),
   );
+}
+
+#[test]
+#[ignore]
+fn rotate_blue() {
+  let mut state = State::default();
+  state.rotate_color(Axis::Blue, TAU / 2.0).all().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn rotate_green() {
+  let mut state = State::default();
+  state.rotate_color(Axis::Green, TAU / 2.0).all().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn rotate_red() {
+  let mut state = State::default();
+  state.rotate_color(Axis::Red, TAU / 2.0).all().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn rotation() {
+  let mut state = State::default();
+  state
+    .rotation(TAU)
+    .rms(Mat1x2f::new(0.0, 0.1))
+    .invert()
+    .x()
+    .push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn sampling_repeat_off() {
+  let mut state = State::default();
+  state
+    .repeat(false)
+    .rotate_position(0.2 * TAU)
+    .rotate_color(Axis::Green, 0.1 * TAU)
+    .all()
+    .push()
+    .push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn sampling_repeat_on() {
+  let mut state = State::default();
+  state
+    .repeat(true)
+    .rotate_position(0.2 * TAU)
+    .rotate_color(Axis::Green, 0.1 * TAU)
+    .all()
+    .push()
+    .push();
+  Test::new(name!()).state(state).run();
 }
 
 #[test]
@@ -630,12 +500,9 @@ fn scenes() {
     name: &'static str,
     error: Error,
   }
-
   let mut errors = Vec::new();
-
   for scene in Scene::iter() {
     let state = scene.state(Some(0));
-
     if let Err(err) = Test::new(format!("scene-{scene}")).state(state).try_run() {
       errors.push(Entry {
         name: scene.name(),
@@ -643,10 +510,126 @@ fn scenes() {
       });
     }
   }
-
   assert!(
     errors.is_empty(),
     "{}",
     Table::new(&errors).with(Style::sharp()),
   );
+}
+
+#[test]
+#[ignore]
+fn square() {
+  let mut state = State::default();
+  state.invert().square().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn tile() {
+  let mut state = State::default();
+  state
+    .invert()
+    .x()
+    .push()
+    .circle()
+    .push()
+    .x()
+    .push()
+    .square()
+    .push()
+    .circle()
+    .push()
+    .triangle()
+    .push()
+    .square()
+    .push()
+    .tile(true);
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn triangle() {
+  let mut state = State::default();
+  state.invert().triangle().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x() {
+  let mut state = State::default();
+  state.invert().x().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_medium_even() {
+  let mut state = State::default();
+  state.invert().x().push();
+  Test::new(name!()).resolution(32).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_medium_odd() {
+  let mut state = State::default();
+  state.invert().x().push();
+  Test::new(name!()).resolution(31).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_oblong() {
+  let mut state = State::default();
+  state.invert().x().push();
+  Test::new(name!()).width(256).height(128).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_scale() {
+  let mut state = State::default();
+  state.repeat(false).invert().x().scale(2.0).times(2);
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_scale_interpolated() {
+  let mut state = State::default();
+  state
+    .repeat(false)
+    .invert()
+    .x()
+    .scale(2.0)
+    .times(2)
+    .interpolate(true);
+  Test::new(name!()).state(state).run();
+}
+#[test]
+#[ignore]
+fn x_scale_repeat() {
+  let mut state = State::default();
+  state.repeat(true).invert().x().scale(2.0).times(2);
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_small_even() {
+  let mut state = State::default();
+  state.invert().x().push();
+  Test::new(name!()).resolution(10).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_small_odd() {
+  let mut state = State::default();
+  state.invert().x().push();
+  Test::new(name!()).resolution(9).state(state).run();
 }
