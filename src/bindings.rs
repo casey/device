@@ -90,16 +90,19 @@ const ENCODER_BINDINGS: &[((Controller, u8), fn(&mut State, Parameter))] = {
 #[rustfmt::skip]
 const NAMED_BINDINGS: &[(ModeKind, NamedKey, Command)] = {
   use {
-    ModeKind::{Normal, Play},
+    ModeKind::{Normal, Play, Command},
     NamedKey::*,
     generated::*,
   };
 
   &[
-    (Normal, ArrowLeft,  NEGATIVE_ROTATION),
-    (Normal, ArrowRight, POSITIVE_ROTATION),
-    (Normal, Backspace,  POP),
-    (Play,   Escape,     ENTER_NORMAL_MODE),
+    (Command, Backspace,  POP_COMMAND),
+    (Command, Tab,        COMPLETE_COMMAND),
+    (Command, Escape,     ENTER_NORMAL_MODE),
+    (Normal,  ArrowLeft,  NEGATIVE_ROTATION),
+    (Normal,  ArrowRight, POSITIVE_ROTATION),
+    (Normal,  Backspace,  POP),
+    (Play,    Escape,     ENTER_NORMAL_MODE),
   ]
 };
 
