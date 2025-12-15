@@ -16,7 +16,6 @@ impl Transformation3 {
 
   pub(crate) fn response(&self, response: f32) -> Mat4f {
     let response = self.period.map_or(response, |period| response % period);
-
     let response = if self.sin { response.sin() } else { response };
 
     let scaling = Self::SCALING_IDENTITY + (self.scaling - Self::SCALING_IDENTITY) * response;
