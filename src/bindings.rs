@@ -244,7 +244,7 @@ impl Display for Bindings {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     use tabled::{
       builder::Builder,
-      settings::{Alignment, Span, Style, object::Columns, themes::BorderCorrection},
+      settings::{Alignment, Panel, Span, Style, object::Columns, themes::BorderCorrection},
     };
 
     fn binding(modifiers: ModifiersState, key: &str) -> String {
@@ -311,6 +311,32 @@ impl Display for Bindings {
       f,
       "{}",
       table.with(Style::modern()).with(BorderCorrection::span()),
+    )?;
+
+    let mut spectra = [[""; 4]; 4];
+    for ((controller, control, _press), (name, _command)) in &self.button {
+      if *controller == Controller::Spectra {
+        let i = control.into_usize();
+        if i >= 16 {
+          continue;
+        }
+        spectra[i / 4][i % 4] = name;
+      }
+    }
+
+    let mut builder = Builder::default();
+    for row in spectra {
+      builder.push_record(row);
+    }
+
+    writeln!(
+      f,
+      "{}",
+      builder
+        .build()
+        .with(Style::modern())
+        .with(Panel::header(Controller::Spectra.name()))
+        .with(BorderCorrection::span())
     )?;
 
     Ok(())
