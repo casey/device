@@ -1,5 +1,7 @@
 use super::*;
 
+const OFF: ModifiersState = ModifiersState::empty();
+
 #[rustfmt::skip]
 const BUTTON_BINDINGS: &[(Controller, u8, Press, (&str, Command))] = {
   use {Controller::*, generated::*, Press::Press};
@@ -28,7 +30,6 @@ const BUTTON_BINDINGS: &[(Controller, u8, Press, (&str, Command))] = {
 const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] = {
   use {generated::*, ModeKind::*};
 
-  const OFF: ModifiersState = ModifiersState::empty();
   const CTRL: ModifiersState = ModifiersState::CONTROL;
   const CTRL_SUPER: ModifiersState = CTRL.union(SUPER);
   const SHIFT: ModifiersState = ModifiersState::SHIFT;
@@ -66,7 +67,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] =
   ]
 };
 
-const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
+const ENCODER_BINDINGS: &[(Controller, u8, (&str, fn(&mut State, u7) -> f32))] = {
   use Controller::*;
 
   fn integer(value: u7) -> f32 {
@@ -125,14 +126,22 @@ const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
     value
   }
 
+  macro_rules! command {
+    {
+      $name:ident
+    } => {
+      (stringify!($name), $name)
+    }
+  }
+
   &[
-    (Twister, 0, set_alpha),
-    (Twister, 1, set_db),
-    (Twister, 4, set_velocity_x),
-    (Twister, 5, set_velocity_y),
-    (Twister, 6, set_velocity_scaling),
-    (Twister, 7, set_velocity_rotation),
-    (Twister, 8, set_complexity),
+    (Twister, 0, command!(set_alpha)),
+    (Twister, 1, command!(set_db)),
+    (Twister, 4, command!(set_velocity_x)),
+    (Twister, 5, command!(set_velocity_y)),
+    (Twister, 6, command!(set_velocity_scaling)),
+    (Twister, 7, command!(set_velocity_rotation)),
+    (Twister, 8, command!(set_complexity)),
   ]
 };
 
@@ -143,8 +152,6 @@ const NAMED_BINDINGS: &[(ModeKind, NamedKey, ModifiersState, (&str, Command))] =
     NamedKey::*,
     generated::*,
   };
-
-  const OFF: ModifiersState = ModifiersState::empty();
 
   &[
     (Command, Backspace,  OFF, POP_COMMAND),
@@ -161,7 +168,7 @@ const NAMED_BINDINGS: &[(ModeKind, NamedKey, ModifiersState, (&str, Command))] =
 pub(crate) struct Bindings {
   button: BTreeMap<(Controller, u8, Press), (&'static str, Command)>,
   character: BTreeMap<(ModeKind, String, ModifiersState), (&'static str, Command)>,
-  encoder: BTreeMap<(Controller, u8), fn(&mut State, u7) -> f32>,
+  encoder: BTreeMap<(Controller, u8), (&'static str, fn(&mut State, u7) -> f32)>,
   named: BTreeMap<(ModeKind, NamedKey, ModifiersState), (&'static str, Command)>,
 }
 
@@ -187,7 +194,7 @@ impl Bindings {
       log::info!("unbound encoder: {controller:?} {encoder}");
     }
 
-    command
+    command.map(|command| command.1)
   }
 
   pub(crate) fn key(&self, mode: ModeKind, key: &Key, modifiers: Modifiers) -> Option<Command> {
@@ -271,73 +278,103 @@ impl Display for Bindings {
       binding.join(" ")
     }
 
-    let mut modes = BTreeMap::<ModeKind, Vec<[String; 2]>>::new();
+    {
+      let mut modes = BTreeMap::<ModeKind, Vec<[String; 2]>>::new();
 
-    for ((mode, character, modifiers), (name, _command)) in &self.character {
-      modes
-        .entry(*mode)
-        .or_default()
-        .push([binding(*modifiers, character), (*name).into()]);
-    }
-
-    for ((mode, named_key, modifiers), (name, _command)) in &self.named {
-      modes.entry(*mode).or_default().push([
-        binding(*modifiers, &format!("{named_key:?}")),
-        (*name).into(),
-      ]);
-    }
-
-    let mut builder = Builder::default();
-
-    let mut mode_records = Vec::new();
-
-    for (mode, records) in modes {
-      mode_records.push(builder.count_records());
-      builder.push_record([mode.name()]);
-
-      for record in records {
-        builder.push_record(record);
+      for ((mode, character, modifiers), (name, _command)) in &self.character {
+        modes
+          .entry(*mode)
+          .or_default()
+          .push([binding(*modifiers, character), (*name).into()]);
       }
+
+      for ((mode, named_key, modifiers), (name, _command)) in &self.named {
+        modes.entry(*mode).or_default().push([
+          binding(*modifiers, &format!("{named_key:?}")),
+          (*name).into(),
+        ]);
+      }
+
+      let mut builder = Builder::default();
+
+      let mut mode_records = Vec::new();
+
+      for (mode, records) in modes {
+        mode_records.push(builder.count_records());
+        builder.push_record([mode.name()]);
+
+        for record in records {
+          builder.push_record(record);
+        }
+      }
+
+      let mut table = builder.build();
+      table.modify(Columns::first(), Alignment::right());
+      for i in mode_records {
+        table.modify((i, 0), Span::column(2));
+        table.modify((i, 0), Alignment::center());
+      }
+
+      writeln!(
+        f,
+        "{}",
+        table.with(Style::modern()).with(BorderCorrection::span()),
+      )?;
     }
 
-    let mut table = builder.build();
-    table.modify(Columns::first(), Alignment::right());
-    for i in mode_records {
-      table.modify((i, 0), Span::column(2));
-      table.modify((i, 0), Alignment::center());
-    }
-
-    writeln!(
-      f,
-      "{}",
-      table.with(Style::modern()).with(BorderCorrection::span()),
-    )?;
-
-    let mut spectra = [[""; 4]; 4];
-    for ((controller, control, _press), (name, _command)) in &self.button {
-      if *controller == Controller::Spectra {
-        let i = control.into_usize();
-        if i >= 16 {
+    {
+      let mut spectra = Vec::new();
+      for ((controller, control, _press), (name, _command)) in &self.button {
+        if *controller != Controller::Spectra {
           continue;
         }
-        spectra[i / 4][i % 4] = name;
+        let i = control.into_usize();
+        spectra.resize(i + 1, "");
+        spectra[i] = name;
       }
+
+      let mut builder = Builder::default();
+      for row in spectra.chunks(4) {
+        builder.push_record(row.iter().copied());
+      }
+
+      writeln!(
+        f,
+        "{}",
+        builder
+          .build()
+          .with(Style::modern())
+          .with(Panel::header(Controller::Spectra.name()))
+          .with(BorderCorrection::span())
+      )?;
     }
 
-    let mut builder = Builder::default();
-    for row in spectra {
-      builder.push_record(row);
-    }
+    {
+      let mut twister = Vec::new();
+      for ((controller, control), (name, _command)) in &self.encoder {
+        if *controller != Controller::Twister {
+          continue;
+        }
+        let i = control.into_usize();
+        twister.resize(i + 1, "");
+        twister[i] = name;
+      }
 
-    writeln!(
-      f,
-      "{}",
-      builder
-        .build()
-        .with(Style::modern())
-        .with(Panel::header(Controller::Spectra.name()))
-        .with(BorderCorrection::span())
-    )?;
+      let mut builder = Builder::default();
+      for row in twister.chunks(4) {
+        builder.push_record(row.iter().copied());
+      }
+
+      writeln!(
+        f,
+        "{}",
+        builder
+          .build()
+          .with(Style::modern())
+          .with(Panel::header(Controller::Twister.name()))
+          .with(BorderCorrection::span())
+      )?;
+    }
 
     Ok(())
   }
