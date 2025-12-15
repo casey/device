@@ -5,17 +5,17 @@ pub(crate) struct Filter {
   pub(crate) alpha: f32,
   pub(crate) base: f32,
   pub(crate) color: Mat4f,
-  pub(crate) color_response: Transformation,
+  pub(crate) color_response: Transformation3,
   pub(crate) coordinates: bool,
   pub(crate) field: Field,
   pub(crate) grid: f32,
   pub(crate) grid_alpha: f32,
   pub(crate) mirror: Vector2<Mirror>,
   pub(crate) position: Mat3f,
+  pub(crate) position_response: Transformation2,
   pub(crate) preset: Option<Preset>,
   pub(crate) repeat: bool,
   pub(crate) rms: Mat1x2f,
-  pub(crate) rotation: f32,
   pub(crate) wrap: bool,
 }
 
@@ -25,17 +25,17 @@ impl Default for Filter {
       alpha: 1.0,
       base: 1.0,
       color: Mat4f::identity(),
-      color_response: Transformation::default(),
+      color_response: Transformation3::default(),
       coordinates: false,
       field: Field::default(),
       grid: 1.0,
       grid_alpha: 0.0,
       mirror: Vector2::default(),
       position: Mat3f::identity(),
+      position_response: Transformation2::default(),
       preset: None,
       repeat: true,
       rms: Mat1x2f::identity(),
-      rotation: 0.0,
       wrap: false,
     }
   }
@@ -60,6 +60,6 @@ impl Filter {
   }
 
   pub(crate) fn position_uniform(&self, response: f32) -> Mat2x3f {
-    (Rotation2::<f32>::new(self.rotation * response).to_homogeneous() * self.position).to_affine()
+    (self.position_response.response(response) * self.position).to_affine()
   }
 }

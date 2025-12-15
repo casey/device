@@ -45,7 +45,7 @@ pub(crate) fn invert() -> Mat4f {
 }
 
 pub(crate) fn rotate_hue_blaster(r: f32) -> Mat4f {
-  Transformation {
+  Transformation3 {
     space: Space::Blaster,
     rotation: UnitQuaternion::from_axis_angle(&Vec3f::x_axis(), r),
     ..default()
@@ -54,7 +54,7 @@ pub(crate) fn rotate_hue_blaster(r: f32) -> Mat4f {
 }
 
 pub(crate) fn rotate_hue_yiq(r: f32) -> Mat4f {
-  Transformation {
+  Transformation3 {
     space: Space::Yiq,
     rotation: UnitQuaternion::from_axis_angle(&Vec3f::x_axis(), r),
     ..default()
@@ -63,7 +63,7 @@ pub(crate) fn rotate_hue_yiq(r: f32) -> Mat4f {
 }
 
 pub(crate) fn saturate(s: f32) -> Mat4f {
-  Transformation {
+  Transformation3 {
     space: Space::Ycgco,
     scaling: Vec3f::new(1.0, s, s),
     ..default()

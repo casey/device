@@ -202,7 +202,7 @@ impl State {
 
   #[cfg(test)]
   pub(crate) fn rotation(&mut self, rotation: f32) -> &mut Self {
-    self.filter.rotation = rotation;
+    self.filter.position_response.rotation = rotation;
     self
   }
 

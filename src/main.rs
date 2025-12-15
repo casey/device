@@ -56,7 +56,8 @@ use {
     text::Text,
     tiling::Tiling,
     to_affine::ToAffine,
-    transformation::Transformation,
+    transformation2::Transformation2,
+    transformation3::Transformation3,
     uniforms::Uniforms,
     window_attributes_ext::WindowAttributesExt,
   },
@@ -71,7 +72,9 @@ use {
   hound::{WavSpec, WavWriter},
   indicatif::{ProgressBar, ProgressStyle},
   midly::num::u7,
-  nalgebra::{Rotation2, Translation3, Unit, UnitQuaternion, Vector2, matrix, vector},
+  nalgebra::{
+    Rotation2, Translation2, Translation3, Unit, UnitQuaternion, Vector2, matrix, vector,
+  },
   parley::{FontContext, LayoutContext},
   rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
@@ -198,7 +201,8 @@ mod templates;
 mod text;
 mod tiling;
 mod to_affine;
-mod transformation;
+mod transformation2;
+mod transformation3;
 mod uniforms;
 mod window_attributes_ext;
 
