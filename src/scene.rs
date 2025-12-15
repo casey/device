@@ -139,7 +139,7 @@ impl Scene {
           .push()
           .samples()
           .push()
-          .z(0.05)
+          .scaling(0.05)
           .vz(-0.05)
           .interpolate(true)
           .position(Mat3f::new_rotation(-0.01))

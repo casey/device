@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 #[allow(clippy::arbitrary_source_item_ordering)]
 pub(crate) struct Transformation2 {
   pub(crate) scaling: Vec2f,
@@ -11,7 +11,7 @@ pub(crate) struct Transformation2 {
 }
 
 impl Transformation2 {
-  const SCALING_IDENTITY: Vec2f = Vec2f::new(1.0, 1.0);
+  pub(crate) const SCALING_IDENTITY: Vec2f = Vec2f::new(1.0, 1.0);
 
   pub(crate) fn response(&self, response: f32) -> Mat3f {
     let response = self.period.map_or(response, |period| response % period);

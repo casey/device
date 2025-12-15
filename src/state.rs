@@ -19,7 +19,7 @@ pub(crate) struct State {
   pub(crate) status: bool,
   pub(crate) text: Option<Text>,
   pub(crate) tile: bool,
-  pub(crate) transient: Vec4f,
+  pub(crate) transient: Transformation2,
   pub(crate) velocity: Vec4f,
   pub(crate) wrap: bool,
 }
@@ -43,7 +43,7 @@ impl Default for State {
       status: false,
       text: None,
       tile: false,
-      transient: Self::TRANSIENT_IDENTITY,
+      transient: Transformation2::default(),
       velocity: Vec4f::zeros(),
       complexity: 0.0,
       wrap: true,
@@ -52,8 +52,6 @@ impl Default for State {
 }
 
 impl State {
-  pub(crate) const TRANSIENT_IDENTITY: Vec4f = Vec4f::new(0.0, 0.0, 1.0, 0.0);
-
   pub(crate) fn all(&mut self) -> &mut Self {
     self.filter.field = Field::All;
     self
@@ -222,6 +220,11 @@ impl State {
     self
   }
 
+  pub(crate) fn scaling(&mut self, z: f32) -> &mut Self {
+    self.transient.scaling = Vec2f::new(z, z);
+    self
+  }
+
   pub(crate) fn spread(&mut self, spread: bool) -> &mut Self {
     self.spread = spread;
     self
@@ -239,10 +242,14 @@ impl State {
   }
 
   pub(crate) fn tick(&mut self, dt: Duration) {
-    self.transient.x -= self.velocity.x * dt.as_secs_f32();
-    self.transient.y -= self.velocity.y * dt.as_secs_f32();
-    self.transient.z -= self.velocity.z * dt.as_secs_f32();
-    self.transient.w -= self.velocity.w * dt.as_secs_f32();
+    {
+      let dt = dt.as_secs_f32();
+      let ds = self.velocity.z * dt;
+      self.transient.translation -= self.velocity.xy() * dt;
+      self.transient.scaling -= Vec2f::new(ds, ds);
+      self.transient.rotation -= self.velocity.w * dt;
+    }
+
     let mut callback = self.callback.take();
     if let Some(callback) = &mut callback {
       callback(self, dt);
@@ -276,13 +283,11 @@ impl State {
   }
 
   pub(crate) fn transient(&self) -> Option<Filter> {
-    if self.transient == Self::TRANSIENT_IDENTITY {
+    if self.transient == Transformation2::default() {
       None
     } else {
       Some(Filter {
-        field: Field::All,
-        position: Mat3f::new_rotation(self.transient.w)
-          * Mat3f::new_translation(&self.transient.xy()).prepend_scaling(self.transient.z),
+        position: self.transient.response(1.0),
         wrap: self.wrap,
         ..default()
       })
@@ -312,11 +317,6 @@ impl State {
 
   pub(crate) fn x(&mut self) -> &mut Self {
     self.filter.field = Field::X;
-    self
-  }
-
-  pub(crate) fn z(&mut self, z: f32) -> &mut Self {
-    self.transient.z = z;
     self
   }
 }
