@@ -728,7 +728,6 @@ dependencies = [
 name = "device"
 version = "0.0.3"
 dependencies = [
- "approx",
  "boilerplate",
  "camino",
  "clap",
