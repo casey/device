@@ -41,6 +41,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
     (Normal, '>',  SHIFT,      CAPTURE),
     (Normal, '?',  SHIFT,      PRINT),
     (Normal, 'A',  OFF,        ALL),
+    (Normal, 'E',  SHIFT,      CLEAR_ELAPSED),
     (Normal, 'B',  OFF,        BLASTER),
     (Normal, 'C',  OFF,        CIRCLE),
     (Normal, 'D',  OFF,        COORDINATES),

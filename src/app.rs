@@ -8,6 +8,8 @@ pub(crate) struct App {
   pub(crate) captures_pending: u64,
   pub(crate) commands: Commands,
   pub(crate) config: Config,
+  pub(crate) cursor_moved: Instant,
+  pub(crate) cursors: HashSet<DeviceId>,
   pub(crate) deadline: Instant,
   pub(crate) errors: Vec<Error>,
   pub(crate) fullscreen: bool,
@@ -155,6 +157,8 @@ impl App {
       captures_pending: 0,
       commands: Commands::new(),
       config,
+      cursor_moved: now,
+      cursors: HashSet::new(),
       deadline: now,
       errors: Vec::new(),
       fullscreen: false,
@@ -233,6 +237,10 @@ impl App {
   }
 
   fn redraw(&mut self, event_loop: &ActiveEventLoop) -> Result {
+    self.window().set_cursor_visible(
+      self.cursors.is_empty() || self.cursor_moved.elapsed().as_secs_f32() < 2.0,
+    );
+
     self.process_messages(event_loop);
 
     let sound = if let Some(input) = &self.input {
@@ -248,7 +256,7 @@ impl App {
     );
 
     let now = Instant::now();
-    let elapsed = now - self.last;
+    let dt = now - self.last;
     self.last = now;
 
     if self.unwind {
@@ -259,7 +267,7 @@ impl App {
       }
     }
 
-    self.state.tick(elapsed);
+    self.state.tick(dt);
 
     let renderer = self.renderer.as_mut().unwrap();
 
@@ -467,6 +475,16 @@ impl ApplicationHandler for App {
     match event {
       WindowEvent::CloseRequested => {
         event_loop.exit();
+      }
+      WindowEvent::CursorEntered { device_id } => {
+        self.cursors.remove(&device_id);
+      }
+      WindowEvent::CursorLeft { device_id } => {
+        self.cursors.insert(device_id);
+      }
+      WindowEvent::CursorMoved { device_id, .. } => {
+        self.cursors.insert(device_id);
+        self.cursor_moved = Instant::now();
       }
       WindowEvent::Destroyed => {
         log::info!("window destroyed");

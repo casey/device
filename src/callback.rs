@@ -1,12 +1,12 @@
 use super::*;
 
-pub(crate) trait Callback: FnMut(&mut State, f32) {
+pub(crate) trait Callback: FnMut(&mut State, Duration) {
   fn clone_box(&self) -> Box<dyn Callback>;
 }
 
 impl<T> Callback for T
 where
-  T: FnMut(&mut State, f32) + Clone + 'static,
+  T: FnMut(&mut State, Duration) + Clone + 'static,
 {
   fn clone_box(&self) -> Box<dyn Callback> {
     Box::new(self.clone())

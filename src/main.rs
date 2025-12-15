@@ -84,7 +84,7 @@ use {
   std::{
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
-    collections::{BTreeMap, HashMap, VecDeque},
+    collections::{BTreeMap, HashMap, HashSet, VecDeque},
     env, f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},
@@ -125,15 +125,12 @@ use {
   winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
-    event::{ElementState, Modifiers, WindowEvent},
+    event::{DeviceId, ElementState, Modifiers, WindowEvent},
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
     keyboard::{Key, ModifiersState, NamedKey},
     window::{Fullscreen, Window, WindowAttributes, WindowId},
   },
 };
-
-#[cfg(test)]
-use std::collections::HashSet;
 
 macro_rules! label {
   () => {

@@ -52,7 +52,7 @@ impl Default for State {
 }
 
 impl State {
-  const TRANSIENT_IDENTITY: Vec4f = Vec4f::new(0.0, 0.0, 1.0, 0.0);
+  pub(crate) const TRANSIENT_IDENTITY: Vec4f = Vec4f::new(0.0, 0.0, 1.0, 0.0);
 
   pub(crate) fn all(&mut self) -> &mut Self {
     self.filter.field = Field::All;
@@ -77,7 +77,7 @@ impl State {
 
   pub(crate) fn callback(
     &mut self,
-    callback: impl FnMut(&mut State, f32) + Clone + 'static,
+    callback: impl FnMut(&mut State, Duration) + Clone + 'static,
   ) -> &mut Self {
     self.callback = Some(Box::new(callback));
     self
@@ -232,17 +232,20 @@ impl State {
     self
   }
 
-  pub(crate) fn tick(&mut self, elapsed: Duration) {
-    let elapsed = elapsed.as_secs_f32();
-    self.transient.x -= self.velocity.x * 4.0 * elapsed;
-    self.transient.y -= self.velocity.y * 4.0 * elapsed;
-    self.transient.z -= self.velocity.z * elapsed;
-    self.transient.w -= self.velocity.w * elapsed;
+  pub(crate) fn tick(&mut self, dt: Duration) {
+    let s = dt.as_secs_f32();
+    self.transient.x -= self.velocity.x * 4.0 * s;
+    self.transient.y -= self.velocity.y * 4.0 * s;
+    self.transient.z -= self.velocity.z * s;
+    self.transient.w -= self.velocity.w * s;
     let mut callback = self.callback.take();
     if let Some(callback) = &mut callback {
-      callback(self, elapsed);
+      callback(self, dt);
     }
     self.callback = callback;
+    for filter in &mut self.filters {
+      filter.tick(dt);
+    }
   }
 
   #[cfg(test)]

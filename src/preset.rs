@@ -6,36 +6,45 @@ pub(crate) enum Preset {
   Circle,
   Cross,
   Desaturate,
-  FlipH,
-  FlipV,
+  FlipHorizontal,
+  FlipVertical,
   Identity,
-  InvertB,
-  InvertF,
-  InvertG,
-  InvertR,
+  Invert,
+  InvertBlue,
+  InvertGreen,
+  InvertRed,
   Jump,
   Left,
-  MirrorH,
-  MirrorV,
+  MirrorHorizontal,
+  MirrorVertical,
   Off,
   Rotate,
-  RotateB,
   RotateBlaster,
-  RotateG,
-  RotateR,
+  RotateBlue,
+  RotateBlueVelocity,
+  RotateGreen,
+  RotateGreenVelocity,
+  RotateRed,
   RotateRedResponsive,
+  RotateRedVelocity,
   RotateResponsive,
+  RotateVelocity,
   Scale,
+  ScaleVelocity,
   Spin,
   Square,
   Test,
   Top,
+  TranslateBlueVelocity,
+  TranslateGreenVelocity,
+  TranslateRedVelocity,
+  TranslateVelocity,
   Triangle,
   X,
-  ZoomIn,
-  ZoomInNe,
-  ZoomOut,
-  ZoomOutNe,
+  ZoomInCenter,
+  ZoomInCorner,
+  ZoomOutCenter,
+  ZoomOutCorner,
 }
 
 impl Preset {
@@ -55,34 +64,43 @@ impl Preset {
   const REST: &[Self] = &[
     Preset::Circle,
     Preset::Cross,
-    Preset::FlipH,
-    Preset::FlipV,
-    Preset::InvertB,
-    Preset::InvertF,
-    Preset::InvertG,
-    Preset::InvertR,
+    Preset::FlipHorizontal,
+    Preset::FlipVertical,
+    Preset::Invert,
+    Preset::InvertBlue,
+    Preset::InvertGreen,
+    Preset::InvertRed,
     Preset::Jump,
     Preset::Left,
-    Preset::MirrorH,
-    Preset::MirrorV,
+    Preset::MirrorHorizontal,
+    Preset::MirrorVertical,
     Preset::Rotate,
-    Preset::RotateB,
     Preset::RotateBlaster,
-    Preset::RotateG,
-    Preset::RotateR,
+    Preset::RotateBlue,
+    Preset::RotateBlueVelocity,
+    Preset::RotateGreen,
+    Preset::RotateGreenVelocity,
+    Preset::RotateRed,
     Preset::RotateRedResponsive,
+    Preset::RotateRedVelocity,
     Preset::RotateResponsive,
+    Preset::RotateVelocity,
     Preset::Scale,
+    Preset::ScaleVelocity,
     Preset::Spin,
     Preset::Square,
     Preset::Test,
     Preset::Top,
+    Preset::TranslateBlueVelocity,
+    Preset::TranslateGreenVelocity,
+    Preset::TranslateRedVelocity,
+    Preset::TranslateVelocity,
     Preset::Triangle,
     Preset::X,
-    Preset::ZoomIn,
-    Preset::ZoomInNe,
-    Preset::ZoomOut,
-    Preset::ZoomOutNe,
+    Preset::ZoomInCenter,
+    Preset::ZoomInCorner,
+    Preset::ZoomOutCenter,
+    Preset::ZoomOutCorner,
   ];
 
   pub(crate) fn filter(self) -> Filter {
@@ -101,28 +119,28 @@ impl Preset {
         color: color::saturate(0.0),
         ..default()
       },
-      Self::FlipH => Filter {
+      Self::FlipHorizontal => Filter {
         position: Mat3f::new_nonuniform_scaling(&Vec2f::new(-1.0, 1.0)),
         ..default()
       },
-      Self::FlipV => Filter {
+      Self::FlipVertical => Filter {
         position: Mat3f::new_nonuniform_scaling(&Vec2f::new(1.0, -1.0)),
         ..default()
       },
       Self::Identity => Filter::default(),
-      Self::InvertB => Filter {
+      Self::InvertBlue => Filter {
         color: Axis::Blue.invert(),
         ..default()
       },
-      Self::InvertF => Filter {
+      Self::Invert => Filter {
         color: color::invert(),
         ..default()
       },
-      Self::InvertG => Filter {
+      Self::InvertGreen => Filter {
         color: Axis::Green.invert(),
         ..default()
       },
-      Self::InvertR => Filter {
+      Self::InvertRed => Filter {
         color: Axis::Red.invert(),
         ..default()
       },
@@ -131,11 +149,11 @@ impl Preset {
         field: Field::Left,
         ..default()
       },
-      Self::MirrorH => Filter {
+      Self::MirrorHorizontal => Filter {
         mirror: Vector2::new(Mirror::Triangle, Mirror::Off),
         ..default()
       },
-      Self::MirrorV => Filter {
+      Self::MirrorVertical => Filter {
         mirror: Vector2::new(Mirror::Off, Mirror::Inverse),
         ..default()
       },
@@ -147,7 +165,7 @@ impl Preset {
         color: color::rotate_hue_yiq(0.38 * TAU),
         ..default()
       },
-      Self::RotateB => Filter {
+      Self::RotateBlue => Filter {
         color: Axis::Blue.rotate(0.38 * TAU),
         ..default()
       },
@@ -155,11 +173,11 @@ impl Preset {
         color: color::rotate_hue_blaster(0.38 * TAU),
         ..default()
       },
-      Self::RotateG => Filter {
+      Self::RotateGreen => Filter {
         color: Axis::Green.rotate(0.38 * TAU),
         ..default()
       },
-      Self::RotateR => Filter {
+      Self::RotateRed => Filter {
         color: Axis::Red.rotate(0.38 * TAU),
         ..default()
       },
@@ -167,6 +185,57 @@ impl Preset {
         color_response: Transformation3 {
           space: Space::CenteredRgb,
           rotation: UnitQuaternion::from_axis_angle(&Axis::Red.axis(), 0.38 * TAU),
+          ..default()
+        },
+        ..default()
+      },
+      Self::RotateRedVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          rotation: UnitQuaternion::from_axis_angle(&Axis::Red.axis(), 0.1 * TAU),
+          ..default()
+        },
+        ..default()
+      },
+      Self::RotateGreenVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          rotation: UnitQuaternion::from_axis_angle(&Axis::Green.axis(), 0.1 * TAU),
+          ..default()
+        },
+        ..default()
+      },
+      Self::RotateBlueVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          rotation: UnitQuaternion::from_axis_angle(&Axis::Blue.axis(), 0.1 * TAU),
+          ..default()
+        },
+        ..default()
+      },
+      Self::TranslateRedVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          translation: Vec3f::new(1.0 / TAU, 0.0, 0.0),
+          sin: true,
+          ..default()
+        },
+        ..default()
+      },
+      Self::TranslateGreenVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          translation: Vec3f::new(0.0, 1.0 / TAU, 0.0),
+          sin: true,
+          ..default()
+        },
+        ..default()
+      },
+      Self::TranslateBlueVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          translation: Vec3f::new(0.0, 0.0, 1.0 / TAU),
+          sin: true,
           ..default()
         },
         ..default()
@@ -215,6 +284,27 @@ impl Preset {
         field: Field::Top,
         ..default()
       },
+      Self::TranslateVelocity => Filter {
+        position_velocity: Transformation2 {
+          translation: Vec2f::new(-0.1, 0.0),
+          ..default()
+        },
+        ..default()
+      },
+      Self::RotateVelocity => Filter {
+        position_velocity: Transformation2 {
+          rotation: 0.1,
+          ..default()
+        },
+        ..default()
+      },
+      Self::ScaleVelocity => Filter {
+        position_velocity: Transformation2 {
+          scaling: Vec2f::new(1.1, 1.1),
+          ..default()
+        },
+        ..default()
+      },
       Self::Triangle => Filter {
         color: color::invert(),
         field: Field::Triangle,
@@ -225,19 +315,19 @@ impl Preset {
         field: Field::X,
         ..default()
       },
-      Self::ZoomIn => Filter {
+      Self::ZoomInCenter => Filter {
         position: Mat3f::new_scaling(0.5),
         ..default()
       },
-      Self::ZoomInNe => Filter {
+      Self::ZoomInCorner => Filter {
         position: Mat3f::new_scaling(0.5).append_translation(&Vec2f::new(0.5, 0.0)),
         ..default()
       },
-      Self::ZoomOut => Filter {
+      Self::ZoomOutCenter => Filter {
         position: Mat3f::new_scaling(2.0),
         ..default()
       },
-      Self::ZoomOutNe => Filter {
+      Self::ZoomOutCorner => Filter {
         position: Mat3f::new_scaling(2.0).prepend_translation(&Vec2f::new(0.5, 0.5)),
         ..default()
       },
@@ -286,30 +376,39 @@ mod tests {
         !matches!(
           preset,
           Desaturate
-            | FlipH
-            | FlipV
+            | FlipHorizontal
+            | FlipVertical
             | Identity
-            | InvertB
-            | InvertF
-            | InvertG
-            | InvertR
+            | Invert
+            | InvertBlue
+            | InvertGreen
+            | InvertRed
             | Jump
-            | MirrorH
-            | MirrorV
+            | MirrorHorizontal
+            | MirrorVertical
             | Off
             | Rotate
-            | RotateB
             | RotateBlaster
-            | RotateG
-            | RotateR
+            | RotateBlue
+            | RotateBlueVelocity
+            | RotateGreen
+            | RotateGreenVelocity
+            | RotateRed
             | RotateRedResponsive
+            | RotateRedVelocity
             | RotateResponsive
+            | RotateVelocity
             | Scale
+            | ScaleVelocity
             | Spin
-            | ZoomIn
-            | ZoomInNe
-            | ZoomOut
-            | ZoomOutNe
+            | TranslateBlueVelocity
+            | TranslateGreenVelocity
+            | TranslateRedVelocity
+            | TranslateVelocity
+            | ZoomInCenter
+            | ZoomInCorner
+            | ZoomOutCenter
+            | ZoomOutCorner
         )
       })
       .collect::<Vec<Preset>>();

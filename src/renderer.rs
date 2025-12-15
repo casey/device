@@ -25,6 +25,14 @@ pub(crate) struct Renderer {
 }
 
 impl Renderer {
+  const IMAGE_SUBRESOURCE_RANGE_FULL: ImageSubresourceRange = ImageSubresourceRange {
+    array_layer_count: None,
+    aspect: TextureAspect::All,
+    base_array_layer: 0,
+    base_mip_level: 0,
+    mip_level_count: None,
+  };
+
   fn bytes_per_row_with_padding(&self) -> u32 {
     const MASK: u32 = COPY_BYTES_PER_ROW_ALIGNMENT - 1;
     (self.resolution.get() * COLOR_CHANNELS + MASK) & !MASK
@@ -715,6 +723,8 @@ impl Renderer {
       None
     };
 
+    self.render_overlay(state, fps)?;
+
     let transient = state.transient();
 
     let filters = state.filters.len() + transient.iter().count();
@@ -857,25 +867,13 @@ impl Renderer {
     for target in &self.resources().targets {
       encoder.clear_texture(
         target.texture_view.texture(),
-        &ImageSubresourceRange {
-          array_layer_count: None,
-          aspect: TextureAspect::All,
-          base_array_layer: 0,
-          base_mip_level: 0,
-          mip_level_count: None,
-        },
+        &Self::IMAGE_SUBRESOURCE_RANGE_FULL,
       );
     }
 
     encoder.clear_texture(
       self.resources().tiling_view.texture(),
-      &ImageSubresourceRange {
-        array_layer_count: None,
-        aspect: TextureAspect::All,
-        base_array_layer: 0,
-        base_mip_level: 0,
-        mip_level_count: None,
-      },
+      &Self::IMAGE_SUBRESOURCE_RANGE_FULL,
     );
 
     let mut source = 0;
@@ -901,8 +899,6 @@ impl Renderer {
       &self.resources().tiling_view,
       &self.composite_pipeline,
     );
-
-    self.render_overlay(state, fps)?;
 
     Self::draw(
       &self.resources().overlay_bind_group,
@@ -979,6 +975,17 @@ impl Renderer {
         y: 0.0,
       }
     } else {
+      let mut encoder = self
+        .device
+        .create_command_encoder(&CommandEncoderDescriptor::default());
+
+      encoder.clear_texture(
+        self.resources().overlay_view.texture(),
+        &Self::IMAGE_SUBRESOURCE_RANGE_FULL,
+      );
+
+      self.queue.submit([encoder.finish()]);
+
       return Ok(());
     };
 

@@ -6,12 +6,17 @@ pub(crate) struct Transformation2 {
   pub(crate) scaling: Vec2f,
   pub(crate) rotation: f32,
   pub(crate) translation: Vec2f,
+  pub(crate) period: Option<f32>,
+  pub(crate) sin: bool,
 }
 
 impl Transformation2 {
   const SCALING_IDENTITY: Vec2f = Vec2f::new(1.0, 1.0);
 
   pub(crate) fn response(&self, response: f32) -> Mat3f {
+    let response = self.period.map_or(response, |period| response % period);
+    let response = if self.sin { response.sin() } else { response };
+
     let scaling = Self::SCALING_IDENTITY + (self.scaling - Self::SCALING_IDENTITY) * response;
     let rotation = self.rotation * response;
     let translation = self.translation * response;
@@ -30,6 +35,8 @@ impl Default for Transformation2 {
       rotation: 0.0,
       scaling: Self::SCALING_IDENTITY,
       translation: Vec2f::zeros(),
+      period: None,
+      sin: false,
     }
   }
 }
