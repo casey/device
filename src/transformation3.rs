@@ -2,14 +2,14 @@ use super::*;
 
 #[derive(Clone, Debug)]
 #[allow(clippy::arbitrary_source_item_ordering)]
-pub(crate) struct Transformation {
+pub(crate) struct Transformation3 {
   pub(crate) space: Space,
   pub(crate) scaling: Vec3f,
   pub(crate) rotation: UnitQuaternion<f32>,
   pub(crate) translation: Vec3f,
 }
 
-impl Transformation {
+impl Transformation3 {
   const SCALING_IDENTITY: Vec3f = Vec3f::new(1.0, 1.0, 1.0);
 
   pub(crate) fn response(&self, response: f32) -> Mat4f {
@@ -25,7 +25,7 @@ impl Transformation {
   }
 }
 
-impl Default for Transformation {
+impl Default for Transformation3 {
   fn default() -> Self {
     Self {
       rotation: UnitQuaternion::identity(),

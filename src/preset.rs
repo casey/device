@@ -13,6 +13,7 @@ pub(crate) enum Preset {
   InvertF,
   InvertG,
   InvertR,
+  Jump,
   Left,
   MirrorH,
   MirrorV,
@@ -24,6 +25,7 @@ pub(crate) enum Preset {
   RotateR,
   RotateRedResponsive,
   RotateResponsive,
+  Scale,
   Spin,
   Square,
   Test,
@@ -59,6 +61,7 @@ impl Preset {
     Preset::InvertF,
     Preset::InvertG,
     Preset::InvertR,
+    Preset::Jump,
     Preset::Left,
     Preset::MirrorH,
     Preset::MirrorV,
@@ -69,6 +72,7 @@ impl Preset {
     Preset::RotateR,
     Preset::RotateRedResponsive,
     Preset::RotateResponsive,
+    Preset::Scale,
     Preset::Spin,
     Preset::Square,
     Preset::Test,
@@ -160,7 +164,7 @@ impl Preset {
         ..default()
       },
       Self::RotateRedResponsive => Filter {
-        color_response: Transformation {
+        color_response: Transformation3 {
           space: Space::CenteredRgb,
           rotation: UnitQuaternion::from_axis_angle(&Axis::Red.axis(), 0.38 * TAU),
           ..default()
@@ -168,7 +172,7 @@ impl Preset {
         ..default()
       },
       Self::RotateResponsive => Filter {
-        color_response: Transformation {
+        color_response: Transformation3 {
           space: Space::Yiq,
           rotation: UnitQuaternion::from_axis_angle(&Vec3f::x_axis(), 0.38 * TAU),
           ..default()
@@ -176,7 +180,24 @@ impl Preset {
         ..default()
       },
       Self::Spin => Filter {
-        rotation: -0.5,
+        position_response: Transformation2 {
+          rotation: -0.5,
+          ..default()
+        },
+        ..default()
+      },
+      Self::Scale => Filter {
+        position_response: Transformation2 {
+          scaling: Vec2f::new(2.0, 2.0),
+          ..default()
+        },
+        ..default()
+      },
+      Self::Jump => Filter {
+        position_response: Transformation2 {
+          translation: Vec2f::new(1.0, 1.0),
+          ..default()
+        },
         ..default()
       },
       Self::Square => Filter {
@@ -272,6 +293,7 @@ mod tests {
             | InvertF
             | InvertG
             | InvertR
+            | Jump
             | MirrorH
             | MirrorV
             | Off
@@ -280,8 +302,9 @@ mod tests {
             | RotateBlaster
             | RotateG
             | RotateR
-            | RotateResponsive
             | RotateRedResponsive
+            | RotateResponsive
+            | Scale
             | Spin
             | ZoomIn
             | ZoomInNe
