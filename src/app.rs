@@ -248,7 +248,7 @@ impl App {
     );
 
     let now = Instant::now();
-    let elapsed = now - self.last;
+    let dt = now - self.last;
     self.last = now;
 
     if self.unwind {
@@ -259,7 +259,7 @@ impl App {
       }
     }
 
-    self.state.tick(elapsed);
+    self.state.tick(dt);
 
     let renderer = self.renderer.as_mut().unwrap();
 

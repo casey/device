@@ -6,13 +6,16 @@ pub(crate) struct Filter {
   pub(crate) base: f32,
   pub(crate) color: Mat4f,
   pub(crate) color_response: Transformation3,
+  pub(crate) color_velocity: Transformation3,
   pub(crate) coordinates: bool,
+  pub(crate) elapsed: Duration,
   pub(crate) field: Field,
   pub(crate) grid: f32,
   pub(crate) grid_alpha: f32,
   pub(crate) mirror: Vector2<Mirror>,
   pub(crate) position: Mat3f,
   pub(crate) position_response: Transformation2,
+  pub(crate) position_velocity: Transformation2,
   pub(crate) preset: Option<Preset>,
   pub(crate) repeat: bool,
   pub(crate) rms: Mat1x2f,
@@ -26,13 +29,16 @@ impl Default for Filter {
       base: 1.0,
       color: Mat4f::identity(),
       color_response: Transformation3::default(),
+      color_velocity: Transformation3::default(),
       coordinates: false,
+      elapsed: Duration::ZERO,
       field: Field::default(),
       grid: 1.0,
       grid_alpha: 0.0,
       mirror: Vector2::default(),
       position: Mat3f::identity(),
       position_response: Transformation2::default(),
+      position_velocity: Transformation2::default(),
       preset: None,
       repeat: true,
       rms: Mat1x2f::identity(),
@@ -43,7 +49,10 @@ impl Default for Filter {
 
 impl Filter {
   pub(crate) fn color_uniform(&self, response: f32) -> Mat3x4f {
-    (self.color_response.response(response) * self.color).to_affine()
+    (self.color_response.response(response)
+      * self.color_velocity.response(self.elapsed.as_secs_f32())
+      * self.color)
+      .to_affine()
   }
 
   pub(crate) fn icon(&self) -> char {
@@ -59,7 +68,14 @@ impl Filter {
     )
   }
 
+  pub(crate) fn tick(&mut self, dt: Duration) {
+    self.elapsed += dt;
+  }
+
   pub(crate) fn position_uniform(&self, response: f32) -> Mat2x3f {
-    (self.position_response.response(response) * self.position).to_affine()
+    (self.position_response.response(response)
+      * self.position_velocity.response(self.elapsed.as_secs_f32())
+      * self.position)
+      .to_affine()
   }
 }

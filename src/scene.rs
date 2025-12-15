@@ -119,7 +119,7 @@ impl Scene {
           .times(8);
 
         state.callback(move |state, elapsed| {
-          r += elapsed / 32.6 * TAU / 4.0;
+          r += elapsed.as_secs_f32() / 32.6 * TAU / 4.0;
 
           state
             .truncate(8)

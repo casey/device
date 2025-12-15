@@ -25,11 +25,14 @@ pub(crate) enum Preset {
   RotateR,
   RotateRedResponsive,
   RotateResponsive,
+  RotateVelocity,
+  ScaleVelocity,
   Scale,
   Spin,
   Square,
   Test,
   Top,
+  Scroll,
   Triangle,
   X,
   ZoomIn,
@@ -72,7 +75,9 @@ impl Preset {
     Preset::RotateR,
     Preset::RotateRedResponsive,
     Preset::RotateResponsive,
+    Preset::RotateVelocity,
     Preset::Scale,
+    Preset::Scroll,
     Preset::Spin,
     Preset::Square,
     Preset::Test,
@@ -213,6 +218,27 @@ impl Preset {
       Self::Top => Filter {
         color: color::invert(),
         field: Field::Top,
+        ..default()
+      },
+      Self::Scroll => Filter {
+        position_velocity: Transformation2 {
+          translation: Vec2f::new(-0.1, 0.0),
+          ..default()
+        },
+        ..default()
+      },
+      Self::RotateVelocity => Filter {
+        position_velocity: Transformation2 {
+          rotation: 0.1,
+          ..default()
+        },
+        ..default()
+      },
+      Self::ScaleVelocity => Filter {
+        position_velocity: Transformation2 {
+          scaling: Vec2f::new(1.1, 1.1),
+          ..default()
+        },
         ..default()
       },
       Self::Triangle => Filter {
