@@ -48,6 +48,9 @@ unused:
 doc:
   cargo doc --workspace --open
 
+bindings:
+  cargo run bindings
+
 program program:
   cargo run --release -- --program {{program}}
 

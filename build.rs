@@ -109,8 +109,9 @@ fn main() {
 
   for (name, variant) in &commands {
     lines.push(format!(
-      "pub(crate) const {}: Command = {variant}({name});",
+      "pub(crate) const {}: (&str, Command) = (\"{}\", {variant}({name}));",
       name.to_uppercase(),
+      name.replace('_', "-"),
     ));
   }
 
@@ -119,11 +120,7 @@ fn main() {
   lines.push("pub(crate) const COMMANDS: &[(&str, Command)] = &[".into());
 
   for name in commands.keys() {
-    lines.push(format!(
-      "  (\"{}\", {}),",
-      name.replace('_', "-"),
-      name.to_uppercase(),
-    ));
+    lines.push(format!("  {},", name.to_uppercase()));
   }
 
   lines.push("];\n".into());

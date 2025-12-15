@@ -1,7 +1,7 @@
 use super::*;
 
 #[rustfmt::skip]
-const BUTTON_BINDINGS: &[(Controller, u8, Press, Command)] = {
+const BUTTON_BINDINGS: &[(Controller, u8, Press, (&str, Command))] = {
   use {Controller::*, generated::*, Press::Press};
   &[
     (Spectra,  0, Press, PUSH_TOP),
@@ -25,7 +25,7 @@ const BUTTON_BINDINGS: &[(Controller, u8, Press, Command)] = {
 };
 
 #[rustfmt::skip]
-const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
+const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] = {
   use {generated::*, ModeKind::*};
 
   const OFF: ModifiersState = ModifiersState::empty();
@@ -37,9 +37,9 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
   &[
     (Normal, '+',  OFF,        INCREMENT_DB),
     (Normal, '-',  OFF,        DECREMENT_DB),
-    (Normal, ':',  SHIFT,      ENTER_COMMAND_MODE),
-    (Normal, '>',  SHIFT,      CAPTURE),
-    (Normal, '?',  SHIFT,      PRINT),
+    (Normal, ':',  OFF,        ENTER_COMMAND_MODE),
+    (Normal, '>',  OFF,        CAPTURE),
+    (Normal, '?',  OFF,        PRINT),
     (Normal, 'A',  OFF,        ALL),
     (Normal, 'B',  OFF,        BLASTER),
     (Normal, 'C',  OFF,        CIRCLE),
@@ -137,30 +137,32 @@ const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
 };
 
 #[rustfmt::skip]
-const NAMED_BINDINGS: &[(ModeKind, NamedKey, Command)] = {
+const NAMED_BINDINGS: &[(ModeKind, NamedKey, ModifiersState, (&str, Command))] = {
   use {
     ModeKind::{Normal, Play, Command},
     NamedKey::*,
     generated::*,
   };
 
+  const OFF: ModifiersState = ModifiersState::empty();
+
   &[
-    (Command, Backspace,  POP_COMMAND),
-    (Command, Enter,      EXECUTE_COMMAND),
-    (Command, Escape,     ENTER_NORMAL_MODE),
-    (Command, Tab,        COMPLETE_COMMAND),
-    (Normal,  ArrowLeft,  NEGATIVE_ROTATION),
-    (Normal,  ArrowRight, POSITIVE_ROTATION),
-    (Normal,  Backspace,  POP),
-    (Play,    Escape,     ENTER_NORMAL_MODE),
+    (Command, Backspace,  OFF, POP_COMMAND),
+    (Command, Enter,      OFF, EXECUTE_COMMAND),
+    (Command, Escape,     OFF, ENTER_NORMAL_MODE),
+    (Command, Tab,        OFF, COMPLETE_COMMAND),
+    (Normal,  ArrowLeft,  OFF, NEGATIVE_ROTATION),
+    (Normal,  ArrowRight, OFF, POSITIVE_ROTATION),
+    (Normal,  Backspace,  OFF, POP),
+    (Play,    Escape,     OFF, ENTER_NORMAL_MODE),
   ]
 };
 
 pub(crate) struct Bindings {
-  button: HashMap<(Controller, u8, Press), Command>,
-  character: HashMap<(ModeKind, String, ModifiersState), Command>,
-  encoder: HashMap<(Controller, u8), fn(&mut State, u7) -> f32>,
-  named: HashMap<(ModeKind, NamedKey), Command>,
+  button: BTreeMap<(Controller, u8, Press), (&'static str, Command)>,
+  character: BTreeMap<(ModeKind, String, ModifiersState), (&'static str, Command)>,
+  encoder: BTreeMap<(Controller, u8), fn(&mut State, u7) -> f32>,
+  named: BTreeMap<(ModeKind, NamedKey, ModifiersState), (&'static str, Command)>,
 }
 
 impl Bindings {
@@ -171,7 +173,7 @@ impl Bindings {
       log::info!("unbound button: {controller:?} {button} {press:?}");
     }
 
-    command
+    command.map(|command| command.1)
   }
 
   pub(crate) fn encoder(
@@ -190,11 +192,17 @@ impl Bindings {
 
   pub(crate) fn key(&self, mode: ModeKind, key: &Key, modifiers: Modifiers) -> Option<Command> {
     let command = match key {
-      Key::Character(character) => self
-        .character
-        .get(&(mode, character.to_uppercase(), modifiers.state()))
-        .copied(),
-      Key::Named(named) => self.named.get(&(mode, *named)).copied(),
+      Key::Character(character) => {
+        let character = character.to_uppercase();
+
+        let mut modifiers = modifiers.state();
+        if character == character.to_lowercase() {
+          modifiers.remove(ModifiersState::SHIFT);
+        }
+
+        self.character.get(&(mode, character, modifiers)).copied()
+      }
+      Key::Named(named) => self.named.get(&(mode, *named, modifiers.state())).copied(),
       _ => None,
     };
 
@@ -202,7 +210,7 @@ impl Bindings {
       log::info!("unbound key: {key:?} {modifiers:?}");
     }
 
-    command
+    command.map(|command| command.1)
   }
 
   pub(crate) fn new() -> Self {
@@ -226,9 +234,86 @@ impl Bindings {
       named: NAMED_BINDINGS
         .iter()
         .copied()
-        .map(|(mode, named, command)| ((mode, named), command))
+        .map(|(mode, named, modifiers, command)| ((mode, named, modifiers), command))
         .collect(),
     }
+  }
+}
+
+impl Display for Bindings {
+  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    use tabled::{
+      builder::Builder,
+      settings::{Alignment, Span, Style, object::Columns, themes::BorderCorrection},
+    };
+
+    fn binding(modifiers: ModifiersState, key: &str) -> String {
+      let mut binding = Vec::new();
+
+      if modifiers.control_key() {
+        binding.push("⌃");
+      }
+
+      if modifiers.alt_key() {
+        binding.push("⌥");
+      }
+
+      if modifiers.shift_key() {
+        binding.push("⇧");
+      }
+
+      if modifiers.super_key() {
+        binding.push("⌘");
+      }
+
+      binding.push(key);
+
+      binding.join(" ")
+    }
+
+    let mut modes = BTreeMap::<ModeKind, Vec<[String; 2]>>::new();
+
+    for ((mode, character, modifiers), (name, _command)) in &self.character {
+      modes
+        .entry(*mode)
+        .or_default()
+        .push([binding(*modifiers, character), (*name).into()]);
+    }
+
+    for ((mode, named_key, modifiers), (name, _command)) in &self.named {
+      modes.entry(*mode).or_default().push([
+        binding(*modifiers, &format!("{named_key:?}")),
+        (*name).into(),
+      ]);
+    }
+
+    let mut builder = Builder::default();
+
+    let mut mode_records = Vec::new();
+
+    for (mode, records) in modes {
+      mode_records.push(builder.count_records());
+      builder.push_record([mode.name()]);
+
+      for record in records {
+        builder.push_record(record);
+      }
+    }
+
+    let mut table = builder.build();
+    table.modify(Columns::first(), Alignment::right());
+    for i in mode_records {
+      table.modify((i, 0), Span::column(2));
+      table.modify((i, 0), Alignment::center());
+    }
+
+    writeln!(
+      f,
+      "{}",
+      table.with(Style::modern()).with(BorderCorrection::span()),
+    )?;
+
+    Ok(())
   }
 }
 
@@ -271,8 +356,8 @@ mod tests {
   #[test]
   fn named_bindings_are_unique() {
     let mut names = HashSet::new();
-    for (mode, name, _command) in NAMED_BINDINGS {
-      assert!(names.insert((mode, name)));
+    for (mode, name, modifiers, _command) in NAMED_BINDINGS {
+      assert!(names.insert((mode, name, modifiers)));
     }
   }
 }

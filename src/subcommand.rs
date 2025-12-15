@@ -1,5 +1,6 @@
 use super::*;
 
+mod bindings;
 mod capture;
 mod probe;
 mod run;
@@ -7,6 +8,7 @@ mod shader;
 
 #[derive(Parser)]
 pub(crate) enum Subcommand {
+  Bindings,
   Capture(capture::Capture),
   Probe,
   Run(run::Run),
@@ -16,10 +18,11 @@ pub(crate) enum Subcommand {
 impl Subcommand {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
     match self {
+      Self::Bindings => bindings::run(),
       Self::Capture(capture) => capture.run(options, config),
       Self::Probe => probe::run(),
-      Self::Shader => shader::run(),
       Self::Run(run) => run.run(options, config),
+      Self::Shader => shader::run(),
     }
   }
 }
