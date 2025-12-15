@@ -2,7 +2,7 @@ set positional-arguments
 
 alias ref := reference
 
-watch +args='lcheck':
+watch +args='lcheck --all --all-targets':
   cargo watch --clear --exec '{{args}}'
 
 run *args:

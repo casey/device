@@ -6,38 +6,38 @@ pub(crate) enum Preset {
   Circle,
   Cross,
   Desaturate,
-  FlipH,
-  FlipV,
+  FlipHorizontal,
+  FlipVertical,
   Identity,
-  InvertB,
-  InvertF,
-  InvertG,
-  InvertR,
+  Invert,
+  InvertBlue,
+  InvertGreen,
+  InvertRed,
   Jump,
   Left,
-  MirrorH,
-  MirrorV,
+  MirrorHorizontal,
+  MirrorVertical,
   Off,
   Rotate,
-  RotateBlue,
   RotateBlaster,
+  RotateBlue,
+  RotateBlueVelocity,
   RotateGreen,
+  RotateGreenVelocity,
   RotateRed,
   RotateRedResponsive,
   RotateRedVelocity,
-  RotateGreenVelocity,
-  RotateBlueVelocity,
-  TranslateRedVelocity,
-  TranslateGreenVelocity,
-  TranslateBlueVelocity,
   RotateResponsive,
   RotateVelocity,
-  ScaleVelocity,
   Scale,
+  ScaleVelocity,
   Spin,
   Square,
   Test,
   Top,
+  TranslateBlueVelocity,
+  TranslateGreenVelocity,
+  TranslateRedVelocity,
   TranslateVelocity,
   Triangle,
   X,
@@ -64,19 +64,19 @@ impl Preset {
   const REST: &[Self] = &[
     Preset::Circle,
     Preset::Cross,
-    Preset::FlipH,
-    Preset::FlipV,
-    Preset::InvertB,
-    Preset::InvertF,
-    Preset::InvertG,
-    Preset::InvertR,
+    Preset::FlipHorizontal,
+    Preset::FlipVertical,
+    Preset::Invert,
+    Preset::InvertBlue,
+    Preset::InvertGreen,
+    Preset::InvertRed,
     Preset::Jump,
     Preset::Left,
-    Preset::MirrorH,
-    Preset::MirrorV,
+    Preset::MirrorHorizontal,
+    Preset::MirrorVertical,
     Preset::Rotate,
-    Preset::RotateBlue,
     Preset::RotateBlaster,
+    Preset::RotateBlue,
     Preset::RotateBlueVelocity,
     Preset::RotateGreen,
     Preset::RotateGreenVelocity,
@@ -86,6 +86,7 @@ impl Preset {
     Preset::RotateResponsive,
     Preset::RotateVelocity,
     Preset::Scale,
+    Preset::ScaleVelocity,
     Preset::Spin,
     Preset::Square,
     Preset::Test,
@@ -118,28 +119,28 @@ impl Preset {
         color: color::saturate(0.0),
         ..default()
       },
-      Self::FlipH => Filter {
+      Self::FlipHorizontal => Filter {
         position: Mat3f::new_nonuniform_scaling(&Vec2f::new(-1.0, 1.0)),
         ..default()
       },
-      Self::FlipV => Filter {
+      Self::FlipVertical => Filter {
         position: Mat3f::new_nonuniform_scaling(&Vec2f::new(1.0, -1.0)),
         ..default()
       },
       Self::Identity => Filter::default(),
-      Self::InvertB => Filter {
+      Self::InvertBlue => Filter {
         color: Axis::Blue.invert(),
         ..default()
       },
-      Self::InvertF => Filter {
+      Self::Invert => Filter {
         color: color::invert(),
         ..default()
       },
-      Self::InvertG => Filter {
+      Self::InvertGreen => Filter {
         color: Axis::Green.invert(),
         ..default()
       },
-      Self::InvertR => Filter {
+      Self::InvertRed => Filter {
         color: Axis::Red.invert(),
         ..default()
       },
@@ -148,11 +149,11 @@ impl Preset {
         field: Field::Left,
         ..default()
       },
-      Self::MirrorH => Filter {
+      Self::MirrorHorizontal => Filter {
         mirror: Vector2::new(Mirror::Triangle, Mirror::Off),
         ..default()
       },
-      Self::MirrorV => Filter {
+      Self::MirrorVertical => Filter {
         mirror: Vector2::new(Mirror::Off, Mirror::Inverse),
         ..default()
       },
@@ -375,26 +376,35 @@ mod tests {
         !matches!(
           preset,
           Desaturate
-            | FlipH
-            | FlipV
+            | FlipHorizontal
+            | FlipVertical
             | Identity
-            | InvertB
-            | InvertF
-            | InvertG
-            | InvertR
+            | Invert
+            | InvertBlue
+            | InvertGreen
+            | InvertRed
             | Jump
-            | MirrorH
-            | MirrorV
+            | MirrorHorizontal
+            | MirrorVertical
             | Off
             | Rotate
-            | RotateB
             | RotateBlaster
-            | RotateG
-            | RotateR
+            | RotateBlue
+            | RotateBlueVelocity
+            | RotateGreen
+            | RotateGreenVelocity
+            | RotateRed
             | RotateRedResponsive
+            | RotateRedVelocity
             | RotateResponsive
+            | RotateVelocity
             | Scale
+            | ScaleVelocity
             | Spin
+            | TranslateBlueVelocity
+            | TranslateGreenVelocity
+            | TranslateRedVelocity
+            | TranslateVelocity
             | ZoomIn
             | ZoomInNe
             | ZoomOut
