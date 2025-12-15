@@ -169,13 +169,15 @@ impl State {
     self
   }
 
-  pub(crate) fn preset_limit(&self) -> usize {
-    ((self.complexity + 1.0) * Preset::LIMIT as f32) as usize
-  }
-
   pub(crate) fn position(&mut self, position: Mat3f) -> &mut Self {
     self.filter.position = position;
     self
+  }
+
+  pub(crate) fn preset_limit(&self) -> usize {
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+    let preset_limit = ((self.complexity + 1.0) * Preset::LIMIT as f32) as usize;
+    preset_limit
   }
 
   pub(crate) fn push(&mut self) -> &mut Self {

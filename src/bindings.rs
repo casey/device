@@ -92,7 +92,7 @@ const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
   fn set_complexity(state: &mut State, value: u7) -> f32 {
     let value = float(value);
     state.complexity = value;
-    value as f32
+    value
   }
 
   fn set_db(state: &mut State, value: u7) -> f32 {
