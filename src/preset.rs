@@ -19,10 +19,10 @@ pub(crate) enum Preset {
   MirrorV,
   Off,
   Rotate,
-  RotateB,
+  RotateBlue,
   RotateBlaster,
-  RotateG,
-  RotateR,
+  RotateGreen,
+  RotateRed,
   RotateRedResponsive,
   RotateRedVelocity,
   RotateGreenVelocity,
@@ -75,25 +75,25 @@ impl Preset {
     Preset::MirrorH,
     Preset::MirrorV,
     Preset::Rotate,
-    Preset::RotateB,
+    Preset::RotateBlue,
     Preset::RotateBlaster,
-    Preset::RotateG,
-    Preset::RotateR,
-    Preset::RotateRedVelocity,
-    Preset::RotateGreenVelocity,
     Preset::RotateBlueVelocity,
-    Preset::TranslateRedVelocity,
-    Preset::TranslateGreenVelocity,
-    Preset::TranslateBlueVelocity,
+    Preset::RotateGreen,
+    Preset::RotateGreenVelocity,
+    Preset::RotateRed,
     Preset::RotateRedResponsive,
+    Preset::RotateRedVelocity,
     Preset::RotateResponsive,
     Preset::RotateVelocity,
     Preset::Scale,
-    Preset::TranslateVelocity,
     Preset::Spin,
     Preset::Square,
     Preset::Test,
     Preset::Top,
+    Preset::TranslateBlueVelocity,
+    Preset::TranslateGreenVelocity,
+    Preset::TranslateRedVelocity,
+    Preset::TranslateVelocity,
     Preset::Triangle,
     Preset::X,
     Preset::ZoomIn,
@@ -164,7 +164,7 @@ impl Preset {
         color: color::rotate_hue_yiq(0.38 * TAU),
         ..default()
       },
-      Self::RotateB => Filter {
+      Self::RotateBlue => Filter {
         color: Axis::Blue.rotate(0.38 * TAU),
         ..default()
       },
@@ -172,11 +172,11 @@ impl Preset {
         color: color::rotate_hue_blaster(0.38 * TAU),
         ..default()
       },
-      Self::RotateG => Filter {
+      Self::RotateGreen => Filter {
         color: Axis::Green.rotate(0.38 * TAU),
         ..default()
       },
-      Self::RotateR => Filter {
+      Self::RotateRed => Filter {
         color: Axis::Red.rotate(0.38 * TAU),
         ..default()
       },
