@@ -479,12 +479,12 @@ impl ApplicationHandler for App {
       WindowEvent::CursorEntered { device_id } => {
         self.cursors.remove(&device_id);
       }
+      WindowEvent::CursorLeft { device_id } => {
+        self.cursors.insert(device_id);
+      }
       WindowEvent::CursorMoved { device_id, .. } => {
         self.cursors.insert(device_id);
         self.cursor_moved = Instant::now();
-      }
-      WindowEvent::CursorLeft { device_id } => {
-        self.cursors.insert(device_id);
       }
       WindowEvent::Destroyed => {
         log::info!("window destroyed");
