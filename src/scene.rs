@@ -61,7 +61,7 @@ impl Scene {
             Preset::Circle,
             Preset::Spin,
             Preset::Circle,
-            Preset::ZoomInNe,
+            Preset::ZoomInCorner,
           ]
           .iter()
           .copied()

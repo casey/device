@@ -41,10 +41,10 @@ pub(crate) enum Preset {
   TranslateVelocity,
   Triangle,
   X,
-  ZoomIn,
-  ZoomInNe,
-  ZoomOut,
-  ZoomOutNe,
+  ZoomInCenter,
+  ZoomInCorner,
+  ZoomOutCenter,
+  ZoomOutCorner,
 }
 
 impl Preset {
@@ -97,10 +97,10 @@ impl Preset {
     Preset::TranslateVelocity,
     Preset::Triangle,
     Preset::X,
-    Preset::ZoomIn,
-    Preset::ZoomInNe,
-    Preset::ZoomOut,
-    Preset::ZoomOutNe,
+    Preset::ZoomInCenter,
+    Preset::ZoomInCorner,
+    Preset::ZoomOutCenter,
+    Preset::ZoomOutCorner,
   ];
 
   pub(crate) fn filter(self) -> Filter {
@@ -315,19 +315,19 @@ impl Preset {
         field: Field::X,
         ..default()
       },
-      Self::ZoomIn => Filter {
+      Self::ZoomInCenter => Filter {
         position: Mat3f::new_scaling(0.5),
         ..default()
       },
-      Self::ZoomInNe => Filter {
+      Self::ZoomInCorner => Filter {
         position: Mat3f::new_scaling(0.5).append_translation(&Vec2f::new(0.5, 0.0)),
         ..default()
       },
-      Self::ZoomOut => Filter {
+      Self::ZoomOutCenter => Filter {
         position: Mat3f::new_scaling(2.0),
         ..default()
       },
-      Self::ZoomOutNe => Filter {
+      Self::ZoomOutCorner => Filter {
         position: Mat3f::new_scaling(2.0).prepend_translation(&Vec2f::new(0.5, 0.5)),
         ..default()
       },
@@ -405,10 +405,10 @@ mod tests {
             | TranslateGreenVelocity
             | TranslateRedVelocity
             | TranslateVelocity
-            | ZoomIn
-            | ZoomInNe
-            | ZoomOut
-            | ZoomOutNe
+            | ZoomInCenter
+            | ZoomInCorner
+            | ZoomOutCenter
+            | ZoomOutCorner
         )
       })
       .collect::<Vec<Preset>>();
