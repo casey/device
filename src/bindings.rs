@@ -37,9 +37,9 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] =
   &[
     (Normal, '+',  OFF,        INCREMENT_DB),
     (Normal, '-',  OFF,        DECREMENT_DB),
-    (Normal, ':',  SHIFT,      ENTER_COMMAND_MODE),
-    (Normal, '>',  SHIFT,      CAPTURE),
-    (Normal, '?',  SHIFT,      PRINT),
+    (Normal, ':',  OFF,        ENTER_COMMAND_MODE),
+    (Normal, '>',  OFF,        CAPTURE),
+    (Normal, '?',  OFF,        PRINT),
     (Normal, 'A',  OFF,        ALL),
     (Normal, 'B',  OFF,        BLASTER),
     (Normal, 'C',  OFF,        CIRCLE),
@@ -192,10 +192,17 @@ impl Bindings {
 
   pub(crate) fn key(&self, mode: ModeKind, key: &Key, modifiers: Modifiers) -> Option<Command> {
     let command = match key {
-      Key::Character(character) => self
-        .character
-        .get(&(mode, character.to_uppercase(), modifiers.state()))
-        .copied(),
+      Key::Character(character) => {
+        let character = character.to_uppercase();
+
+        let mut modifiers = modifiers.state();
+
+        if character == character.to_lowercase() {
+          modifiers.remove(ModifiersState::SHIFT);
+        }
+
+        self.character.get(&(mode, character, modifiers)).copied()
+      }
       Key::Named(named) => self.named.get(&(mode, *named, modifiers.state())).copied(),
       _ => None,
     };
@@ -238,14 +245,8 @@ impl Display for Bindings {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     use tabled::{
       builder::Builder,
-      settings::{Alignment, Panel, Style, object::Columns},
+      settings::{Alignment, Span, Style, object::Columns, themes::BorderCorrection},
     };
-
-    // todo:
-    // - get rid of shift symbol on shifted characters
-    // - one table for all modes
-    // - row with mode name?
-    // - show encoder commands
 
     fn binding(modifiers: ModifiersState, key: &str) -> String {
       let mut binding = Vec::new();
@@ -271,76 +272,47 @@ impl Display for Bindings {
       binding.join(" ")
     }
 
-    let mut modes = BTreeMap::<ModeKind, Builder>::new();
-
-    // let mut builder = Builder::default();
+    let mut modes = BTreeMap::<ModeKind, Vec<[String; 2]>>::new();
 
     for ((mode, character, modifiers), (name, _command)) in &self.character {
       modes
         .entry(*mode)
         .or_default()
-        .push_record([binding(*modifiers, character), (*name).into()]);
-
-      // builder.push_record([mode.name(), &binding(*modifiers, character), *name]);
+        .push([binding(*modifiers, character), (*name).into()]);
     }
 
     for ((mode, named_key, modifiers), (name, _command)) in &self.named {
-      modes.entry(*mode).or_default().push_record([
+      modes.entry(*mode).or_default().push([
         binding(*modifiers, &format!("{named_key:?}")),
         (*name).into(),
       ]);
-
-      // builder.push_record([
-      //   mode.name(),
-      //   &binding(*modifiers, &format!("{named_key:?}")),
-      //   *name,
-      // ]);
     }
 
-    for (mode, builder) in modes {
-      let mut table = builder.build();
+    let mut builder = Builder::default();
 
-      table.modify(Columns::first(), Alignment::right());
+    let mut mode_records = Vec::new();
 
-      writeln!(
-        f,
-        "{}",
-        table.with(Style::modern()).with(Panel::header(mode.name())),
-      )?;
-    }
+    for (mode, records) in modes {
+      mode_records.push(builder.count_records());
+      builder.push_record([mode.name()]);
 
-    // let mut table = builder.build();
-
-    // table.modify(Columns::new(1..=1), Alignment::right());
-
-    // writeln!(
-    //   f,
-    //   "{}",
-    //   table.with(Style::modern()).with(Panel::header("keyboard")),
-    // )?;
-
-    let mut controllers = BTreeMap::<Controller, [[&str; 4]; 4]>::new();
-
-    for ((controller, control, _press), (name, _command)) in &self.button {
-      let i = control.into_usize();
-      controllers.entry(*controller).or_default()[i / 4][i % 4] = name;
-    }
-
-    for (controller, bindings) in controllers {
-      let mut builder = Builder::default();
-      for row in bindings {
-        builder.push_record(row.iter().copied());
+      for record in records {
+        builder.push_record(record);
       }
-
-      writeln!(
-        f,
-        "{}",
-        builder
-          .build()
-          .with(Style::modern())
-          .with(Panel::header(controller.name()))
-      )?;
     }
+
+    let mut table = builder.build();
+    table.modify(Columns::first(), Alignment::right());
+    for i in mode_records {
+      table.modify((i, 0), Span::column(2));
+      table.modify((i, 0), Alignment::center());
+    }
+
+    writeln!(
+      f,
+      "{}",
+      table.with(Style::modern()).with(BorderCorrection::span()),
+    )?;
 
     Ok(())
   }
