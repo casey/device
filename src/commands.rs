@@ -48,7 +48,7 @@ pub(crate) fn all(state: &mut State) {
 }
 
 pub(crate) fn blaster(state: &mut State) {
-  let presets = (0..state.complexity)
+  let presets = (0..state.preset_limit())
     .map(|i| Preset::random(&mut state.rng, i))
     .collect::<Vec<Preset>>();
 
@@ -292,7 +292,7 @@ pub(crate) fn push_bottom(state: &mut State) {
     Preset::random(&mut state.rng, state.filters.len()).filter(),
   );
 
-  while state.filters.len() > Preset::LIMIT {
+  while state.filters.len() > state.preset_limit() {
     state.filters.pop();
   }
 }
@@ -302,7 +302,7 @@ pub(crate) fn push_top(state: &mut State) {
     .filters
     .push(Preset::random(&mut state.rng, state.filters.len()).filter());
 
-  while state.filters.len() > Preset::LIMIT {
+  while state.filters.len() > state.preset_limit() {
     state.filters.remove(0);
   }
 }

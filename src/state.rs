@@ -5,7 +5,7 @@ pub(crate) struct State {
   pub(crate) alpha: f32,
   pub(crate) beat: u64,
   pub(crate) callback: Option<Box<dyn Callback>>,
-  pub(crate) complexity: usize,
+  pub(crate) complexity: f32,
   pub(crate) db: f32,
   pub(crate) encoder: f32,
   pub(crate) filter: Filter,
@@ -45,7 +45,7 @@ impl Default for State {
       tile: false,
       transient: Self::TRANSIENT_IDENTITY,
       velocity: Vec4f::zeros(),
-      complexity: Preset::LIMIT,
+      complexity: 0.0,
       wrap: true,
     }
   }
@@ -174,6 +174,12 @@ impl State {
     self
   }
 
+  pub(crate) fn preset_limit(&self) -> usize {
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+    let preset_limit = ((self.complexity + 1.0) * Preset::LIMIT as f32) as usize;
+    preset_limit
+  }
+
   pub(crate) fn push(&mut self) -> &mut Self {
     self.filters.push(self.filter.clone());
     self
@@ -233,11 +239,10 @@ impl State {
   }
 
   pub(crate) fn tick(&mut self, dt: Duration) {
-    let s = dt.as_secs_f32();
-    self.transient.x -= self.velocity.x * 4.0 * s;
-    self.transient.y -= self.velocity.y * 4.0 * s;
-    self.transient.z -= self.velocity.z * s;
-    self.transient.w -= self.velocity.w * s;
+    self.transient.x -= self.velocity.x * dt.as_secs_f32();
+    self.transient.y -= self.velocity.y * dt.as_secs_f32();
+    self.transient.z -= self.velocity.z * dt.as_secs_f32();
+    self.transient.w -= self.velocity.w * dt.as_secs_f32();
     let mut callback = self.callback.take();
     if let Some(callback) = &mut callback {
       callback(self, dt);
