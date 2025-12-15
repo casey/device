@@ -120,7 +120,7 @@ fn main() {
   lines.push("pub(crate) const COMMANDS: &[(&str, Command)] = &[".into());
 
   for name in commands.keys() {
-    lines.push(format!("  {},", name.to_uppercase(),));
+    lines.push(format!("  {},", name.to_uppercase()));
   }
 
   lines.push("];\n".into());
