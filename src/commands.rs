@@ -286,6 +286,10 @@ pub(crate) fn print(state: &mut State) {
   );
 }
 
+pub(crate) fn print_bindings(app: &mut App) {
+  eprintln!("{}", app.bindings);
+}
+
 pub(crate) fn push_bottom(state: &mut State) {
   state.filters.insert(
     0,
