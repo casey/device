@@ -196,7 +196,6 @@ impl Bindings {
         let character = character.to_uppercase();
 
         let mut modifiers = modifiers.state();
-
         if character == character.to_lowercase() {
           modifiers.remove(ModifiersState::SHIFT);
         }
