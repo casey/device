@@ -143,6 +143,18 @@ impl Preset {
         color: color::rotate_hue_yiq(0.38 * TAU),
         ..default()
       },
+      Self::RotateB => Filter {
+        color: Axis::Blue.rotate(0.38 * TAU),
+        ..default()
+      },
+      Self::RotateBlaster => Filter {
+        color: color::rotate_hue_blaster(0.38 * TAU),
+        ..default()
+      },
+      Self::RotateG => Filter {
+        color: Axis::Green.rotate(0.38 * TAU),
+        ..default()
+      },
       Self::RotateR => Filter {
         color: Axis::Red.rotate(0.38 * TAU),
         ..default()
@@ -161,18 +173,6 @@ impl Preset {
           rotation: UnitQuaternion::from_axis_angle(&Vec3f::x_axis(), 0.38 * TAU),
           ..default()
         },
-        ..default()
-      },
-      Self::RotateG => Filter {
-        color: Axis::Green.rotate(0.38 * TAU),
-        ..default()
-      },
-      Self::RotateB => Filter {
-        color: Axis::Blue.rotate(0.38 * TAU),
-        ..default()
-      },
-      Self::RotateBlaster => Filter {
-        color: color::rotate_hue_blaster(0.38 * TAU),
         ..default()
       },
       Self::Spin => Filter {
