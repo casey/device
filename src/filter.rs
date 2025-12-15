@@ -5,6 +5,7 @@ pub(crate) struct Filter {
   pub(crate) alpha: f32,
   pub(crate) base: f32,
   pub(crate) color: Mat4f,
+  pub(crate) color_response: Transformation,
   pub(crate) coordinates: bool,
   pub(crate) field: Field,
   pub(crate) grid: f32,
@@ -24,6 +25,7 @@ impl Default for Filter {
       alpha: 1.0,
       base: 1.0,
       color: Mat4f::identity(),
+      color_response: Transformation::default(),
       coordinates: false,
       field: Field::default(),
       grid: 1.0,
@@ -40,6 +42,10 @@ impl Default for Filter {
 }
 
 impl Filter {
+  pub(crate) fn color_uniform(&self, response: f32) -> Mat3x4f {
+    (self.color_response.response(response) * self.color).to_affine()
+  }
+
   pub(crate) fn icon(&self) -> char {
     self.field.icon()
   }
@@ -54,6 +60,6 @@ impl Filter {
   }
 
   pub(crate) fn position_uniform(&self, response: f32) -> Mat2x3f {
-    (Rot2f::new(self.rotation * response).to_homogeneous() * self.position).to_affine()
+    (Rotation2::<f32>::new(self.rotation * response).to_homogeneous() * self.position).to_affine()
   }
 }

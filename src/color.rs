@@ -14,25 +14,25 @@ pub(crate) const CENTERED_RGB_INVERSE: Mat4f = matrix!(
   0.0, 0.0, 0.0, 1.0;
 );
 
-const YCGCO: Mat3f = matrix!(
+pub(crate) const YCGCO: Mat3f = matrix!(
    0.25, 0.5,  0.25;
    0.50, 0.0, -0.50;
   -0.25, 0.5, -0.25;
 );
 
-const YCGCO_INVERSE: Mat3f = matrix!(
+pub(crate) const YCGCO_INVERSE: Mat3f = matrix!(
   1.0,  1.0, -1.0;
   1.0,  0.0,  1.0;
   1.0, -1.0, -1.0;
 );
 
-const YIQ: Mat3f = matrix!(
+pub(crate) const YIQ: Mat3f = matrix!(
   0.2990,  0.5870,  0.1140;
   0.5959, -0.2746, -0.3213;
   0.2115, -0.5227,  0.3112;
 );
 
-const YIQ_INVERSE: Mat3f = matrix!(
+pub(crate) const YIQ_INVERSE: Mat3f = matrix!(
   1.0,  0.956,  0.619;
   1.0, -0.272, -0.647;
   1.0, -1.106,  1.703;
@@ -45,27 +45,30 @@ pub(crate) fn invert() -> Mat4f {
 }
 
 pub(crate) fn rotate_hue_blaster(r: f32) -> Mat4f {
-  let mut rotation = Mat3f::identity();
-
-  rotation
-    .fixed_view_mut::<2, 2>(1, 1)
-    .copy_from(Rot2f::new(r).matrix());
-
-  (YIQ_INVERSE.transpose() * rotation * YIQ.transpose()).to_homogeneous()
+  Transformation {
+    space: Space::Blaster,
+    rotation: UnitQuaternion::from_axis_angle(&Vec3f::x_axis(), r),
+    ..default()
+  }
+  .response(1.0)
 }
 
 pub(crate) fn rotate_hue_yiq(r: f32) -> Mat4f {
-  let mut rotation = Mat3f::identity();
-
-  rotation
-    .fixed_view_mut::<2, 2>(1, 1)
-    .copy_from(Rot2f::new(r).matrix());
-
-  (YIQ_INVERSE * rotation * YIQ).to_homogeneous()
+  Transformation {
+    space: Space::Yiq,
+    rotation: UnitQuaternion::from_axis_angle(&Vec3f::x_axis(), r),
+    ..default()
+  }
+  .response(1.0)
 }
 
 pub(crate) fn saturate(s: f32) -> Mat4f {
-  (YCGCO_INVERSE * Mat3f::from_diagonal(&Vec3f::new(1.0, s, s)) * YCGCO).to_homogeneous()
+  Transformation {
+    space: Space::Ycgco,
+    scaling: Vec3f::new(1.0, s, s),
+    ..default()
+  }
+  .response(1.0)
 }
 
 #[cfg(test)]

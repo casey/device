@@ -22,6 +22,8 @@ pub(crate) enum Preset {
   RotateBlaster,
   RotateG,
   RotateR,
+  RotateRedResponsive,
+  RotateResponsive,
   Spin,
   Square,
   Test,
@@ -65,6 +67,8 @@ impl Preset {
     Preset::RotateBlaster,
     Preset::RotateG,
     Preset::RotateR,
+    Preset::RotateRedResponsive,
+    Preset::RotateResponsive,
     Preset::Spin,
     Preset::Square,
     Preset::Test,
@@ -141,6 +145,22 @@ impl Preset {
       },
       Self::RotateR => Filter {
         color: Axis::Red.rotate(0.38 * TAU),
+        ..default()
+      },
+      Self::RotateRedResponsive => Filter {
+        color_response: Transformation {
+          space: Space::CenteredRgb,
+          rotation: UnitQuaternion::from_axis_angle(&Axis::Red.axis(), 0.38 * TAU),
+          ..default()
+        },
+        ..default()
+      },
+      Self::RotateResponsive => Filter {
+        color_response: Transformation {
+          space: Space::Yiq,
+          rotation: UnitQuaternion::from_axis_angle(&Vec3f::x_axis(), 0.38 * TAU),
+          ..default()
+        },
         ..default()
       },
       Self::RotateG => Filter {
@@ -260,6 +280,8 @@ mod tests {
             | RotateBlaster
             | RotateG
             | RotateR
+            | RotateResponsive
+            | RotateRedResponsive
             | Spin
             | ZoomIn
             | ZoomInNe

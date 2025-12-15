@@ -780,7 +780,7 @@ impl Renderer {
         uniforms.push(FilterUniforms {
           alpha: filter.alpha,
           base: filter.base,
-          color: filter.color.to_affine(),
+          color: filter.color_uniform(response),
           coordinates: filter.coordinates,
           field: filter.field,
           frequency_range,

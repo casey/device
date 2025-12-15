@@ -8,6 +8,14 @@ pub(crate) enum Axis {
 }
 
 impl Axis {
+  pub(crate) fn axis(self) -> Unit<Vec3f> {
+    match self {
+      Self::Red => Vec3f::x_axis(),
+      Self::Green => Vec3f::y_axis(),
+      Self::Blue => Vec3f::z_axis(),
+    }
+  }
+
   pub(crate) fn invert(self) -> Mat4f {
     match self {
       Self::Red => Mat3f::from_diagonal(&Vec3f::new(-1.0, 1.0, 1.0))
@@ -23,14 +31,7 @@ impl Axis {
   }
 
   pub(crate) fn rotate(self, angle: f32) -> Mat4f {
-    let axis = match self {
-      Self::Red => Vec3f::x_axis(),
-      Self::Green => Vec3f::y_axis(),
-      Self::Blue => Vec3f::z_axis(),
-    };
-
-    let transformation = Mat4f::from_axis_angle(&axis, angle);
-
+    let transformation = Mat4f::from_axis_angle(&self.axis(), angle);
     color::CENTERED_RGB_INVERSE * transformation * color::CENTERED_RGB
   }
 }
