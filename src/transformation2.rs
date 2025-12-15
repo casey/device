@@ -13,10 +13,7 @@ impl Transformation2 {
   const SCALING_IDENTITY: Vec2f = Vec2f::new(1.0, 1.0);
 
   pub(crate) fn response(&self, response: f32) -> Mat3f {
-    let response = self
-      .period
-      .map(|period| response % period)
-      .unwrap_or(response);
+    let response = self.period.map_or(response, |period| response % period);
     let scaling = Self::SCALING_IDENTITY + (self.scaling - Self::SCALING_IDENTITY) * response;
     let rotation = self.rotation * response;
     let translation = self.translation * response;

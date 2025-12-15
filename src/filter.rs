@@ -68,14 +68,14 @@ impl Filter {
     )
   }
 
-  pub(crate) fn tick(&mut self, dt: Duration) {
-    self.elapsed += dt;
-  }
-
   pub(crate) fn position_uniform(&self, response: f32) -> Mat2x3f {
     (self.position_response.response(response)
       * self.position_velocity.response(self.elapsed.as_secs_f32())
       * self.position)
       .to_affine()
+  }
+
+  pub(crate) fn tick(&mut self, dt: Duration) {
+    self.elapsed += dt;
   }
 }

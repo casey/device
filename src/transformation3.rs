@@ -15,10 +15,7 @@ impl Transformation3 {
   const SCALING_IDENTITY: Vec3f = Vec3f::new(1.0, 1.0, 1.0);
 
   pub(crate) fn response(&self, response: f32) -> Mat4f {
-    let response = self
-      .period
-      .map(|period| response % period)
-      .unwrap_or(response);
+    let response = self.period.map_or(response, |period| response % period);
 
     let response = if self.sin { response.sin() } else { response };
 
