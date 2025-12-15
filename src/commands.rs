@@ -98,22 +98,22 @@ pub(crate) fn circle(state: &mut State) {
 }
 
 pub(crate) fn clear_elapsed(state: &mut State) {
-  state.transient = State::TRANSIENT_IDENTITY;
+  state.transient = Transformation2::default();
   for filter in &mut state.filters {
     filter.elapsed = Duration::ZERO;
   }
 }
 
 pub(crate) fn clear_transient_scale(state: &mut State) {
-  state.transient.z = 0.0;
+  state.transient.scaling = Vec2f::zeros();
 }
 
 pub(crate) fn clear_transient_x_translation(state: &mut State) {
-  state.transient.x = 0.0;
+  state.transient.translation.x = 0.0;
 }
 
 pub(crate) fn clear_transient_y_translation(state: &mut State) {
-  state.transient.y = 0.0;
+  state.transient.translation.y = 0.0;
 }
 
 pub(crate) fn complete_command(app: &mut App) {

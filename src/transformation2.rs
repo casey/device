@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 #[allow(clippy::arbitrary_source_item_ordering)]
 pub(crate) struct Transformation2 {
   pub(crate) scaling: Vec2f,
