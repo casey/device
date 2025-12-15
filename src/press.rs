@@ -1,5 +1,4 @@
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Ord, PartialOrd, strum::Display)]
-#[strum(serialize_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub(crate) enum Press {
   Press,
   Release,
