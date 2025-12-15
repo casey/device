@@ -270,29 +270,53 @@ impl Display for Bindings {
       binding.join(" ")
     }
 
-    let mut builder = Builder::default();
+    let mut modes = BTreeMap::<ModeKind, Builder>::new();
+
+    // let mut builder = Builder::default();
 
     for ((mode, character, modifiers), (name, _command)) in &self.character {
-      builder.push_record([mode.name(), &binding(*modifiers, character), *name]);
+      modes
+        .entry(*mode)
+        .or_default()
+        .push_record([binding(*modifiers, character), (*name).into()]);
+
+      // builder.push_record([mode.name(), &binding(*modifiers, character), *name]);
     }
 
     for ((mode, named_key, modifiers), (name, _command)) in &self.named {
-      builder.push_record([
-        mode.name(),
-        &binding(*modifiers, &format!("{named_key:?}")),
-        *name,
+      modes.entry(*mode).or_default().push_record([
+        binding(*modifiers, &format!("{named_key:?}")),
+        (*name).into(),
       ]);
+
+      // builder.push_record([
+      //   mode.name(),
+      //   &binding(*modifiers, &format!("{named_key:?}")),
+      //   *name,
+      // ]);
     }
 
-    let mut table = builder.build();
+    for (mode, builder) in modes {
+      let mut table = builder.build();
 
-    table.modify(Columns::new(1..=1), Alignment::right());
+      table.modify(Columns::first(), Alignment::right());
 
-    writeln!(
-      f,
-      "{}",
-      table.with(Style::modern()).with(Panel::header("keyboard")),
-    )?;
+      writeln!(
+        f,
+        "{}",
+        table.with(Style::modern()).with(Panel::header(mode.name())),
+      )?;
+    }
+
+    // let mut table = builder.build();
+
+    // table.modify(Columns::new(1..=1), Alignment::right());
+
+    // writeln!(
+    //   f,
+    //   "{}",
+    //   table.with(Style::modern()).with(Panel::header("keyboard")),
+    // )?;
 
     let mut controllers = BTreeMap::<Controller, [[&str; 4]; 4]>::new();
 
