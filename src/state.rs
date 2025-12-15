@@ -220,6 +220,11 @@ impl State {
     self
   }
 
+  pub(crate) fn scaling(&mut self, z: f32) -> &mut Self {
+    self.transient.scaling = Vec2f::new(z, z);
+    self
+  }
+
   pub(crate) fn spread(&mut self, spread: bool) -> &mut Self {
     self.spread = spread;
     self
@@ -312,11 +317,6 @@ impl State {
 
   pub(crate) fn x(&mut self) -> &mut Self {
     self.filter.field = Field::X;
-    self
-  }
-
-  pub(crate) fn scaling(&mut self, z: f32) -> &mut Self {
-    self.transient.scaling = Vec2f::new(z, z);
     self
   }
 }
