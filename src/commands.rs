@@ -105,7 +105,7 @@ pub(crate) fn clear_elapsed(state: &mut State) {
 }
 
 pub(crate) fn clear_transient_scale(state: &mut State) {
-  state.transient.scaling = Vec2f::zeros();
+  state.transient.scaling = Transformation2::SCALING_IDENTITY;
 }
 
 pub(crate) fn clear_transient_x_translation(state: &mut State) {
