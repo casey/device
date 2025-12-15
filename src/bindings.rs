@@ -243,7 +243,8 @@ impl Display for Bindings {
 
     // todo:
     // - get rid of shift symbol on shifted characters
-    // - one table per mode
+    // - one table for all modes
+    // - row with mode name?
     // - show encoder commands
 
     fn binding(modifiers: ModifiersState, key: &str) -> String {
