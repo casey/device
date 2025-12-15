@@ -84,7 +84,7 @@ use {
   std::{
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
-    collections::{BTreeMap, HashMap, HashSet, VecDeque},
+    collections::{BTreeMap, HashSet, VecDeque},
     env, f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},

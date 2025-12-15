@@ -1,7 +1,7 @@
 use super::*;
 
 #[rustfmt::skip]
-const BUTTON_BINDINGS: &[(Controller, u8, Press, Command)] = {
+const BUTTON_BINDINGS: &[(Controller, u8, Press, (&str, Command))] = {
   use {Controller::*, generated::*, Press::Press};
   &[
     (Spectra,  0, Press, PUSH_TOP),
@@ -25,7 +25,7 @@ const BUTTON_BINDINGS: &[(Controller, u8, Press, Command)] = {
 };
 
 #[rustfmt::skip]
-const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, Command)] = {
+const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] = {
   use {generated::*, ModeKind::*};
 
   const OFF: ModifiersState = ModifiersState::empty();
@@ -137,7 +137,7 @@ const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
 };
 
 #[rustfmt::skip]
-const NAMED_BINDINGS: &[(ModeKind, NamedKey, Command)] = {
+const NAMED_BINDINGS: &[(ModeKind, NamedKey, (&str, Command))] = {
   use {
     ModeKind::{Normal, Play, Command},
     NamedKey::*,
@@ -157,10 +157,10 @@ const NAMED_BINDINGS: &[(ModeKind, NamedKey, Command)] = {
 };
 
 pub(crate) struct Bindings {
-  button: HashMap<(Controller, u8, Press), Command>,
-  character: HashMap<(ModeKind, String, ModifiersState), Command>,
-  encoder: HashMap<(Controller, u8), fn(&mut State, u7) -> f32>,
-  named: HashMap<(ModeKind, NamedKey), Command>,
+  button: BTreeMap<(Controller, u8, Press), (&'static str, Command)>,
+  character: BTreeMap<(ModeKind, String, ModifiersState), (&'static str, Command)>,
+  encoder: BTreeMap<(Controller, u8), fn(&mut State, u7) -> f32>,
+  named: BTreeMap<(ModeKind, NamedKey), (&'static str, Command)>,
 }
 
 impl Bindings {
@@ -171,7 +171,7 @@ impl Bindings {
       log::info!("unbound button: {controller:?} {button} {press:?}");
     }
 
-    command
+    command.map(|command| command.1)
   }
 
   pub(crate) fn encoder(
@@ -202,7 +202,7 @@ impl Bindings {
       log::info!("unbound key: {key:?} {modifiers:?}");
     }
 
-    command
+    command.map(|command| command.1)
   }
 
   pub(crate) fn new() -> Self {
@@ -229,6 +229,92 @@ impl Bindings {
         .map(|(mode, named, command)| ((mode, named), command))
         .collect(),
     }
+  }
+}
+
+impl Display for Bindings {
+  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    use tabled::{
+      builder::Builder,
+      settings::{Alignment, Panel, Style, object::Columns},
+    };
+
+    // todo:
+    // - could use tables directly instead of constructing bindings object
+    // - however, may want to modify bindings at runtime or something
+    // - get rid of shift symbol on shifted characters
+    // - one table per mode
+    // - encoder commands
+    //
+
+    fn binding(modifiers: ModifiersState, key: &str) -> String {
+      let mut binding = Vec::new();
+
+      if modifiers.control_key() {
+        binding.push("⌃");
+      }
+
+      if modifiers.alt_key() {
+        binding.push("⌥");
+      }
+
+      if modifiers.shift_key() {
+        binding.push("⇧");
+      }
+
+      if modifiers.super_key() {
+        binding.push("⌘");
+      }
+
+      binding.push(key);
+
+      binding.join(" ")
+    }
+
+    let mut builder = Builder::default();
+
+    for ((mode, character, modifiers), (name, command)) in &self.character {
+      builder.push_record([mode.name(), &binding(*modifiers, character), *name]);
+    }
+
+    for ((mode, named_key), (name, command)) in &self.named {
+      builder.push_record([mode.name(), &format!("{named_key:?}"), *name]);
+    }
+
+    let mut table = builder.build();
+
+    table.modify(Columns::first(), Alignment::right());
+
+    writeln!(
+      f,
+      "{}",
+      table.with(Style::modern()).with(Panel::header("keyboard")),
+    )?;
+
+    let mut controllers = BTreeMap::<Controller, [[&str; 4]; 4]>::new();
+
+    for ((controller, control, _press), (name, _command)) in &self.button {
+      let i = control.into_usize();
+      controllers.entry(*controller).or_default()[i / 4][i % 4] = name;
+    }
+
+    for (controller, bindings) in controllers {
+      let mut builder = Builder::default();
+      for row in bindings {
+        builder.push_record(row.iter().copied());
+      }
+
+      writeln!(
+        f,
+        "{}",
+        builder
+          .build()
+          .with(Style::modern())
+          .with(Panel::header(controller.name()))
+      )?;
+    }
+
+    Ok(())
   }
 }
 
