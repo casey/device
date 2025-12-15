@@ -137,22 +137,24 @@ const ENCODER_BINDINGS: &[(Controller, u8, fn(&mut State, u7) -> f32)] = {
 };
 
 #[rustfmt::skip]
-const NAMED_BINDINGS: &[(ModeKind, NamedKey, (&str, Command))] = {
+const NAMED_BINDINGS: &[(ModeKind, NamedKey, ModifiersState, (&str, Command))] = {
   use {
     ModeKind::{Normal, Play, Command},
     NamedKey::*,
     generated::*,
   };
 
+  const OFF: ModifiersState = ModifiersState::empty();
+
   &[
-    (Command, Backspace,  POP_COMMAND),
-    (Command, Enter,      EXECUTE_COMMAND),
-    (Command, Escape,     ENTER_NORMAL_MODE),
-    (Command, Tab,        COMPLETE_COMMAND),
-    (Normal,  ArrowLeft,  NEGATIVE_ROTATION),
-    (Normal,  ArrowRight, POSITIVE_ROTATION),
-    (Normal,  Backspace,  POP),
-    (Play,    Escape,     ENTER_NORMAL_MODE),
+    (Command, Backspace,  OFF, POP_COMMAND),
+    (Command, Enter,      OFF, EXECUTE_COMMAND),
+    (Command, Escape,     OFF, ENTER_NORMAL_MODE),
+    (Command, Tab,        OFF, COMPLETE_COMMAND),
+    (Normal,  ArrowLeft,  OFF, NEGATIVE_ROTATION),
+    (Normal,  ArrowRight, OFF, POSITIVE_ROTATION),
+    (Normal,  Backspace,  OFF, POP),
+    (Play,    Escape,     OFF, ENTER_NORMAL_MODE),
   ]
 };
 
@@ -160,7 +162,7 @@ pub(crate) struct Bindings {
   button: BTreeMap<(Controller, u8, Press), (&'static str, Command)>,
   character: BTreeMap<(ModeKind, String, ModifiersState), (&'static str, Command)>,
   encoder: BTreeMap<(Controller, u8), fn(&mut State, u7) -> f32>,
-  named: BTreeMap<(ModeKind, NamedKey), (&'static str, Command)>,
+  named: BTreeMap<(ModeKind, NamedKey, ModifiersState), (&'static str, Command)>,
 }
 
 impl Bindings {
@@ -194,7 +196,7 @@ impl Bindings {
         .character
         .get(&(mode, character.to_uppercase(), modifiers.state()))
         .copied(),
-      Key::Named(named) => self.named.get(&(mode, *named)).copied(),
+      Key::Named(named) => self.named.get(&(mode, *named, modifiers.state())).copied(),
       _ => None,
     };
 
@@ -226,7 +228,7 @@ impl Bindings {
       named: NAMED_BINDINGS
         .iter()
         .copied()
-        .map(|(mode, named, command)| ((mode, named), command))
+        .map(|(mode, named, modifiers, command)| ((mode, named, modifiers), command))
         .collect(),
     }
   }
@@ -240,12 +242,9 @@ impl Display for Bindings {
     };
 
     // todo:
-    // - could use tables directly instead of constructing bindings object
-    // - however, may want to modify bindings at runtime or something
     // - get rid of shift symbol on shifted characters
     // - one table per mode
-    // - encoder commands
-    //
+    // - show encoder commands
 
     fn binding(modifiers: ModifiersState, key: &str) -> String {
       let mut binding = Vec::new();
@@ -277,13 +276,17 @@ impl Display for Bindings {
       builder.push_record([mode.name(), &binding(*modifiers, character), *name]);
     }
 
-    for ((mode, named_key), (name, _command)) in &self.named {
-      builder.push_record([mode.name(), &format!("{named_key:?}"), *name]);
+    for ((mode, named_key, modifiers), (name, _command)) in &self.named {
+      builder.push_record([
+        mode.name(),
+        &binding(*modifiers, &format!("{named_key:?}")),
+        *name,
+      ]);
     }
 
     let mut table = builder.build();
 
-    table.modify(Columns::first(), Alignment::right());
+    table.modify(Columns::new(1..=1), Alignment::right());
 
     writeln!(
       f,
@@ -357,8 +360,8 @@ mod tests {
   #[test]
   fn named_bindings_are_unique() {
     let mut names = HashSet::new();
-    for (mode, name, _command) in NAMED_BINDINGS {
-      assert!(names.insert((mode, name)));
+    for (mode, name, modifiers, _command) in NAMED_BINDINGS {
+      assert!(names.insert((mode, name, modifiers)));
     }
   }
 }
