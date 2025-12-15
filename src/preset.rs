@@ -24,6 +24,12 @@ pub(crate) enum Preset {
   RotateG,
   RotateR,
   RotateRedResponsive,
+  RotateRedVelocity,
+  RotateGreenVelocity,
+  RotateBlueVelocity,
+  TranslateRedVelocity,
+  TranslateGreenVelocity,
+  TranslateBlueVelocity,
   RotateResponsive,
   RotateVelocity,
   ScaleVelocity,
@@ -32,7 +38,7 @@ pub(crate) enum Preset {
   Square,
   Test,
   Top,
-  Scroll,
+  TranslateVelocity,
   Triangle,
   X,
   ZoomIn,
@@ -73,11 +79,17 @@ impl Preset {
     Preset::RotateBlaster,
     Preset::RotateG,
     Preset::RotateR,
+    Preset::RotateRedVelocity,
+    Preset::RotateGreenVelocity,
+    Preset::RotateBlueVelocity,
+    Preset::TranslateRedVelocity,
+    Preset::TranslateGreenVelocity,
+    Preset::TranslateBlueVelocity,
     Preset::RotateRedResponsive,
     Preset::RotateResponsive,
     Preset::RotateVelocity,
     Preset::Scale,
-    Preset::Scroll,
+    Preset::TranslateVelocity,
     Preset::Spin,
     Preset::Square,
     Preset::Test,
@@ -176,6 +188,57 @@ impl Preset {
         },
         ..default()
       },
+      Self::RotateRedVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          rotation: UnitQuaternion::from_axis_angle(&Axis::Red.axis(), 0.1 * TAU),
+          ..default()
+        },
+        ..default()
+      },
+      Self::RotateGreenVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          rotation: UnitQuaternion::from_axis_angle(&Axis::Green.axis(), 0.1 * TAU),
+          ..default()
+        },
+        ..default()
+      },
+      Self::RotateBlueVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          rotation: UnitQuaternion::from_axis_angle(&Axis::Blue.axis(), 0.1 * TAU),
+          ..default()
+        },
+        ..default()
+      },
+      Self::TranslateRedVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          translation: Vec3f::new(1.0 / TAU, 0.0, 0.0),
+          sin: true,
+          ..default()
+        },
+        ..default()
+      },
+      Self::TranslateGreenVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          translation: Vec3f::new(0.0, 1.0 / TAU, 0.0),
+          sin: true,
+          ..default()
+        },
+        ..default()
+      },
+      Self::TranslateBlueVelocity => Filter {
+        color_velocity: Transformation3 {
+          space: Space::CenteredRgb,
+          translation: Vec3f::new(0.0, 0.0, 1.0 / TAU),
+          sin: true,
+          ..default()
+        },
+        ..default()
+      },
       Self::RotateResponsive => Filter {
         color_response: Transformation3 {
           space: Space::Yiq,
@@ -220,7 +283,7 @@ impl Preset {
         field: Field::Top,
         ..default()
       },
-      Self::Scroll => Filter {
+      Self::TranslateVelocity => Filter {
         position_velocity: Transformation2 {
           translation: Vec2f::new(-0.1, 0.0),
           ..default()

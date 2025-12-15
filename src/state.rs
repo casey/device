@@ -52,7 +52,7 @@ impl Default for State {
 }
 
 impl State {
-  const TRANSIENT_IDENTITY: Vec4f = Vec4f::new(0.0, 0.0, 1.0, 0.0);
+  pub(crate) const TRANSIENT_IDENTITY: Vec4f = Vec4f::new(0.0, 0.0, 1.0, 0.0);
 
   pub(crate) fn all(&mut self) -> &mut Self {
     self.filter.field = Field::All;

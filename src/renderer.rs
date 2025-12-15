@@ -878,6 +878,17 @@ impl Renderer {
       },
     );
 
+    encoder.clear_texture(
+      self.resources().overlay_view.texture(),
+      &ImageSubresourceRange {
+        array_layer_count: None,
+        aspect: TextureAspect::All,
+        base_array_layer: 0,
+        base_mip_level: 0,
+        mip_level_count: None,
+      },
+    );
+
     let mut source = 0;
     let mut destination = 1;
     for i in 0..filters {
@@ -979,6 +990,21 @@ impl Renderer {
         y: 0.0,
       }
     } else {
+      // self
+      //   .overlay_renderer
+      //   .render_to_texture(
+      //     &self.device,
+      //     &self.queue,
+      //     &self.overlay_scene,
+      //     &self.resources.as_ref().unwrap().overlay_view,
+      //     &RenderParams {
+      //       antialiasing_method: AaConfig::Msaa16,
+      //       base_color: Color::TRANSPARENT,
+      //       height: self.resolution.get(),
+      //       width: self.resolution.get(),
+      //     },
+      //   )
+      //   .context(error::RenderOverlay)?;
       return Ok(());
     };
 

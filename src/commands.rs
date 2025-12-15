@@ -97,6 +97,13 @@ pub(crate) fn circle(state: &mut State) {
   });
 }
 
+pub(crate) fn clear_elapsed(state: &mut State) {
+  state.transient = State::TRANSIENT_IDENTITY;
+  for filter in &mut state.filters {
+    filter.elapsed = Duration::ZERO;
+  }
+}
+
 pub(crate) fn clear_transient_scale(state: &mut State) {
   state.transient.z = 0.0;
 }
