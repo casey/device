@@ -105,8 +105,7 @@ impl Capture {
 
     progress.finish();
 
-    let tempdir = TempDir::new().context(error::TempdirIo)?;
-    let tempdir_path = tempdir.path().into_utf8_path()?;
+    let (_tempdir, tempdir_path) = tempdir()?;
 
     Sound::save(
       &tempdir_path.join(AUDIO),
@@ -128,7 +127,7 @@ impl Capture {
       .args(["-c:a", "aac"])
       .args(["-b:a", "192k"])
       .arg(RECORDING)
-      .current_dir(tempdir_path)
+      .current_dir(&tempdir_path)
       .stdin(Stdio::piped())
       .stderr(options.stdio())
       .stdout(options.stdio())

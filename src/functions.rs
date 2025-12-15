@@ -12,3 +12,14 @@ pub(crate) fn pad(i: usize, alignment: usize) -> usize {
   assert!(alignment.is_power_of_two());
   (i + alignment - 1) & !(alignment - 1)
 }
+
+pub(crate) fn tempdir() -> Result<(TempDir, Utf8PathBuf)> {
+  let tempdir = tempfile::Builder::new()
+    .prefix("device")
+    .tempdir()
+    .context(error::TempdirIo)?;
+
+  let path = tempdir.path().into_utf8_path()?.into();
+
+  Ok((tempdir, path))
+}

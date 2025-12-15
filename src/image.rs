@@ -255,11 +255,10 @@ mod tests {
       assert_eq!(loaded, image);
     }
 
-    let tempdir = tempfile::tempdir().unwrap();
-    let path = tempdir.path().into_utf8_path().unwrap();
+    let (_tempdir, path) = tempdir().unwrap();
 
     case(
-      path,
+      &path,
       &[0, 0, 0, 255, 255, 255, 255, 255],
       ColorType::Grayscale,
       BitDepth::One,
@@ -267,7 +266,7 @@ mod tests {
     );
 
     case(
-      path,
+      &path,
       &[0, 0, 0, 255, 127, 127, 127, 255],
       ColorType::Grayscale,
       BitDepth::Eight,
@@ -275,7 +274,7 @@ mod tests {
     );
 
     case(
-      path,
+      &path,
       &[0, 0, 0, 255, 255, 255, 255, 127],
       ColorType::GrayscaleAlpha,
       BitDepth::Eight,
@@ -283,7 +282,7 @@ mod tests {
     );
 
     case(
-      path,
+      &path,
       &[0, 0, 0, 255, 0, 127, 255, 255],
       ColorType::Rgb,
       BitDepth::Eight,
@@ -291,7 +290,7 @@ mod tests {
     );
 
     case(
-      path,
+      &path,
       &[0, 0, 0, 255, 0, 127, 255, 127],
       ColorType::Rgba,
       BitDepth::Eight,
@@ -299,7 +298,7 @@ mod tests {
     );
 
     case(
-      path,
+      &path,
       &[0, 0, 0, 255, 255, 0, 0, 255],
       ColorType::Rgb,
       BitDepth::Eight,
