@@ -152,12 +152,12 @@ impl App {
     Ok(Self {
       analyzer: Analyzer::new(),
       bindings: Bindings::new(),
-      cursor_moved: now,
       capture_rx,
       capture_tx,
       captures_pending: 0,
       commands: Commands::new(),
       config,
+      cursor_moved: now,
       cursors: HashSet::new(),
       deadline: now,
       errors: Vec::new(),
