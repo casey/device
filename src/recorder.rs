@@ -17,8 +17,7 @@ impl Recorder {
   }
 
   pub(crate) fn new() -> Result<Self> {
-    let tempdir = TempDir::new().context(error::TempdirIo)?;
-    let tempdir_path = tempdir.path().into_utf8_path()?.into();
+    let (tempdir, tempdir_path) = tempdir()?;
     Ok(Self {
       sounds: Vec::new(),
       tempdir,

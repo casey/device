@@ -21,7 +21,7 @@ use {
     format::Format,
     fps::Fps,
     frame::Frame,
-    functions::{default, display, pad},
+    functions::{default, display, pad, tempdir},
     hub::Hub,
     image::Image,
     input::Input,
