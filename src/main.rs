@@ -45,6 +45,7 @@ use {
     score::Score,
     shared::Shared,
     sound::Sound,
+    space::Space,
     state::State,
     stream_config_display::StreamConfigDisplay,
     subcommand::Subcommand,
@@ -55,6 +56,7 @@ use {
     text::Text,
     tiling::Tiling,
     to_affine::ToAffine,
+    transformation::Transformation,
     uniforms::Uniforms,
     window_attributes_ext::WindowAttributesExt,
   },
@@ -69,7 +71,7 @@ use {
   hound::{WavSpec, WavWriter},
   indicatif::{ProgressBar, ProgressStyle},
   midly::num::u7,
-  nalgebra::{Vector2, matrix, vector},
+  nalgebra::{Rotation2, Translation3, Unit, UnitQuaternion, Vector2, matrix, vector},
   parley::{FontContext, LayoutContext},
   rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
@@ -185,6 +187,7 @@ mod scene;
 mod score;
 mod shared;
 mod sound;
+mod space;
 mod state;
 mod stream_config_display;
 mod subcommand;
@@ -195,6 +198,7 @@ mod templates;
 mod text;
 mod tiling;
 mod to_affine;
+mod transformation;
 mod uniforms;
 mod window_attributes_ext;
 
@@ -215,7 +219,6 @@ type Mat2x3f = nalgebra::Matrix2x3<f32>;
 type Mat3f = nalgebra::Matrix3<f32>;
 type Mat3x4f = nalgebra::Matrix3x4<f32>;
 type Mat4f = nalgebra::Matrix4<f32>;
-type Rot2f = nalgebra::Rotation2<f32>;
 type Vec2f = nalgebra::Vector2<f32>;
 type Vec3f = nalgebra::Vector3<f32>;
 type Vec4f = nalgebra::Vector4<f32>;
