@@ -169,6 +169,10 @@ impl State {
     self
   }
 
+  pub(crate) fn preset_limit(&self) -> usize {
+    ((self.complexity + 1.0) * Preset::LIMIT as f32) as usize
+  }
+
   pub(crate) fn position(&mut self, position: Mat3f) -> &mut Self {
     self.filter.position = position;
     self
