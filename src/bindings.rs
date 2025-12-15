@@ -273,11 +273,11 @@ impl Display for Bindings {
 
     let mut builder = Builder::default();
 
-    for ((mode, character, modifiers), (name, command)) in &self.character {
+    for ((mode, character, modifiers), (name, _command)) in &self.character {
       builder.push_record([mode.name(), &binding(*modifiers, character), *name]);
     }
 
-    for ((mode, named_key), (name, command)) in &self.named {
+    for ((mode, named_key), (name, _command)) in &self.named {
       builder.push_record([mode.name(), &format!("{named_key:?}"), *name]);
     }
 
