@@ -43,6 +43,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] =
     (Normal, '?',  OFF,        PRINT),
     (Normal, 'A',  OFF,        ALL),
     (Normal, 'B',  OFF,        BLASTER),
+    (Normal, 'B',  SUPER,      PRINT_BINDINGS),
     (Normal, 'C',  OFF,        CIRCLE),
     (Normal, 'D',  OFF,        COORDINATES),
     (Normal, 'E',  OFF,        CLEAR_ELAPSED),
@@ -365,7 +366,7 @@ impl Display for Bindings {
         builder.push_record(row.iter().copied());
       }
 
-      writeln!(
+      write!(
         f,
         "{}",
         builder
