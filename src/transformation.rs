@@ -29,7 +29,7 @@ impl Default for Transformation {
   fn default() -> Self {
     Self {
       rotation: UnitQuaternion::identity(),
-      scaling: vector!(1.0, 1.0, 1.0),
+      scaling: Self::SCALING_IDENTITY,
       space: Space::Rgb,
       translation: Vec3f::zeros(),
     }
