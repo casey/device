@@ -230,6 +230,8 @@ impl Backend {
       return;
     }
 
+    let muted = self.muted.load(atomic::Ordering::Relaxed);
+
     for slot in buffer {
       if self
         .sample
@@ -247,11 +249,7 @@ impl Backend {
         (self.sample.into_usize() / Tap::CHANNELS.into_usize()) % MAX_BUFFER_SIZE,
       );
 
-      *slot = if self.muted.load(atomic::Ordering::Relaxed) {
-        0.0
-      } else {
-        sample
-      };
+      *slot = if muted { 0.0 } else { sample };
 
       self.samples.push(sample);
 
