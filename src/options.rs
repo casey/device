@@ -87,8 +87,12 @@ impl Options {
   pub(crate) fn image_format(&self) -> Option<ImageFormat> {
     self
       .image_format
-      .or_else(|| self.scene.and_then(Scene::format))
-      .or_else(|| self.program.and_then(|program| program.scene().format()))
+      .or_else(|| self.scene.and_then(Scene::image_format))
+      .or_else(|| {
+        self
+          .program
+          .and_then(|program| program.scene().image_format())
+      })
   }
 
   pub(crate) fn size(&self, size: Vector2<NonZeroU32>) -> (Vector2<NonZeroU32>, NonZeroU32) {

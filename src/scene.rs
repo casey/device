@@ -27,7 +27,7 @@ pub(crate) enum Scene {
 }
 
 impl Scene {
-  pub(crate) fn format(self) -> Option<ImageFormat> {
+  pub(crate) fn image_format(self) -> Option<ImageFormat> {
     match self {
       Self::Blaster
       | Self::Kaleidoscope
