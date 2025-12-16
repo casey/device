@@ -48,6 +48,7 @@ impl Renderer {
     let captures = self.resources().captures.clone();
 
     let capture = captures.lock().unwrap().pop().unwrap_or_else(|| {
+      log::info!("creating new capture buffer");
       self.device.create_buffer(&BufferDescriptor {
         label: label!(),
         mapped_at_creation: false,
