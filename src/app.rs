@@ -98,10 +98,11 @@ impl App {
   }
 
   pub(crate) fn new(
+    config: Config,
+    fullscreen: bool,
     options: Options,
     present_mode: Option<PresentMode>,
     record: Option<Fps>,
-    config: Config,
   ) -> Result<Self> {
     let host = cpal::default_host();
 
@@ -169,7 +170,7 @@ impl App {
       cursors: HashSet::new(),
       deadline: now,
       errors: Vec::new(),
-      fullscreen: false,
+      fullscreen,
       history: Vec::new(),
       hub: Hub::new()?,
       input,
@@ -436,6 +437,7 @@ impl ApplicationHandler for App {
               width: 256,
               height: 256,
             })
+            .with_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)))
             .with_title("device")
             .with_platform_attributes(),
         )
