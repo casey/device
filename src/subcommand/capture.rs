@@ -1,4 +1,4 @@
-use {super::*, std::process::Command};
+use super::*;
 
 const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 
@@ -61,16 +61,18 @@ impl Capture {
       .duration
       .map(|duration| u64::from(duration.get()) * u64::from(fps.fps().get()));
 
-    let progress = if let Some(frames) = frames {
+    let progress = if options.verbose {
+      ProgressBar::hidden()
+    } else if let Some(frames) = frames {
       ProgressBar::new(frames)
         .with_style(ProgressStyle::default_bar().progress_chars(PROGRESS_CHARS))
     } else {
       ProgressBar::new_spinner().with_style(ProgressStyle::default_spinner().tick_chars(TICK_CHARS))
     };
 
-    let mut media = Vec::new();
-
     let mut samples = vec![0.0; spf.into_usize() * Tap::CHANNELS.into_usize()];
+
+    let mut recorder = Recorder::new(&options, resolution, fps)?;
 
     let mut done = false;
     for frame in 0.. {
@@ -98,73 +100,15 @@ impl Capture {
       renderer.poll()?;
 
       let image = rx.recv().unwrap();
-      media.push((image, sound));
+
+      recorder.frame(frame, image, sound)?;
 
       state.tick(fps.duration());
     }
 
     progress.finish();
 
-    let (_tempdir, tempdir_path) = tempdir()?;
-
-    Sound::save(
-      &tempdir_path.join(AUDIO),
-      media.iter().map(|(_image, sound)| sound),
-    )?;
-
-    let child = Command::new("ffmpeg")
-      .args(["-f", "rawvideo"])
-      .args(["-pixel_format", "rgb24"])
-      .args(["-video_size", &format!("{resolution}x{resolution}")])
-      .args(["-framerate", &fps.to_string()])
-      .args(["-i", "-"])
-      .args(["-i", AUDIO])
-      .args(["-c:v", "libx264"])
-      .args(["-crf", "18"])
-      .args(["-movflags", "+faststart"])
-      .args(["-pix_fmt", "yuv420p"])
-      .args(["-preset", "slow"])
-      .args(["-c:a", "aac"])
-      .args(["-b:a", "192k"])
-      .arg(RECORDING)
-      .current_dir(&tempdir_path)
-      .stdin(Stdio::piped())
-      .stderr(options.stdio())
-      .stdout(options.stdio())
-      .spawn()
-      .context(error::CaptureInvoke)?;
-
-    let mut stdin = BufWriter::new(child.stdin.as_ref().unwrap());
-
-    for (image, _sound) in media {
-      for pixel in image.data().chunks(4) {
-        stdin.write_all(&pixel[0..3]).context(error::CaptureWrite)?;
-      }
-    }
-
-    stdin.flush().context(error::CaptureFlush)?;
-
-    drop(stdin);
-
-    let output = child.wait_with_output().context(error::CaptureWait)?;
-
-    if !output.status.success() {
-      if !options.verbose {
-        eprintln!("{}", String::from_utf8_lossy(&output.stdout));
-        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
-      }
-
-      return Err(
-        error::CaptureStatus {
-          status: output.status,
-        }
-        .build(),
-      );
-    }
-
-    let path = config.capture("mp4");
-
-    fs::rename(tempdir_path.join(RECORDING), &path).context(error::FilesystemIo { path })?;
+    recorder.finish(&options, &config)?;
 
     Ok(())
   }
