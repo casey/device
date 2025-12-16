@@ -27,15 +27,19 @@ impl Sound {
       .map(|chunk| chunk.iter().sum::<f32>() / self.format.channels as f32)
   }
 
-  pub(crate) fn frames(&self) -> usize {
-    self.samples.len() / self.format.channels.into_usize()
-  }
-
   pub(crate) fn empty(format: SoundFormat) -> Self {
     Self {
       format,
       samples: Vec::new(),
     }
+  }
+
+  pub(crate) fn format(&self) -> SoundFormat {
+    self.format
+  }
+
+  pub(crate) fn frames(&self) -> usize {
+    self.samples.len() / self.format.channels.into_usize()
   }
 
   pub(crate) fn new(channels: u16, sample_rate: u32, samples: Vec<f32>) -> Self {
@@ -46,10 +50,6 @@ impl Sound {
         sample_rate,
       },
     }
-  }
-
-  pub(crate) fn format(&self) -> SoundFormat {
-    self.format
   }
 
   pub(crate) fn save(&self, path: &Utf8Path) -> Result {
