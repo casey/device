@@ -12,7 +12,7 @@ impl Run {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
     let record = self
       .record
-      .then(|| options.fps.context(error::RecordFps))
+      .then(|| options.fps.context(error::RecordRequiresFps))
       .transpose()?;
 
     let mut app = App::new(options, self.present_mode, record, config)?;
