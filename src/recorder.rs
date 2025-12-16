@@ -150,7 +150,7 @@ impl Recorder {
     Ok(())
   }
 
-  pub(crate) fn frame_imbalance(&self) -> f64 {
+  fn frame_imbalance(&self) -> f64 {
     let audio_duration = self.audio.duration();
     let expected_frames = audio_duration.div_duration_f64(self.fps.duration());
     self.frame_count as f64 - expected_frames
