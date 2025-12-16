@@ -105,7 +105,6 @@ impl Recorder {
     let change = if image.width() != self.size.x.get() || image.height() != self.size.y.get() {
       log::warn!("recording resolution changed");
       true
-    // todo: cannot actually append here, may be out of order
     } else if sound.format() != self.audio.format() {
       log::warn!("sound format changed");
       true
