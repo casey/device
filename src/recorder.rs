@@ -132,10 +132,14 @@ impl Recorder {
 
     let encoders = Self::encoders()?;
 
-    let encoder_options: &[&str] = if encoders.contains("h264_videotoolbox") {
-      &["-c:v", "h264_videotoolbox", "-q:v", "100"]
+    let encoder_options: &[[&str; 2]] = if encoders.contains("h264_videotoolbox") {
+      &[
+        ["-c:v", "h264_videotoolbox"],
+        ["-q:v", "100"],
+        ["-realtime", "true"],
+      ]
     } else {
-      &["-c:v", "libx264", "-crf", "18", "-preset", "slow"]
+      &[["-c:v", "libx264"], ["-crf", "18"], ["-preset", "slow"]]
     };
 
     let mut encoder = Command::new("ffmpeg")
@@ -148,7 +152,7 @@ impl Recorder {
       .args(["-pixel_format", "rgba"])
       .args(["-video_size", &format!("{}x{}", size.x, size.y)])
       .args(["-i", "-"])
-      .args(encoder_options)
+      .args(encoder_options.iter().flatten())
       .args(["-color_range", "pc"])
       .args(["-colorspace", "bt709"])
       .args(["-color_primaries", "bt709"])
