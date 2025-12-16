@@ -20,24 +20,6 @@ pub(crate) struct Recorder {
 }
 
 impl Recorder {
-  fn process_output(options: &Options, output: &process::Output) -> Result {
-    if output.status.success() {
-      return Ok(());
-    }
-
-    if !options.verbose {
-      eprintln!("{}", String::from_utf8_lossy(&output.stdout));
-      eprintln!("{}", String::from_utf8_lossy(&output.stderr));
-    }
-
-    Err(
-      error::CaptureStatus {
-        status: output.status,
-      }
-      .build(),
-    )
-  }
-
   pub(crate) fn finish(mut self, options: &Options, config: &Config) -> Result {
     assert!(self.heap.is_empty());
 
@@ -144,5 +126,23 @@ impl Recorder {
       tempdir,
       tempdir_path,
     })
+  }
+
+  fn process_output(options: &Options, output: &process::Output) -> Result {
+    if output.status.success() {
+      return Ok(());
+    }
+
+    if !options.verbose {
+      eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+      eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+
+    Err(
+      error::CaptureStatus {
+        status: output.status,
+      }
+      .build(),
+    )
   }
 }
