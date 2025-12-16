@@ -43,11 +43,18 @@ impl Capture {
 
     let resolution = options.resolution.unwrap_or(DEFAULT_RESOLUTION);
 
+    let size = Vector2::new(
+      options.width.unwrap_or(resolution),
+      options.height.unwrap_or(resolution),
+    );
+
+    let (size, resolution) = options.size(size);
+
     let mut renderer = pollster::block_on(Renderer::new(
       options.format(),
       None,
       resolution,
-      Vector2::new(resolution, resolution),
+      size,
       None,
     ))?;
 

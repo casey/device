@@ -1,6 +1,9 @@
 use {
   super::*,
-  clap::builder::styling::{AnsiColor, Effects, Styles},
+  clap::{
+    ArgAction,
+    builder::styling::{AnsiColor, Effects, Styles},
+  },
 };
 
 const AUDIO: &str = "audio";
@@ -20,10 +23,14 @@ const AUDIO: &str = "audio";
 pub(crate) struct Options {
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) db: Option<f32>,
+  #[arg(long, action = ArgAction::SetTrue)]
+  pub(crate) fit: Option<bool>,
   #[arg(long)]
   pub(crate) format: Option<Format>,
   #[arg(long)]
   pub(crate) fps: Option<Fps>,
+  #[arg(long)]
+  pub(crate) height: Option<NonZeroU32>,
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
   #[arg(long)]
@@ -56,6 +63,8 @@ pub(crate) struct Options {
   pub(crate) vy: Option<f32>,
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) vz: Option<f32>,
+  #[arg(long)]
+  pub(crate) width: Option<NonZeroU32>,
 }
 
 impl Options {
@@ -82,6 +91,12 @@ impl Options {
       .or_else(|| self.program.and_then(|program| program.scene().format()))
   }
 
+  pub(crate) fn size(&self, size: Vector2<NonZeroU32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
+    let size = Vector2::new(self.width.unwrap_or(size.x), self.height.unwrap_or(size.y));
+    let resolution = self.resolution.unwrap_or(size.x.max(size.y));
+    (size, resolution)
+  }
+
   pub(crate) fn state(&self) -> State {
     let mut state = if let Some(scene) = self.scene {
       scene.state(self.seed)
@@ -102,6 +117,7 @@ impl Options {
     }
 
     state.db = self.db.unwrap_or(state.db);
+    state.fit = self.fit.unwrap_or(state.fit);
     state.fps = self.fps.or(state.fps);
     state.interpolate = self.interpolate.unwrap_or(state.interpolate);
     state.velocity = Vec4f::new(

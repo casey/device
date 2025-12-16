@@ -326,17 +326,6 @@ impl App {
     Ok(())
   }
 
-  fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
-    let size = Vector2::<NonZeroU32>::new(
-      size.width.max(1).try_into().unwrap(),
-      size.height.max(1).try_into().unwrap(),
-    );
-
-    let resolution = self.options.resolution.unwrap_or(size.x.max(size.y));
-
-    (size, resolution)
-  }
-
   fn select_stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
     min_channels: u16,
@@ -398,6 +387,13 @@ impl App {
     }
   }
 
+  fn size(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
+    self.options.size(Vector2::new(
+      size.width.max(1).try_into().unwrap(),
+      size.height.max(1).try_into().unwrap(),
+    ))
+  }
+
   pub(crate) fn window(&self) -> &Window {
     self.window.as_ref().unwrap()
   }
@@ -433,8 +429,8 @@ impl ApplicationHandler for App {
         .create_window(
           WindowAttributes::default()
             .with_inner_size(PhysicalSize {
-              width: DEFAULT_RESOLUTION.get(),
-              height: DEFAULT_RESOLUTION.get(),
+              width: self.options.width.unwrap_or(DEFAULT_RESOLUTION).get(),
+              height: self.options.height.unwrap_or(DEFAULT_RESOLUTION).get(),
             })
             .with_min_inner_size(PhysicalSize {
               width: 256,
@@ -453,7 +449,7 @@ impl ApplicationHandler for App {
         }
       };
 
-      let (size, resolution) = self.resolution(window.inner_size());
+      let (size, resolution) = self.size(window.inner_size());
 
       self.window = Some(window.clone());
 
@@ -519,7 +515,7 @@ impl ApplicationHandler for App {
         }
       }
       WindowEvent::Resized(size) => {
-        let (size, resolution) = self.resolution(size);
+        let (size, resolution) = self.size(size);
         self.renderer.as_mut().unwrap().resize(size, resolution);
         self.window().request_redraw();
       }
