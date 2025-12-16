@@ -10,7 +10,7 @@ pub(crate) struct Recorder {
   encoder: Child,
   end: Option<u64>,
   fps: Fps,
-  frames: HashMap<u64, Image>,
+  frames: HashMap<u64, (Image, Sound)>,
   heap: BinaryHeap<Reverse<u64>>,
   next: u64,
   size: Vector2<NonZeroU32>,
@@ -105,8 +105,9 @@ impl Recorder {
     let change = if image.width() != self.size.x.get() || image.height() != self.size.y.get() {
       log::warn!("recording resolution changed");
       true
-    } else if let Err(err) = self.audio.append(sound) {
-      log::warn!("sound format changed: {err}");
+    // todo: cannot actually append here, may be out of order
+    } else if sound.format() != self.audio.format() {
+      log::warn!("sound format changed");
       true
     } else {
       false
@@ -126,7 +127,7 @@ impl Recorder {
     }
 
     self.heap.push(Reverse(frame));
-    self.frames.insert(frame, image);
+    self.frames.insert(frame, (image, sound));
 
     while self
       .heap
@@ -135,11 +136,12 @@ impl Recorder {
     {
       let Reverse(frame) = self.heap.pop().unwrap();
       assert_eq!(frame, self.next);
-      let image = self.frames.remove(&frame).unwrap();
+      let (image, sound) = self.frames.remove(&frame).unwrap();
       self
         .stdin
         .write_all(image.data())
         .context(error::RecordingWrite)?;
+      self.audio.append(sound).unwrap();
       self.next += 1;
     }
 
