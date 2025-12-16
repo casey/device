@@ -3,6 +3,8 @@ use super::*;
 #[derive(Default, Parser)]
 pub(crate) struct Run {
   #[arg(long)]
+  fullscreen: bool,
+  #[arg(long)]
   present_mode: Option<PresentMode>,
   #[arg(long)]
   record: bool,
@@ -15,7 +17,7 @@ impl Run {
       .then(|| options.fps.context(error::RecordRequiresFps))
       .transpose()?;
 
-    let mut app = App::new(options, self.present_mode, record, config)?;
+    let mut app = App::new(config, self.fullscreen, options, self.present_mode, record)?;
 
     let event_loop = EventLoop::with_user_event()
       .build()
