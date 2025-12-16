@@ -37,6 +37,10 @@ pub(crate) struct Options {
   #[arg(long)]
   pub(crate) resolution: Option<NonZeroU32>,
   #[arg(long)]
+  pub(crate) width: Option<NonZeroU32>,
+  #[arg(long)]
+  pub(crate) height: Option<NonZeroU32>,
+  #[arg(long)]
   pub(crate) scene: Option<Scene>,
   #[arg(group = AUDIO, long)]
   pub(crate) score: Option<Score>,

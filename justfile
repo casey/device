@@ -104,7 +104,8 @@ record-curtains:
 record-blaster:
   cargo run --release -- \
     --fps 60 \
-    --resolution 2048 \
+    --width 3840 \
+    --height 2160 \
     --program blaster \
     --verbose \
     run \
