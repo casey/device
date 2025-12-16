@@ -278,8 +278,8 @@ impl App {
 
     renderer.render(&self.analyzer, &self.state, now)?;
 
-    if let Some(fps) = self.record
-      && self.recorder.is_none()
+    if self.recorder.is_none()
+      && let Some(fps) = self.record
     {
       self.recorder = Some(Arc::new(Mutex::new(Recorder::new(
         &self.options,
