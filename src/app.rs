@@ -332,7 +332,7 @@ impl App {
       size.height.max(1).try_into().unwrap(),
     );
 
-    let resolution = self.state.resolution.unwrap_or(size.x.max(size.y));
+    let resolution = self.options.resolution.unwrap_or(size.x.max(size.y));
 
     (size, resolution)
   }
