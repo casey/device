@@ -58,7 +58,7 @@ impl Capture {
       None,
     ))?;
 
-    let fps = state.fps.unwrap_or(DEFAULT_FPS.try_into().unwrap());
+    let fps = options.fps.unwrap_or(DEFAULT_FPS.try_into().unwrap());
 
     let spf = fps.spf(tap.sample_rate())?;
 
