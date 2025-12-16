@@ -45,7 +45,7 @@ impl Recorder {
         continue;
       }
 
-      if let Some(encoder) = line.split_whitespace().skip(1).next() {
+      if let Some(encoder) = line.split_whitespace().nth(1) {
         encoders.insert(encoder.into());
       }
     }
@@ -208,6 +208,6 @@ mod tests {
   #[test]
   fn encoders() {
     let encoders = Recorder::encoders().unwrap();
-    assert!(encoders.contains("h264_videotoolbox"), "{:?}", encoders);
+    assert!(encoders.contains("h264_videotoolbox"), "{encoders:?}");
   }
 }
