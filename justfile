@@ -18,6 +18,8 @@ ci: forbid
 
 clippy: (watch 'lclippy --all-targets -- --deny warnings')
 
+test: (watch 'ltest')
+
 clean:
   rm -f reference/*.test.png
   rm -f capture.png

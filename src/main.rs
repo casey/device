@@ -108,7 +108,7 @@ use {
   },
   strum::{EnumDiscriminants, EnumIter, IntoEnumIterator, IntoStaticStr},
   tempfile::TempDir,
-  usized::{IntoU64, IntoUsize},
+  usized::{IntoU64, IntoU128, IntoUsize},
   vello::{kurbo, peniko},
   walkdir::WalkDir,
   wgpu::{
@@ -231,7 +231,10 @@ type Vec3f = nalgebra::Vector3<f32>;
 type Vec4f = nalgebra::Vector4<f32>;
 
 fn main() {
-  env_logger::init();
+  env_logger::Builder::new()
+    .filter_level(log::LevelFilter::Warn)
+    .parse_default_env()
+    .init();
 
   if let Err(err) = Arguments::parse().run() {
     eprintln!("error: {err}");

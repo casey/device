@@ -11,8 +11,8 @@ pub(crate) struct Recorder {
   end: Option<u64>,
   fps: Fps,
   frames: HashMap<u64, (Image, Sound)>,
+  frames_encoded: u64,
   heap: BinaryHeap<Reverse<u64>>,
-  next: u64,
   size: Vector2<NonZeroU32>,
   stdin: BufWriter<ChildStdin>,
   #[allow(unused)]
@@ -57,6 +57,12 @@ impl Recorder {
   pub(crate) fn finish(mut self, options: &Options, config: &Config) -> Result {
     assert!(self.heap.is_empty());
 
+    let frame_imbalance = self.frame_imbalance();
+
+    if frame_imbalance.abs() > 0.0 {
+      log::warn!("frame imbalance: {frame_imbalance:+.2}");
+    }
+
     self.stdin.flush().context(error::RecordingFlush)?;
     drop(self.stdin);
 
@@ -66,15 +72,6 @@ impl Recorder {
       .context(error::RecordingWait)?;
 
     Self::process_output(&output)?;
-
-    let video_duration = self.fps.duration().as_secs_f32() * self.next as f32;
-    log::info!("recorded video duration: {video_duration:.3}");
-
-    let frames = self.audio.frames();
-    let audio_duration = frames as f32 / self.audio.format().sample_rate as f32;
-    log::info!("recorded audio duration: {audio_duration:.3}");
-    let audio_overrun = audio_duration - video_duration;
-    log::info!("audio overrun: {audio_overrun:+.3}");
 
     self.audio.save(&self.tempdir_path.join(AUDIO))?;
 
@@ -131,20 +128,32 @@ impl Recorder {
     while self
       .heap
       .peek()
-      .is_some_and(|Reverse(frame)| *frame == self.next)
+      .is_some_and(|Reverse(frame)| *frame == self.frames_encoded)
     {
       let Reverse(frame) = self.heap.pop().unwrap();
-      assert_eq!(frame, self.next);
+      assert_eq!(frame, self.frames_encoded);
       let (image, sound) = self.frames.remove(&frame).unwrap();
       self
         .stdin
         .write_all(image.data())
         .context(error::RecordingWrite)?;
       self.audio.append(sound).unwrap();
-      self.next += 1;
+      self.frames_encoded += 1;
+    }
+
+    let frame_imbalance = self.frame_imbalance();
+
+    if frame_imbalance.abs() > 1.0 {
+      log::warn!("frame imbalance: {frame_imbalance:+.2}");
     }
 
     Ok(())
+  }
+
+  fn frame_imbalance(&self) -> f64 {
+    let audio_duration = self.audio.duration();
+    let expected_frames = audio_duration.div_duration_f64(self.fps.duration());
+    self.frames_encoded as f64 - expected_frames
   }
 
   pub(crate) fn new(
@@ -200,8 +209,8 @@ impl Recorder {
       end: None,
       fps,
       frames: HashMap::new(),
+      frames_encoded: 0,
       heap: BinaryHeap::new(),
-      next: 0,
       size,
       stdin,
       tempdir,
