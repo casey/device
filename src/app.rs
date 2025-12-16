@@ -435,60 +435,62 @@ impl ApplicationHandler for App {
   }
 
   fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-    if self.window.is_none() {
-      assert!(self.renderer.is_none());
+    if self.window.is_some() {
+      return;
+    }
 
-      let window = match event_loop
-        .create_window(
-          WindowAttributes::default()
-            .with_inner_size(PhysicalSize {
-              width: self.options.width.unwrap_or(DEFAULT_RESOLUTION).get(),
-              height: self.options.height.unwrap_or(DEFAULT_RESOLUTION).get(),
-            })
-            .with_min_inner_size(PhysicalSize {
-              width: 256,
-              height: 256,
-            })
-            .with_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)))
-            .with_title("device")
-            .with_platform_attributes(),
-        )
-        .context(error::CreateWindow)
-      {
-        Ok(window) => Arc::new(window),
-        Err(err) => {
-          self.errors.push(err);
-          event_loop.exit();
-          return;
-        }
-      };
+    assert!(self.renderer.is_none());
 
-      let (size, resolution) = self.size(window.inner_size());
-
-      self.window = Some(window.clone());
-
-      let renderer = match pollster::block_on(Renderer::new(
-        self.options.image_format(),
-        self.present_mode,
-        resolution,
-        size,
-        Some(window),
-      )) {
-        Ok(renderer) => renderer,
-        Err(err) => {
-          self.errors.push(err);
-          event_loop.exit();
-          return;
-        }
-      };
-
-      self.renderer = Some(renderer);
-
-      self.last = Instant::now();
-
-      if self.input.is_none() {
-        self.tap.play();
+    let window = match event_loop
+      .create_window(
+        WindowAttributes::default()
+          .with_inner_size(PhysicalSize {
+            width: self.options.width.unwrap_or(DEFAULT_RESOLUTION).get(),
+            height: self.options.height.unwrap_or(DEFAULT_RESOLUTION).get(),
+          })
+          .with_min_inner_size(PhysicalSize {
+            width: 256,
+            height: 256,
+          })
+          .with_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)))
+          .with_title("device")
+          .with_platform_attributes(),
+      )
+      .context(error::CreateWindow)
+    {
+      Ok(window) => Arc::new(window),
+      Err(err) => {
+        self.errors.push(err);
+        event_loop.exit();
+        return;
       }
+    };
+
+    let (size, resolution) = self.size(window.inner_size());
+
+    self.window = Some(window.clone());
+
+    let renderer = match pollster::block_on(Renderer::new(
+      self.options.image_format(),
+      self.present_mode,
+      resolution,
+      size,
+      Some(window),
+    )) {
+      Ok(renderer) => renderer,
+      Err(err) => {
+        self.errors.push(err);
+        event_loop.exit();
+        return;
+      }
+    };
+
+    self.renderer = Some(renderer);
+
+    self.last = Instant::now();
+
+    if self.input.is_none() {
+      self.tap.play();
     }
   }
 
