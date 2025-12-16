@@ -1,6 +1,7 @@
-use std::alloc::{GlobalAlloc, Layout, System};
-
-use std::sync::atomic::{AtomicUsize, Ordering};
+use {
+  super::*,
+  std::alloc::{GlobalAlloc, Layout, System},
+};
 
 pub(crate) struct Allocator;
 
@@ -12,7 +13,7 @@ static ALLOCATED: AtomicUsize = AtomicUsize::new(0);
 
 impl Allocator {
   pub(crate) fn allocated() -> usize {
-    ALLOCATED.load(Ordering::Relaxed)
+    ALLOCATED.load(atomic::Ordering::Relaxed)
   }
 }
 
@@ -20,7 +21,7 @@ unsafe impl GlobalAlloc for Allocator {
   unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
     let ptr = unsafe { System.alloc(layout) };
     if !ptr.is_null() {
-      ALLOCATED.fetch_add(layout.size(), Ordering::Relaxed);
+      ALLOCATED.fetch_add(layout.size(), atomic::Ordering::Relaxed);
     }
     ptr
   }
@@ -29,6 +30,6 @@ unsafe impl GlobalAlloc for Allocator {
     unsafe {
       System.dealloc(ptr, layout);
     }
-    ALLOCATED.fetch_sub(layout.size(), Ordering::Relaxed);
+    ALLOCATED.fetch_sub(layout.size(), atomic::Ordering::Relaxed);
   }
 }

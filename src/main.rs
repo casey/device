@@ -99,7 +99,7 @@ use {
     str::FromStr,
     sync::{
       Arc, Mutex,
-      atomic::{self, AtomicBool},
+      atomic::{self, AtomicBool, AtomicUsize},
       mpsc,
     },
     thread,
