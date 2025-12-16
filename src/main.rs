@@ -19,12 +19,12 @@ use {
     field::Field,
     filter::Filter,
     filter_uniforms::FilterUniforms,
-    format::Format,
     fps::Fps,
     frame::Frame,
     functions::{default, display, pad, tempdir},
     hub::Hub,
     image::Image,
+    image_format::ImageFormat,
     input::Input,
     into_stereo::IntoStereo,
     into_utf8_path::IntoUtf8Path,
@@ -162,13 +162,13 @@ mod event;
 mod field;
 mod filter;
 mod filter_uniforms;
-mod format;
 mod fps;
 mod frame;
 mod functions;
 mod generated;
 mod hub;
 mod image;
+mod image_format;
 mod input;
 mod into_stereo;
 mod into_utf8_path;

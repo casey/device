@@ -26,7 +26,7 @@ pub(crate) struct Options {
   #[arg(long, action = ArgAction::SetTrue)]
   pub(crate) fit: Option<bool>,
   #[arg(long)]
-  pub(crate) format: Option<Format>,
+  pub(crate) format: Option<ImageFormat>,
   #[arg(long)]
   pub(crate) fps: Option<Fps>,
   #[arg(long)]
@@ -84,7 +84,7 @@ impl Options {
     Ok(())
   }
 
-  pub(crate) fn format(&self) -> Option<Format> {
+  pub(crate) fn format(&self) -> Option<ImageFormat> {
     self
       .format
       .or_else(|| self.scene.and_then(Scene::format))

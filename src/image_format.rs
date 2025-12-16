@@ -1,7 +1,7 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug, Default, ValueEnum)]
-pub(crate) enum Format {
+pub(crate) enum ImageFormat {
   #[value(name("bgra8unorm"))]
   Bgra8Unorm,
   #[default]
@@ -9,7 +9,7 @@ pub(crate) enum Format {
   Bgra8UnormSrgb,
 }
 
-impl Display for Format {
+impl Display for ImageFormat {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     match self {
       Self::Bgra8Unorm => write!(f, "bgra8unorm"),
@@ -18,7 +18,7 @@ impl Display for Format {
   }
 }
 
-impl Format {
+impl ImageFormat {
   pub(crate) fn swizzle(self, src: &[u8], dst: &mut [u8]) {
     match self {
       Self::Bgra8Unorm | Self::Bgra8UnormSrgb => {
@@ -30,7 +30,7 @@ impl Format {
   }
 }
 
-impl TryFrom<TextureFormat> for Format {
+impl TryFrom<TextureFormat> for ImageFormat {
   type Error = Error;
 
   fn try_from(texture_format: TextureFormat) -> Result<Self> {
@@ -42,11 +42,11 @@ impl TryFrom<TextureFormat> for Format {
   }
 }
 
-impl From<Format> for TextureFormat {
-  fn from(format: Format) -> Self {
+impl From<ImageFormat> for TextureFormat {
+  fn from(format: ImageFormat) -> Self {
     match format {
-      Format::Bgra8Unorm => Self::Bgra8Unorm,
-      Format::Bgra8UnormSrgb => Self::Bgra8UnormSrgb,
+      ImageFormat::Bgra8Unorm => Self::Bgra8Unorm,
+      ImageFormat::Bgra8UnormSrgb => Self::Bgra8UnormSrgb,
     }
   }
 }

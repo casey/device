@@ -27,13 +27,13 @@ pub(crate) enum Scene {
 }
 
 impl Scene {
-  pub(crate) fn format(self) -> Option<Format> {
+  pub(crate) fn format(self) -> Option<ImageFormat> {
     match self {
       Self::Blaster
       | Self::Kaleidoscope
       | Self::Pattern
       | Self::Starburst
-      | Self::StarburstRandom => Some(Format::Bgra8Unorm),
+      | Self::StarburstRandom => Some(ImageFormat::Bgra8Unorm),
       _ => None,
     }
   }

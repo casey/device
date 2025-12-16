@@ -252,7 +252,7 @@ pub(crate) enum Error {
   #[snafu(display("Unsupported surface format `{format}`"))]
   UnsupportedSurfaceFormat {
     backtrace: Option<Backtrace>,
-    format: Format,
+    format: ImageFormat,
   },
   #[snafu(display("default texture format {texture_format:?} not supported"))]
   UnsupportedTextureFormat {
