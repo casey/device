@@ -289,7 +289,7 @@ impl App {
     {
       self.recorder = Some(Arc::new(Mutex::new(Recorder::new(
         &self.options,
-        renderer.resolution(),
+        renderer.size(),
         fps,
       )?)));
     }

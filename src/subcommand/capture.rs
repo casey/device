@@ -72,7 +72,7 @@ impl Capture {
 
     let mut samples = vec![0.0; spf.into_usize() * Tap::CHANNELS.into_usize()];
 
-    let mut recorder = Recorder::new(&options, resolution, fps)?;
+    let mut recorder = Recorder::new(&options, renderer.size(), fps)?;
 
     let mut done = false;
     for frame in 0.. {

@@ -12,7 +12,7 @@ pub(crate) struct Recorder {
   frames: HashMap<u64, (Image, Sound)>,
   heap: BinaryHeap<Reverse<u64>>,
   next: u64,
-  resolution: NonZeroU32,
+  size: Vector2<NonZeroU32>,
   stdin: BufWriter<ChildStdin>,
   #[allow(unused)]
   tempdir: TempDir,
@@ -58,7 +58,7 @@ impl Recorder {
   }
 
   pub(crate) fn frame(&mut self, frame: u64, image: Image, sound: Sound) -> Result {
-    if image.width() != self.resolution.get() || image.height() != self.resolution.get() {
+    if image.width() != self.size.x.get() || image.height() != self.size.y.get() {
       log::warn!("recording resolution changed");
       match self.end {
         Some(end) => self.end = Some(end.min(frame)),
@@ -94,13 +94,13 @@ impl Recorder {
     Ok(())
   }
 
-  pub(crate) fn new(options: &Options, resolution: NonZeroU32, fps: Fps) -> Result<Self> {
+  pub(crate) fn new(options: &Options, size: Vector2<NonZeroU32>, fps: Fps) -> Result<Self> {
     let (tempdir, tempdir_path) = tempdir()?;
 
     let mut encoder = Command::new("ffmpeg")
       .args(["-f", "rawvideo"])
       .args(["-pixel_format", "rgba"])
-      .args(["-video_size", &format!("{resolution}x{resolution}")])
+      .args(["-video_size", &format!("{}x{}", size.x, size.y)])
       .args(["-framerate", &fps.to_string()])
       .args(["-i", "-"])
       .args(["-c:v", "libx264"])
@@ -124,7 +124,7 @@ impl Recorder {
       frames: HashMap::new(),
       heap: BinaryHeap::new(),
       next: 0,
-      resolution,
+      size,
       stdin,
       tempdir,
       tempdir_path,
