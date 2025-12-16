@@ -10,8 +10,8 @@ pub(crate) struct Recorder {
   encoder: Child,
   end: Option<u64>,
   fps: Fps,
-  frame_count: u64,
   frames: HashMap<u64, (Image, Sound)>,
+  frames_encoded: u64,
   heap: BinaryHeap<Reverse<u64>>,
   size: Vector2<NonZeroU32>,
   stdin: BufWriter<ChildStdin>,
@@ -128,17 +128,17 @@ impl Recorder {
     while self
       .heap
       .peek()
-      .is_some_and(|Reverse(frame)| *frame == self.frame_count)
+      .is_some_and(|Reverse(frame)| *frame == self.frames_encoded)
     {
       let Reverse(frame) = self.heap.pop().unwrap();
-      assert_eq!(frame, self.frame_count);
+      assert_eq!(frame, self.frames_encoded);
       let (image, sound) = self.frames.remove(&frame).unwrap();
       self
         .stdin
         .write_all(image.data())
         .context(error::RecordingWrite)?;
       self.audio.append(sound).unwrap();
-      self.frame_count += 1;
+      self.frames_encoded += 1;
     }
 
     let frame_imbalance = self.frame_imbalance();
@@ -153,7 +153,7 @@ impl Recorder {
   fn frame_imbalance(&self) -> f64 {
     let audio_duration = self.audio.duration();
     let expected_frames = audio_duration.div_duration_f64(self.fps.duration());
-    self.frame_count as f64 - expected_frames
+    self.frames_encoded as f64 - expected_frames
   }
 
   pub(crate) fn new(
@@ -208,8 +208,8 @@ impl Recorder {
       encoder,
       end: None,
       fps,
-      frame_count: 0,
       frames: HashMap::new(),
+      frames_encoded: 0,
       heap: BinaryHeap::new(),
       size,
       stdin,
