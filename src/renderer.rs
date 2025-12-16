@@ -81,8 +81,8 @@ impl Renderer {
     self.queue.submit([encoder.finish()]);
 
     let buffer = capture.clone();
-    let resolution = self.resolution;
     let format = self.format;
+    let size = self.size;
     capture.map_async(MapMode::Read, .., move |result| {
       if let Err(err) = result {
         eprintln!("failed to map capture buffer: {err}");
@@ -93,13 +93,14 @@ impl Renderer {
         let view = buffer.get_mapped_range(..);
 
         let channels = COLOR_CHANNELS.into_usize();
-        let bytes_per_row = resolution.get().into_usize() * channels;
+        let bytes_per_row = size.x.get().into_usize() * channels;
 
         let mut image = Image::default();
-        image.resize(resolution.get(), resolution.get());
+        image.resize(size.x.get(), size.y.get());
         for (src, dst) in view
           .chunks(bytes_per_row_with_padding.into_usize())
           .map(|src| &src[..bytes_per_row])
+          .take(size.y.get().into_usize())
           .zip(image.data_mut().chunks_mut(bytes_per_row))
         {
           for (src, dst) in src.chunks(channels).zip(dst.chunks_mut(channels)) {
@@ -833,11 +834,6 @@ impl Renderer {
         CompositeUniforms {
           destination: true,
           source: true,
-          viewport: Mat3f::new_scaling(1.0 / self.resolution.get() as f32).to_affine(),
-        },
-        CompositeUniforms {
-          destination: true,
-          source: true,
           viewport: Mat3f::new_nonuniform_scaling(&Vec2f::new(
             1.0 / self.size.x.get() as f32,
             1.0 / self.size.y.get() as f32,
@@ -914,7 +910,7 @@ impl Renderer {
         &self.resources().overlay_bind_group,
         &mut encoder,
         None,
-        2,
+        1,
         &frame.texture.create_view(&TextureViewDescriptor::default()),
         &self.composite_pipeline,
       );
@@ -1177,12 +1173,12 @@ impl Renderer {
     });
   }
 
-  pub(crate) fn resolution(&self) -> NonZeroU32 {
-    self.resolution
-  }
-
   fn resources(&self) -> &Resources {
     self.resources.as_ref().unwrap()
+  }
+
+  pub(crate) fn size(&self) -> Vector2<NonZeroU32> {
+    self.size
   }
 
   fn target(&self) -> Target {

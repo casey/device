@@ -583,14 +583,6 @@ fn x_medium_odd() {
 
 #[test]
 #[ignore]
-fn x_oblong() {
-  let mut state = State::default();
-  state.invert().x().push();
-  Test::new(name!()).width(256).height(128).state(state).run();
-}
-
-#[test]
-#[ignore]
 fn x_scale() {
   let mut state = State::default();
   state.repeat(false).invert().x().scale(2.0).times(2);
@@ -632,4 +624,38 @@ fn x_small_odd() {
   let mut state = State::default();
   state.invert().x().push();
   Test::new(name!()).resolution(9).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_tall() {
+  let mut state = State::default();
+  state.invert().x().push();
+  Test::new(name!()).width(128).height(256).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_tall_fit() {
+  let mut state = State::default();
+  state.invert().x().push();
+  state.fit = true;
+  Test::new(name!()).width(128).height(256).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_wide() {
+  let mut state = State::default();
+  state.invert().x().push();
+  Test::new(name!()).width(256).height(128).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn x_wide_fit() {
+  let mut state = State::default();
+  state.invert().x().push();
+  state.fit = true;
+  Test::new(name!()).width(256).height(128).state(state).run();
 }
