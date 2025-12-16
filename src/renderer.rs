@@ -516,7 +516,7 @@ impl Renderer {
       let uniform_buffer = device.create_buffer(&BufferDescriptor {
         label: label!(),
         mapped_at_creation: false,
-        size: u64::from(uniform_buffer_stride) * 3,
+        size: u64::from(uniform_buffer_stride) * 2,
         usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
       });
 
