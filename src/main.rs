@@ -85,7 +85,7 @@ use {
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     cmp::Reverse,
-    collections::{BTreeMap, BinaryHeap, HashMap, HashSet, VecDeque},
+    collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, VecDeque},
     env, f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},

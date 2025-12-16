@@ -20,6 +20,39 @@ pub(crate) struct Recorder {
 }
 
 impl Recorder {
+  fn encoders() -> Result<BTreeSet<String>> {
+    let output = Command::new("ffmpeg")
+      .args(["-hide_banner", "-encoders"])
+      .output()
+      .context(error::RecordingInvoke)?;
+
+    Self::process_output(&output)?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    let mut encoders = BTreeSet::new();
+
+    let mut body = false;
+    for line in stdout.lines() {
+      let line = line.trim();
+
+      if line == "------" {
+        body = true;
+        continue;
+      }
+
+      if line.is_empty() || !body {
+        continue;
+      }
+
+      if let Some(encoder) = line.split_whitespace().nth(1) {
+        encoders.insert(encoder.into());
+      }
+    }
+
+    Ok(encoders)
+  }
+
   pub(crate) fn finish(mut self, options: &Options, config: &Config) -> Result {
     assert!(self.heap.is_empty());
 
@@ -31,7 +64,7 @@ impl Recorder {
       .wait_with_output()
       .context(error::RecordingWait)?;
 
-    Self::process_output(options, &output)?;
+    Self::process_output(&output)?;
 
     Sound::save(&self.tempdir_path.join(AUDIO), self.audio.iter())?;
 
@@ -48,7 +81,7 @@ impl Recorder {
       .output()
       .context(error::RecordingInvoke)?;
 
-    Self::process_output(options, &output)?;
+    Self::process_output(&output)?;
 
     let path = config.capture("mp4");
 
@@ -97,6 +130,14 @@ impl Recorder {
   pub(crate) fn new(options: &Options, size: Vector2<NonZeroU32>, fps: Fps) -> Result<Self> {
     let (tempdir, tempdir_path) = tempdir()?;
 
+    let encoders = Self::encoders()?;
+
+    let encoder_options: &[&str] = if encoders.contains("h264_videotoolbox") {
+      &["-c:v", "h264_videotoolbox", "-q:v", "23"]
+    } else {
+      &["-c:v", "libx264", "-crf", "18", "-preset", "slow"]
+    };
+
     let mut encoder = Command::new("ffmpeg")
       .args(["-f", "rawvideo"])
       .args(["-color_primaries", "bt709"])
@@ -107,10 +148,12 @@ impl Recorder {
       .args(["-pixel_format", "rgba"])
       .args(["-video_size", &format!("{}x{}", size.x, size.y)])
       .args(["-i", "-"])
-      .args(["-c:v", "libx264"])
-      .args(["-crf", "18"])
+      .args(encoder_options)
+      .args(["-color_range", "pc"])
+      .args(["-colorspace", "bt709"])
+      .args(["-color_primaries", "bt709"])
+      .args(["-color_trc", "bt709"])
       .args(["-pix_fmt", "yuv420p"])
-      .args(["-preset", "slow"])
       .arg(VIDEO)
       .current_dir(&tempdir_path)
       .stdin(Stdio::piped())
@@ -135,13 +178,16 @@ impl Recorder {
     })
   }
 
-  fn process_output(options: &Options, output: &process::Output) -> Result {
+  fn process_output(output: &process::Output) -> Result {
     if output.status.success() {
       return Ok(());
     }
 
-    if !options.verbose {
+    if !output.stdout.is_empty() {
       eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+    }
+
+    if !output.stderr.is_empty() {
       eprintln!("{}", String::from_utf8_lossy(&output.stderr));
     }
 
@@ -151,5 +197,17 @@ impl Recorder {
       }
       .build(),
     )
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[ignore]
+  #[test]
+  fn encoders() {
+    let encoders = Recorder::encoders().unwrap();
+    assert!(encoders.contains("h264_videotoolbox"), "{encoders:?}");
   }
 }
