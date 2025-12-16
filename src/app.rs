@@ -249,10 +249,6 @@ impl App {
   }
 
   fn redraw(&mut self, event_loop: &ActiveEventLoop) -> Result {
-    if let Some(fps) = self.options.fps {
-      self.deadline += fps.duration();
-    }
-
     self.window().set_cursor_visible(
       self.cursors.is_empty() || self.cursor_moved.elapsed().as_secs_f32() < 2.0,
     );
@@ -417,10 +413,11 @@ impl App {
 
 impl ApplicationHandler for App {
   fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-    if self.options.fps.is_some() {
+    if let Some(fps) = self.options.fps {
       let now = Instant::now();
 
-      if self.deadline <= now {
+      while self.deadline <= now {
+        self.deadline += fps.duration();
         self.window.as_ref().unwrap().request_redraw();
       }
 

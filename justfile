@@ -111,7 +111,6 @@ record-blaster:
     --width 3840 \
     --height 2160 \
     --program blaster \
-    --preset off \
     --verbose \
     run \
     --record

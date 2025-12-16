@@ -15,6 +15,10 @@ impl Sound {
       .map(|chunk| chunk.iter().sum::<f32>() / self.channels as f32)
   }
 
+  pub(crate) fn frames(&self) -> usize {
+    self.samples.len() / self.channels.into_usize()
+  }
+
   pub(crate) fn save<'a>(path: &Utf8Path, mut sounds: impl Iterator<Item = &'a Sound>) -> Result {
     let first = sounds.next();
 
