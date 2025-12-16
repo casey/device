@@ -326,13 +326,6 @@ impl App {
     Ok(())
   }
 
-  fn size(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
-    self.options.size(Vector2::new(
-      size.width.max(1).try_into().unwrap(),
-      size.height.max(1).try_into().unwrap(),
-    ))
-  }
-
   fn select_stream_config(
     configs: impl Iterator<Item = SupportedStreamConfigRange>,
     min_channels: u16,
@@ -392,6 +385,13 @@ impl App {
       "\\" => Some(12 + 10),
       _ => None,
     }
+  }
+
+  fn size(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
+    self.options.size(Vector2::new(
+      size.width.max(1).try_into().unwrap(),
+      size.height.max(1).try_into().unwrap(),
+    ))
   }
 
   pub(crate) fn window(&self) -> &Window {
