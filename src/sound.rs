@@ -27,6 +27,16 @@ impl Sound {
       .map(|chunk| chunk.iter().sum::<f32>() / self.format.channels as f32)
   }
 
+  pub(crate) fn duration(&self) -> Duration {
+    const NANOS_PER_SECOND: u128 = 1_000_000_000;
+    let nanoseconds =
+      self.frames().into_u128() * NANOS_PER_SECOND / u128::from(self.format.sample_rate);
+    Duration::new(
+      (nanoseconds / NANOS_PER_SECOND).try_into().unwrap(),
+      (nanoseconds % NANOS_PER_SECOND).try_into().unwrap(),
+    )
+  }
+
   pub(crate) fn empty(format: SoundFormat) -> Self {
     Self::new(format, Vec::new())
   }
@@ -64,5 +74,27 @@ impl Sound {
     writer.finalize().context(error::WaveFinalize { path })?;
 
     Ok(())
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn duration() {
+    let format = SoundFormat {
+      channels: 2,
+      sample_rate: 10,
+    };
+    assert_eq!(Sound::empty(format).duration(), Duration::from_secs(0));
+    assert_eq!(
+      Sound::new(format, vec![0.0; 10]).duration(),
+      Duration::from_millis(500)
+    );
+    assert_eq!(
+      Sound::new(format, vec![0.0; 20]).duration(),
+      Duration::from_secs(1)
+    );
   }
 }
