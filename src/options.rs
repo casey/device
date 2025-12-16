@@ -26,11 +26,11 @@ pub(crate) struct Options {
   #[arg(long, action = ArgAction::SetTrue)]
   pub(crate) fit: Option<bool>,
   #[arg(long)]
-  pub(crate) image_format: Option<ImageFormat>,
-  #[arg(long)]
   pub(crate) fps: Option<Fps>,
   #[arg(long)]
   pub(crate) height: Option<NonZeroU32>,
+  #[arg(long)]
+  pub(crate) image_format: Option<ImageFormat>,
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
   #[arg(long)]
