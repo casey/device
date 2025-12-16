@@ -84,7 +84,7 @@ impl Options {
     Ok(())
   }
 
-  pub(crate) fn format(&self) -> Option<ImageFormat> {
+  pub(crate) fn image_format(&self) -> Option<ImageFormat> {
     self
       .format
       .or_else(|| self.scene.and_then(Scene::format))
