@@ -9,7 +9,7 @@ pub(crate) struct Input {
 
 impl Input {
   pub(crate) fn drain(&self) -> Sound {
-    Sound::new(self.format, mem::take(&mut self.queue.lock().unwrap()))
+    Sound::new(self.format, self.queue.lock().unwrap().drain(..).collect())
   }
 
   pub(crate) fn new(
