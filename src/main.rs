@@ -1,5 +1,6 @@
 use {
   self::{
+    allocator::Allocator,
     analyzer::Analyzer,
     app::App,
     arguments::Arguments,
@@ -140,6 +141,7 @@ macro_rules! label {
   };
 }
 
+mod allocator;
 mod analyzer;
 mod app;
 mod arguments;

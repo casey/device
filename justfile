@@ -102,12 +102,16 @@ record-curtains:
     --record
 
 record-blaster:
-  cargo run --release -- \
+  cargo run \
+    --release \
+    --features allocator \
+    -- \
     --fit \
     --fps 60 \
     --width 3840 \
     --height 2160 \
     --program blaster \
+    --preset off \
     --verbose \
     run \
     --record

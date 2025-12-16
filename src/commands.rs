@@ -274,10 +274,17 @@ pub(crate) fn positive_x_translation(state: &mut State) {
   });
 }
 
-pub(crate) fn print(state: &mut State) {
+pub(crate) fn print(app: &mut App) {
+  let allocated = Allocator::allocated();
+
+  if allocated > 0 {
+    eprintln!("allocated: {allocated}");
+  }
+
   eprintln!(
-    "{}",
-    state
+    "filters: {}",
+    app
+      .state
       .filters
       .iter()
       .map(|filter| filter.preset.map_or("unknown", Preset::name))
