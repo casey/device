@@ -118,7 +118,6 @@ impl Options {
 
     state.db = self.db.unwrap_or(state.db);
     state.fit = self.fit.unwrap_or(state.fit);
-    state.fps = self.fps.or(state.fps);
     state.interpolate = self.interpolate.unwrap_or(state.interpolate);
     state.velocity = Vec4f::new(
       self.vx.unwrap_or(state.velocity.x),
