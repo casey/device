@@ -67,7 +67,7 @@ impl Recorder {
 
     Self::process_output(&output)?;
 
-    let video_duration = (self.fps.duration() * self.next as u32).as_secs_f32();
+    let video_duration = self.fps.duration().as_secs_f32() * self.next as f32;
     log::info!("recorded video duration: {video_duration:.3}");
 
     if let Some(first) = self.audio.first() {
