@@ -327,20 +327,10 @@ impl App {
   }
 
   fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
-    let size = Vector2::<NonZeroU32>::new(
-      self
-        .options
-        .width
-        .unwrap_or(size.width.max(1).try_into().unwrap()),
-      self
-        .options
-        .height
-        .unwrap_or(size.height.max(1).try_into().unwrap()),
-    );
-
-    let resolution = self.options.resolution.unwrap_or(size.x.max(size.y));
-
-    (size, resolution)
+    self.options.resolution(Vector2::new(
+      size.width.max(1).try_into().unwrap(),
+      size.height.max(1).try_into().unwrap(),
+    ))
   }
 
   fn select_stream_config(
