@@ -7,8 +7,8 @@ const VIDEO: &str = "video.mp4";
 
 pub(crate) struct Recorder {
   audio: Vec<Sound>,
+  encoder: Child,
   end: Option<u64>,
-  ffmpeg: Child,
   frames: HashMap<u64, (Image, Sound)>,
   heap: BinaryHeap<Reverse<u64>>,
   next: u64,
@@ -26,7 +26,10 @@ impl Recorder {
     self.stdin.flush().context(error::CaptureFlush)?;
     drop(self.stdin);
 
-    let output = self.ffmpeg.wait_with_output().context(error::CaptureWait)?;
+    let output = self
+      .encoder
+      .wait_with_output()
+      .context(error::CaptureWait)?;
 
     Self::process_output(options, &output)?;
 
@@ -94,7 +97,7 @@ impl Recorder {
   pub(crate) fn new(options: &Options, resolution: NonZeroU32, fps: Fps) -> Result<Self> {
     let (tempdir, tempdir_path) = tempdir()?;
 
-    let mut ffmpeg = Command::new("ffmpeg")
+    let mut encoder = Command::new("ffmpeg")
       .args(["-f", "rawvideo"])
       .args(["-pixel_format", "rgba"])
       .args(["-video_size", &format!("{resolution}x{resolution}")])
@@ -112,12 +115,12 @@ impl Recorder {
       .spawn()
       .context(error::CaptureInvoke)?;
 
-    let stdin = BufWriter::new(ffmpeg.stdin.take().unwrap());
+    let stdin = BufWriter::new(encoder.stdin.take().unwrap());
 
     Ok(Self {
       audio: Vec::new(),
+      encoder,
       end: None,
-      ffmpeg,
       frames: HashMap::new(),
       heap: BinaryHeap::new(),
       next: 0,
