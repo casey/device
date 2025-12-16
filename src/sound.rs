@@ -28,10 +28,7 @@ impl Sound {
   }
 
   pub(crate) fn empty(format: SoundFormat) -> Self {
-    Self {
-      format,
-      samples: Vec::new(),
-    }
+    Self::new(format, Vec::new())
   }
 
   pub(crate) fn format(&self) -> SoundFormat {
@@ -42,14 +39,8 @@ impl Sound {
     self.samples.len() / self.format.channels.into_usize()
   }
 
-  pub(crate) fn new(channels: u16, sample_rate: u32, samples: Vec<f32>) -> Self {
-    Self {
-      samples,
-      format: SoundFormat {
-        channels,
-        sample_rate,
-      },
-    }
+  pub(crate) fn new(format: SoundFormat, samples: Vec<f32>) -> Self {
+    Self { format, samples }
   }
 
   pub(crate) fn save(&self, path: &Utf8Path) -> Result {

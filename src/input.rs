@@ -1,19 +1,15 @@
 use super::*;
 
 pub(crate) struct Input {
+  format: SoundFormat,
   queue: Arc<Mutex<Vec<f32>>>,
   #[allow(unused)]
   stream: Stream,
-  stream_config: StreamConfig,
 }
 
 impl Input {
   pub(crate) fn drain(&self) -> Sound {
-    Sound::new(
-      self.stream_config.channels,
-      self.stream_config.sample_rate.0,
-      mem::take(&mut self.queue.lock().unwrap()),
-    )
+    Sound::new(self.format, mem::take(&mut self.queue.lock().unwrap()))
   }
 
   pub(crate) fn new(
@@ -55,9 +51,12 @@ impl Input {
     );
 
     Ok(Self {
+      format: SoundFormat {
+        channels: stream_config.channels,
+        sample_rate: stream_config.sample_rate.0,
+      },
       queue,
       stream,
-      stream_config,
     })
   }
 }

@@ -17,6 +17,7 @@ use {
 pub(crate) struct Tap {
   backend: Arc<Mutex<Backend>>,
   done: f64,
+  format: SoundFormat,
   muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
   sample_rate: u32,
@@ -37,7 +38,7 @@ impl Tap {
       .drain(..)
       .collect::<Vec<f32>>();
     self.time += (samples.len() / Self::CHANNELS.into_usize()) as f64 / self.sample_rate as f64;
-    Sound::new(Self::CHANNELS, self.sample_rate, samples)
+    Sound::new(self.format, samples)
   }
 
   pub(crate) fn is_done(&self) -> bool {
@@ -118,6 +119,10 @@ impl Tap {
         sequencer_backend,
       })),
       done: 0.0,
+      format: SoundFormat {
+        channels: Self::CHANNELS,
+        sample_rate,
+      },
       muted,
       paused,
       sample_rate,
