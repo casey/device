@@ -49,6 +49,9 @@ syn = "2.0.0"
 pretty_assertions = "1.0.0"
 tempfile = "3.17.1"
 
+[features]
+allocator = []
+
 [lints.rust]
 mismatched-lifetime-syntaxes = "allow"
 
