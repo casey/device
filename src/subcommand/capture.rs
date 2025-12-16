@@ -84,7 +84,7 @@ impl Capture {
 
     let mut samples = vec![0.0; spf.into_usize() * sound_format.channels.into_usize()];
 
-    let mut recorder = Recorder::new(&options, renderer.size(), fps, sound_format)?;
+    let mut recorder = Recorder::new(fps, &options, renderer.size(), sound_format)?;
 
     let mut done = false;
     for frame in 0.. {

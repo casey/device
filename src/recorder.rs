@@ -147,9 +147,9 @@ impl Recorder {
   }
 
   pub(crate) fn new(
+    fps: Fps,
     options: &Options,
     size: Vector2<NonZeroU32>,
-    fps: Fps,
     sound_format: SoundFormat,
   ) -> Result<Self> {
     let (tempdir, tempdir_path) = tempdir()?;
