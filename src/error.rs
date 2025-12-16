@@ -53,31 +53,6 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: cpal::SupportedStreamConfigsError,
   },
-  #[snafu(display("failed to flush captured video"))]
-  CaptureFlush {
-    backtrace: Option<Backtrace>,
-    source: io::Error,
-  },
-  #[snafu(display("failed to invoke capture command"))]
-  CaptureInvoke {
-    backtrace: Option<Backtrace>,
-    source: io::Error,
-  },
-  #[snafu(display("capture command failed"))]
-  CaptureStatus {
-    backtrace: Option<Backtrace>,
-    status: ExitStatus,
-  },
-  #[snafu(display("failed to wait for capture command"))]
-  CaptureWait {
-    backtrace: Option<Backtrace>,
-    source: io::Error,
-  },
-  #[snafu(display("failed to write captured video"))]
-  CaptureWrite {
-    backtrace: Option<Backtrace>,
-    source: io::Error,
-  },
   #[snafu(display("failed to deserialize config file at `{path}`"))]
   ConfigDeserialize {
     backtrace: Option<Backtrace>,
@@ -178,6 +153,11 @@ pub(crate) enum Error {
   },
   #[snafu(display("`--record` requires `--fps`"))]
   RecordRequiresFps { backtrace: Option<Backtrace> },
+  #[snafu(display("failed to flush recorded video"))]
+  RecordingFlush {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
   #[snafu(display("failed to invoke recording command"))]
   RecordingInvoke {
     backtrace: Option<Backtrace>,
@@ -187,6 +167,16 @@ pub(crate) enum Error {
   RecordingStatus {
     backtrace: Option<Backtrace>,
     status: ExitStatus,
+  },
+  #[snafu(display("failed to wait for recording command"))]
+  RecordingWait {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
+  #[snafu(display("failed to write recorded video"))]
+  RecordingWrite {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
   },
   #[snafu(display(
     "rendering failed: {error}{}",

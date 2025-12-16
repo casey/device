@@ -23,13 +23,13 @@ impl Recorder {
   pub(crate) fn finish(mut self, options: &Options, config: &Config) -> Result {
     assert!(self.heap.is_empty());
 
-    self.stdin.flush().context(error::CaptureFlush)?;
+    self.stdin.flush().context(error::RecordingFlush)?;
     drop(self.stdin);
 
     let output = self
       .encoder
       .wait_with_output()
-      .context(error::CaptureWait)?;
+      .context(error::RecordingWait)?;
 
     Self::process_output(options, &output)?;
 
@@ -86,7 +86,7 @@ impl Recorder {
       self
         .stdin
         .write_all(image.data())
-        .context(error::CaptureWrite)?;
+        .context(error::RecordingWrite)?;
       self.audio.push(sound);
       self.next += 1;
     }
@@ -113,7 +113,7 @@ impl Recorder {
       .stderr(options.stdio())
       .stdout(options.stdio())
       .spawn()
-      .context(error::CaptureInvoke)?;
+      .context(error::RecordingInvoke)?;
 
     let stdin = BufWriter::new(encoder.stdin.take().unwrap());
 
@@ -142,7 +142,7 @@ impl Recorder {
     }
 
     Err(
-      error::CaptureStatus {
+      error::RecordingStatus {
         status: output.status,
       }
       .build(),
