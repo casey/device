@@ -52,14 +52,6 @@ pub(crate) fn blaster(state: &mut State) {
     .map(|i| Preset::random(&mut state.rng, i))
     .collect::<Vec<Preset>>();
 
-  if log::log_enabled!(log::Level::Info) {
-    let presets = presets
-      .iter()
-      .map(|preset| preset.name())
-      .collect::<Vec<&str>>();
-    log::info!("stack: {}", presets.join(" "));
-  }
-
   state.truncate(0);
 
   state

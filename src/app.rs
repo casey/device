@@ -1,6 +1,7 @@
 use super::*;
 
 pub(crate) struct App {
+  pub(crate) allocated: usize,
   pub(crate) analyzer: Analyzer,
   pub(crate) bindings: Bindings,
   pub(crate) capture_rx: mpsc::Receiver<Result>,
@@ -159,6 +160,7 @@ impl App {
     let now = Instant::now();
 
     Ok(Self {
+      allocated: 0,
       analyzer: Analyzer::new(),
       bindings: Bindings::new(),
       capture_rx,
@@ -323,6 +325,15 @@ impl App {
         self.captures_pending -= 1;
       }
     }
+
+    let allocated = Allocator::allocated();
+
+    log::trace!(
+      "frame allocation delta: {}",
+      allocated.cast_signed() - self.allocated.cast_signed(),
+    );
+
+    self.allocated = allocated;
 
     Ok(())
   }
