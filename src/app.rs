@@ -291,9 +291,10 @@ impl App {
       && let Some(fps) = self.record
     {
       self.recorder = Some(Arc::new(Mutex::new(Recorder::new(
+        fps,
         &self.options,
         renderer.size(),
-        fps,
+        sound.format(),
       )?)));
     }
 

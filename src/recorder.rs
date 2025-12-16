@@ -6,7 +6,7 @@ use {
 const VIDEO: &str = "video.mp4";
 
 pub(crate) struct Recorder {
-  audio: Vec<Sound>,
+  audio: Sound,
   encoder: Child,
   end: Option<u64>,
   fps: Fps,
@@ -70,15 +70,13 @@ impl Recorder {
     let video_duration = self.fps.duration().as_secs_f32() * self.next as f32;
     log::info!("recorded video duration: {video_duration:.3}");
 
-    if let Some(first) = self.audio.first() {
-      let frames = self.audio.iter().map(Sound::frames).sum::<usize>();
-      let audio_duration = frames as f32 / first.sample_rate as f32;
-      log::info!("recorded audio duration: {audio_duration:.3}");
-      let audio_overrun = audio_duration - video_duration;
-      log::info!("audio overrun: {audio_overrun:+.3}");
-    }
+    let frames = self.audio.frames();
+    let audio_duration = frames as f32 / self.audio.format().sample_rate as f32;
+    log::info!("recorded audio duration: {audio_duration:.3}");
+    let audio_overrun = audio_duration - video_duration;
+    log::info!("audio overrun: {audio_overrun:+.3}");
 
-    Sound::save(&self.tempdir_path.join(AUDIO), self.audio.iter())?;
+    self.audio.save(&self.tempdir_path.join(AUDIO))?;
 
     let output = Command::new("ffmpeg")
       .arg("-hide_banner")
@@ -104,8 +102,17 @@ impl Recorder {
   }
 
   pub(crate) fn frame(&mut self, frame: u64, image: Image, sound: Sound) -> Result {
-    if image.width() != self.size.x.get() || image.height() != self.size.y.get() {
+    let change = if image.width() != self.size.x.get() || image.height() != self.size.y.get() {
       log::warn!("recording resolution changed");
+      true
+    } else if sound.format() != self.audio.format() {
+      log::warn!("sound format changed");
+      true
+    } else {
+      false
+    };
+
+    if change {
       match self.end {
         Some(end) => self.end = Some(end.min(frame)),
         None => self.end = Some(frame),
@@ -133,14 +140,19 @@ impl Recorder {
         .stdin
         .write_all(image.data())
         .context(error::RecordingWrite)?;
-      self.audio.push(sound);
+      self.audio.append(sound).unwrap();
       self.next += 1;
     }
 
     Ok(())
   }
 
-  pub(crate) fn new(options: &Options, size: Vector2<NonZeroU32>, fps: Fps) -> Result<Self> {
+  pub(crate) fn new(
+    fps: Fps,
+    options: &Options,
+    size: Vector2<NonZeroU32>,
+    sound_format: SoundFormat,
+  ) -> Result<Self> {
     let (tempdir, tempdir_path) = tempdir()?;
 
     let encoders = Self::encoders()?;
@@ -183,7 +195,7 @@ impl Recorder {
     let stdin = BufWriter::new(encoder.stdin.take().unwrap());
 
     Ok(Self {
-      audio: Vec::new(),
+      audio: Sound::empty(sound_format),
       encoder,
       end: None,
       fps,
