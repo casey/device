@@ -326,8 +326,8 @@ impl App {
     Ok(())
   }
 
-  fn resolution(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
-    self.options.resolution(Vector2::new(
+  fn size(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
+    self.options.size(Vector2::new(
       size.width.max(1).try_into().unwrap(),
       size.height.max(1).try_into().unwrap(),
     ))
@@ -449,7 +449,7 @@ impl ApplicationHandler for App {
         }
       };
 
-      let (size, resolution) = self.resolution(window.inner_size());
+      let (size, resolution) = self.size(window.inner_size());
 
       self.window = Some(window.clone());
 
@@ -515,7 +515,7 @@ impl ApplicationHandler for App {
         }
       }
       WindowEvent::Resized(size) => {
-        let (size, resolution) = self.resolution(size);
+        let (size, resolution) = self.size(size);
         self.renderer.as_mut().unwrap().resize(size, resolution);
         self.window().request_redraw();
       }

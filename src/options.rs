@@ -91,7 +91,7 @@ impl Options {
       .or_else(|| self.program.and_then(|program| program.scene().format()))
   }
 
-  pub(crate) fn resolution(&self, size: Vector2<NonZeroU32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
+  pub(crate) fn size(&self, size: Vector2<NonZeroU32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
     let size = Vector2::new(self.width.unwrap_or(size.x), self.height.unwrap_or(size.y));
     let resolution = self.resolution.unwrap_or(size.x.max(size.y));
     (size, resolution)
