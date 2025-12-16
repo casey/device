@@ -11,7 +11,7 @@ impl Sound {
     if other.format != self.format {
       return Err(format!(
         "format changed from {} to {}",
-        self.format, other.format
+        self.format, other.format,
       ));
     }
 
