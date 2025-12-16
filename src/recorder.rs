@@ -9,6 +9,7 @@ pub(crate) struct Recorder {
   audio: Vec<Sound>,
   encoder: Child,
   end: Option<u64>,
+  fps: Fps,
   frames: HashMap<u64, (Image, Sound)>,
   heap: BinaryHeap<Reverse<u64>>,
   next: u64,
@@ -66,9 +67,21 @@ impl Recorder {
 
     Self::process_output(&output)?;
 
+    let video_duration = self.fps.duration().as_secs_f32() * self.next as f32;
+    log::info!("recorded video duration: {video_duration:.3}");
+
+    if let Some(first) = self.audio.first() {
+      let frames = self.audio.iter().map(Sound::frames).sum::<usize>();
+      let audio_duration = frames as f32 / first.sample_rate as f32;
+      log::info!("recorded audio duration: {audio_duration:.3}");
+      let audio_overrun = audio_duration - video_duration;
+      log::info!("audio overrun: {audio_overrun:+.3}");
+    }
+
     Sound::save(&self.tempdir_path.join(AUDIO), self.audio.iter())?;
 
     let output = Command::new("ffmpeg")
+      .arg("-hide_banner")
       .args(["-i", VIDEO])
       .args(["-i", AUDIO])
       .args(["-c:v", "copy"])
@@ -143,6 +156,7 @@ impl Recorder {
     };
 
     let mut encoder = Command::new("ffmpeg")
+      .arg("-hide_banner")
       .args(["-f", "rawvideo"])
       .args(["-color_primaries", "bt709"])
       .args(["-color_range", "pc"])
@@ -172,6 +186,7 @@ impl Recorder {
       audio: Vec::new(),
       encoder,
       end: None,
+      fps,
       frames: HashMap::new(),
       heap: BinaryHeap::new(),
       next: 0,
