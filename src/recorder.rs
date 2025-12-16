@@ -20,6 +20,24 @@ pub(crate) struct Recorder {
 }
 
 impl Recorder {
+  fn process_output(options: &Options, output: &process::Output) -> Result {
+    if output.status.success() {
+      return Ok(());
+    }
+
+    if !options.verbose {
+      eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+      eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+    }
+
+    Err(
+      error::CaptureStatus {
+        status: output.status,
+      }
+      .build(),
+    )
+  }
+
   pub(crate) fn finish(mut self, options: &Options, config: &Config) -> Result {
     assert!(self.heap.is_empty());
 
@@ -28,19 +46,7 @@ impl Recorder {
 
     let output = self.ffmpeg.wait_with_output().context(error::CaptureWait)?;
 
-    if !output.status.success() {
-      if !options.verbose {
-        eprintln!("{}", String::from_utf8_lossy(&output.stdout));
-        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
-      }
-
-      return Err(
-        error::CaptureStatus {
-          status: output.status,
-        }
-        .build(),
-      );
-    }
+    Self::process_output(options, &output)?;
 
     Sound::save(&self.tempdir_path.join(AUDIO), self.audio.iter())?;
 
@@ -57,19 +63,7 @@ impl Recorder {
       .output()
       .context(error::RecordingInvoke)?;
 
-    if !output.status.success() {
-      if !options.verbose {
-        eprintln!("{}", String::from_utf8_lossy(&output.stdout));
-        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
-      }
-
-      return Err(
-        error::CaptureStatus {
-          status: output.status,
-        }
-        .build(),
-      );
-    }
+    Self::process_output(options, &output)?;
 
     let path = config.capture("mp4");
 
