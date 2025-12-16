@@ -22,6 +22,7 @@ pub(crate) struct App {
   pub(crate) options: Options,
   pub(crate) patch: Patch,
   pub(crate) present_mode: Option<PresentMode>,
+  pub(crate) record: Option<Fps>,
   pub(crate) recorder: Option<Arc<Mutex<Recorder>>>,
   pub(crate) renderer: Option<Renderer>,
   pub(crate) state: State,
@@ -78,8 +79,19 @@ impl App {
       }
     }
 
-    if let Some(recorder) = &self.recorder {
-      recorder.lock().unwrap().save(&self.options, &self.config)?;
+    if let Some(mut arc) = self.recorder.take() {
+      let mutex = loop {
+        match Arc::try_unwrap(arc) {
+          Ok(mutex) => break mutex,
+          Err(back) => arc = back,
+        }
+        hint::spin_loop();
+      };
+
+      mutex
+        .into_inner()
+        .unwrap()
+        .finish(&self.options, &self.config)?;
     }
 
     Ok(())
@@ -88,7 +100,7 @@ impl App {
   pub(crate) fn new(
     options: Options,
     present_mode: Option<PresentMode>,
-    record: bool,
+    record: Option<Fps>,
     config: Config,
   ) -> Result<Self> {
     let host = cpal::default_host();
@@ -139,10 +151,6 @@ impl App {
 
     options.add_source(&config, &mut tap)?;
 
-    let recorder = record
-      .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
-      .transpose()?;
-
     let state = options.state();
 
     let (capture_tx, capture_rx) = mpsc::channel();
@@ -171,7 +179,8 @@ impl App {
       options,
       patch: Patch::default(),
       present_mode,
-      recorder,
+      record,
+      recorder: None,
       renderer: None,
       state,
       tap,
@@ -274,6 +283,16 @@ impl App {
     let frame = renderer.frame();
 
     renderer.render(&self.analyzer, &self.state, now)?;
+
+    if self.recorder.is_none()
+      && let Some(fps) = self.record
+    {
+      self.recorder = Some(Arc::new(Mutex::new(Recorder::new(
+        &self.options,
+        renderer.resolution(),
+        fps,
+      )?)));
+    }
 
     if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();

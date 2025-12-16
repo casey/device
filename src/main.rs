@@ -84,10 +84,12 @@ use {
   std::{
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
-    collections::{BTreeMap, HashSet, VecDeque},
+    cmp::Reverse,
+    collections::{BTreeMap, BinaryHeap, HashMap, HashSet, VecDeque},
     env, f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},
+    hint,
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
@@ -104,7 +106,7 @@ use {
   },
   strum::{EnumDiscriminants, EnumIter, IntoEnumIterator, IntoStaticStr},
   tempfile::TempDir,
-  usized::{IntoU64, IntoU128, IntoUsize},
+  usized::{IntoU64, IntoUsize},
   vello::{kurbo, peniko},
   walkdir::WalkDir,
   wgpu::{
