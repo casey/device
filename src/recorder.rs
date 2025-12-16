@@ -195,6 +195,7 @@ impl Recorder {
     let stdin = BufWriter::new(encoder.stdin.take().unwrap());
 
     Ok(Self {
+      audio: Sound::empty(sound_format),
       encoder,
       end: None,
       fps,
@@ -205,7 +206,6 @@ impl Recorder {
       stdin,
       tempdir,
       tempdir_path,
-      audio: Sound::empty(sound_format),
     })
   }
 
