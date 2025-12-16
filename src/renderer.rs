@@ -24,6 +24,8 @@ pub(crate) struct Renderer {
   surface: Option<(Surface<'static>, SurfaceConfiguration)>,
 }
 
+const COMPOSITE_UNIFORMS: usize = 2;
+
 impl Renderer {
   const IMAGE_SUBRESOURCE_RANGE_FULL: ImageSubresourceRange = ImageSubresourceRange {
     array_layer_count: None,
@@ -516,7 +518,7 @@ impl Renderer {
       let uniform_buffer = device.create_buffer(&BufferDescriptor {
         label: label!(),
         mapped_at_creation: false,
-        size: u64::from(uniform_buffer_stride) * 2,
+        size: u64::from(uniform_buffer_stride) * COMPOSITE_UNIFORMS.into_u64(),
         usage: BufferUsages::COPY_DST | BufferUsages::UNIFORM,
       });
 
@@ -826,7 +828,7 @@ impl Renderer {
     };
 
     {
-      let uniforms = [
+      let uniforms: [CompositeUniforms; COMPOSITE_UNIFORMS] = [
         CompositeUniforms {
           destination: tiling.destination_read(filter_count),
           source: tiling.source_read(filter_count),
