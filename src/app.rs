@@ -22,6 +22,7 @@ pub(crate) struct App {
   pub(crate) options: Options,
   pub(crate) patch: Patch,
   pub(crate) present_mode: Option<PresentMode>,
+  pub(crate) record: Option<Fps>,
   pub(crate) recorder: Option<Arc<Mutex<Recorder>>>,
   pub(crate) renderer: Option<Renderer>,
   pub(crate) state: State,
@@ -78,8 +79,13 @@ impl App {
       }
     }
 
-    if let Some(recorder) = &self.recorder {
-      recorder.lock().unwrap().save(&self.options, &self.config)?;
+    if let Some(recorder) = self.recorder.take() {
+      Arc::try_unwrap(recorder)
+        .ok()
+        .unwrap()
+        .into_inner()
+        .unwrap()
+        .finish(&self.options, &self.config)?;
     }
 
     Ok(())
@@ -88,7 +94,7 @@ impl App {
   pub(crate) fn new(
     options: Options,
     present_mode: Option<PresentMode>,
-    record: bool,
+    record: Option<Fps>,
     config: Config,
   ) -> Result<Self> {
     let host = cpal::default_host();
@@ -139,10 +145,6 @@ impl App {
 
     options.add_source(&config, &mut tap)?;
 
-    let recorder = record
-      .then(|| Ok(Arc::new(Mutex::new(Recorder::new()?))))
-      .transpose()?;
-
     let state = options.state();
 
     let (capture_tx, capture_rx) = mpsc::channel();
@@ -152,6 +154,7 @@ impl App {
     Ok(Self {
       analyzer: Analyzer::new(),
       bindings: Bindings::new(),
+      recorder: None,
       capture_rx,
       capture_tx,
       captures_pending: 0,
@@ -167,11 +170,11 @@ impl App {
       input,
       last: now,
       mode: Mode::Normal,
+      record,
       modifiers: Modifiers::default(),
       options,
       patch: Patch::default(),
       present_mode,
-      recorder,
       renderer: None,
       state,
       tap,
@@ -274,6 +277,16 @@ impl App {
     let frame = renderer.frame();
 
     renderer.render(&self.analyzer, &self.state, now)?;
+
+    if let Some(fps) = self.record
+      && self.recorder.is_none()
+    {
+      self.recorder = Some(Arc::new(Mutex::new(Recorder::new(
+        &self.options,
+        renderer.resolution(),
+        fps,
+      )?)));
+    }
 
     if let Some(recorder) = &self.recorder {
       let recorder = recorder.clone();

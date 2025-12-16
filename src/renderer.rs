@@ -1177,6 +1177,10 @@ impl Renderer {
     });
   }
 
+  pub(crate) fn resolution(&self) -> NonZeroU32 {
+    self.resolution
+  }
+
   fn resources(&self) -> &Resources {
     self.resources.as_ref().unwrap()
   }

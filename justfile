@@ -106,5 +106,6 @@ record-blaster:
     --fps 60 \
     --resolution 2048 \
     --program blaster \
+    --verbose \
     run \
     --record

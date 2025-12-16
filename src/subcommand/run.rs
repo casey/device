@@ -10,7 +10,12 @@ pub(crate) struct Run {
 
 impl Run {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
-    let mut app = App::new(options, self.present_mode, self.record, config)?;
+    let record = self
+      .record
+      .then(|| options.fps.context(error::RecordFps))
+      .transpose()?;
+
+    let mut app = App::new(options, self.present_mode, record, config)?;
 
     let event_loop = EventLoop::with_user_event()
       .build()

@@ -21,6 +21,10 @@ impl Image {
     &mut self.data
   }
 
+  pub(crate) fn height(&self) -> u32 {
+    self.height
+  }
+
   #[allow(unused)]
   pub(crate) fn load(path: &Utf8Path) -> Result<Self> {
     let decoder = Decoder::new(BufReader::new(
@@ -213,6 +217,10 @@ impl Image {
     writer.finish().context(error::PngEncode { path })?;
 
     Ok(())
+  }
+
+  pub(crate) fn width(&self) -> u32 {
+    self.width
   }
 }
 
