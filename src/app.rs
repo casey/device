@@ -294,6 +294,7 @@ impl App {
         &self.options,
         renderer.size(),
         fps,
+        sound.format(),
       )?)));
     }
 

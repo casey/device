@@ -46,6 +46,7 @@ use {
     score::Score,
     shared::Shared,
     sound::Sound,
+    sound_format::SoundFormat,
     space::Space,
     state::State,
     stream_config_display::StreamConfigDisplay,
@@ -191,6 +192,7 @@ mod scene;
 mod score;
 mod shared;
 mod sound;
+mod sound_format;
 mod space;
 mod state;
 mod stream_config_display;

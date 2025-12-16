@@ -62,7 +62,7 @@ impl Analyzer {
 
     let n = self.complex_frequencies.len();
     let half = n / 2;
-    let spacing = sound.sample_rate as f32 / n as f32;
+    let spacing = sound.format().sample_rate as f32 / n as f32;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let threshold = (20.0 / spacing) as usize;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]

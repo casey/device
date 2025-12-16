@@ -37,11 +37,7 @@ impl Tap {
       .drain(..)
       .collect::<Vec<f32>>();
     self.time += (samples.len() / Self::CHANNELS.into_usize()) as f64 / self.sample_rate as f64;
-    Sound {
-      channels: Self::CHANNELS,
-      sample_rate: self.sample_rate,
-      samples,
-    }
+    Sound::new(Self::CHANNELS, self.sample_rate, samples)
   }
 
   pub(crate) fn is_done(&self) -> bool {

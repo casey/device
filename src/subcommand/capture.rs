@@ -33,7 +33,12 @@ pub(crate) struct Capture {
 
 impl Capture {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
-    let mut tap = Tap::new(&options, DEFAULT_SAMPLE_RATE);
+    let sound_format = SoundFormat {
+      sample_rate: DEFAULT_SAMPLE_RATE,
+      channels: Tap::CHANNELS,
+    };
+
+    let mut tap = Tap::new(&options, sound_format.sample_rate);
 
     options.add_source(&config, &mut tap)?;
 
@@ -77,9 +82,9 @@ impl Capture {
       ProgressBar::new_spinner().with_style(ProgressStyle::default_spinner().tick_chars(TICK_CHARS))
     };
 
-    let mut samples = vec![0.0; spf.into_usize() * Tap::CHANNELS.into_usize()];
+    let mut samples = vec![0.0; spf.into_usize() * sound_format.channels.into_usize()];
 
-    let mut recorder = Recorder::new(&options, renderer.size(), fps)?;
+    let mut recorder = Recorder::new(&options, renderer.size(), fps, sound_format)?;
 
     let mut done = false;
     for frame in 0.. {

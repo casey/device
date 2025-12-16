@@ -6,11 +6,11 @@ use {
 const VIDEO: &str = "video.mp4";
 
 pub(crate) struct Recorder {
-  audio: Vec<Sound>,
+  audio: Sound,
   encoder: Child,
   end: Option<u64>,
   fps: Fps,
-  frames: HashMap<u64, (Image, Sound)>,
+  frames: HashMap<u64, Image>,
   heap: BinaryHeap<Reverse<u64>>,
   next: u64,
   size: Vector2<NonZeroU32>,
@@ -70,15 +70,13 @@ impl Recorder {
     let video_duration = self.fps.duration().as_secs_f32() * self.next as f32;
     log::info!("recorded video duration: {video_duration:.3}");
 
-    if let Some(first) = self.audio.first() {
-      let frames = self.audio.iter().map(Sound::frames).sum::<usize>();
-      let audio_duration = frames as f32 / first.sample_rate as f32;
-      log::info!("recorded audio duration: {audio_duration:.3}");
-      let audio_overrun = audio_duration - video_duration;
-      log::info!("audio overrun: {audio_overrun:+.3}");
-    }
+    let frames = self.audio.frames();
+    let audio_duration = frames as f32 / self.audio.format().sample_rate as f32;
+    log::info!("recorded audio duration: {audio_duration:.3}");
+    let audio_overrun = audio_duration - video_duration;
+    log::info!("audio overrun: {audio_overrun:+.3}");
 
-    Sound::save(&self.tempdir_path.join(AUDIO), self.audio.iter())?;
+    self.audio.save(&self.tempdir_path.join(AUDIO))?;
 
     let output = Command::new("ffmpeg")
       .arg("-hide_banner")
@@ -104,8 +102,17 @@ impl Recorder {
   }
 
   pub(crate) fn frame(&mut self, frame: u64, image: Image, sound: Sound) -> Result {
-    if image.width() != self.size.x.get() || image.height() != self.size.y.get() {
+    let change = if image.width() != self.size.x.get() || image.height() != self.size.y.get() {
       log::warn!("recording resolution changed");
+      true
+    } else if let Err(err) = self.audio.append(sound) {
+      log::warn!("sound format changed: {err}");
+      true
+    } else {
+      false
+    };
+
+    if change {
       match self.end {
         Some(end) => self.end = Some(end.min(frame)),
         None => self.end = Some(frame),
@@ -119,7 +126,7 @@ impl Recorder {
     }
 
     self.heap.push(Reverse(frame));
-    self.frames.insert(frame, (image, sound));
+    self.frames.insert(frame, image);
 
     while self
       .heap
@@ -128,19 +135,23 @@ impl Recorder {
     {
       let Reverse(frame) = self.heap.pop().unwrap();
       assert_eq!(frame, self.next);
-      let (image, sound) = self.frames.remove(&frame).unwrap();
+      let image = self.frames.remove(&frame).unwrap();
       self
         .stdin
         .write_all(image.data())
         .context(error::RecordingWrite)?;
-      self.audio.push(sound);
       self.next += 1;
     }
 
     Ok(())
   }
 
-  pub(crate) fn new(options: &Options, size: Vector2<NonZeroU32>, fps: Fps) -> Result<Self> {
+  pub(crate) fn new(
+    options: &Options,
+    size: Vector2<NonZeroU32>,
+    fps: Fps,
+    sound_format: SoundFormat,
+  ) -> Result<Self> {
     let (tempdir, tempdir_path) = tempdir()?;
 
     let encoders = Self::encoders()?;
@@ -183,7 +194,6 @@ impl Recorder {
     let stdin = BufWriter::new(encoder.stdin.take().unwrap());
 
     Ok(Self {
-      audio: Vec::new(),
       encoder,
       end: None,
       fps,
@@ -194,6 +204,7 @@ impl Recorder {
       stdin,
       tempdir,
       tempdir_path,
+      audio: Sound::empty(sound_format),
     })
   }
 
