@@ -177,7 +177,7 @@ pub(crate) enum Error {
     source: png::EncodingError,
   },
   #[snafu(display("`--record` requires `--fps`"))]
-  RecordFps { backtrace: Option<Backtrace> },
+  RecordRequiresFps { backtrace: Option<Backtrace> },
   #[snafu(display("failed to invoke recording command"))]
   RecordingInvoke {
     backtrace: Option<Backtrace>,
