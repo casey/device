@@ -132,22 +132,10 @@ impl Recorder {
 
     let encoders = Self::encoders()?;
 
-    let encoder_options: &[[&str; 2]] = if encoders.contains("h264_videotoolbox") {
-      &[
-        ["-c:v", "h264_videotoolbox"],
-        ["-b:v", "50M"],
-        ["-maxrate", "75M"],
-        ["-bufsize", "100M"],
-        ["-profile:v", "high"],
-        ["-pix_fmt", "yuv420p"],
-      ]
+    let encoder_options: &[&str] = if encoders.contains("h264_videotoolbox") {
+      &["-c:v", "h264_videotoolbox", "-q:v", "23"]
     } else {
-      &[
-        ["-c:v", "libx264"],
-        ["-crf", "18"],
-        ["-preset", "slow"],
-        ["-pix_fmt", "yuv420p"],
-      ]
+      &["-c:v", "libx264", "-crf", "18", "-preset", "slow"]
     };
 
     let mut encoder = Command::new("ffmpeg")
@@ -160,11 +148,12 @@ impl Recorder {
       .args(["-pixel_format", "rgba"])
       .args(["-video_size", &format!("{}x{}", size.x, size.y)])
       .args(["-i", "-"])
-      .args(encoder_options.iter().flatten())
+      .args(encoder_options)
       .args(["-color_range", "pc"])
       .args(["-colorspace", "bt709"])
       .args(["-color_primaries", "bt709"])
       .args(["-color_trc", "bt709"])
+      .args(["-pix_fmt", "yuv420p"])
       .arg(VIDEO)
       .current_dir(&tempdir_path)
       .stdin(Stdio::piped())
