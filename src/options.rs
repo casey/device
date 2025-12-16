@@ -1,6 +1,9 @@
 use {
   super::*,
-  clap::builder::styling::{AnsiColor, Effects, Styles},
+  clap::{
+    ArgAction,
+    builder::styling::{AnsiColor, Effects, Styles},
+  },
 };
 
 const AUDIO: &str = "audio";
@@ -20,10 +23,14 @@ const AUDIO: &str = "audio";
 pub(crate) struct Options {
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) db: Option<f32>,
+  #[arg(long, action = ArgAction::SetTrue)]
+  pub(crate) fit: Option<bool>,
   #[arg(long)]
   pub(crate) format: Option<Format>,
   #[arg(long)]
   pub(crate) fps: Option<Fps>,
+  #[arg(long)]
+  pub(crate) height: Option<NonZeroU32>,
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
   #[arg(long)]
@@ -36,10 +43,6 @@ pub(crate) struct Options {
   pub(crate) program: Option<Program>,
   #[arg(long)]
   pub(crate) resolution: Option<NonZeroU32>,
-  #[arg(long)]
-  pub(crate) width: Option<NonZeroU32>,
-  #[arg(long)]
-  pub(crate) height: Option<NonZeroU32>,
   #[arg(long)]
   pub(crate) scene: Option<Scene>,
   #[arg(group = AUDIO, long)]
@@ -60,6 +63,8 @@ pub(crate) struct Options {
   pub(crate) vy: Option<f32>,
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) vz: Option<f32>,
+  #[arg(long)]
+  pub(crate) width: Option<NonZeroU32>,
 }
 
 impl Options {
@@ -106,6 +111,7 @@ impl Options {
     }
 
     state.db = self.db.unwrap_or(state.db);
+    state.fit = self.fit.unwrap_or(state.fit);
     state.fps = self.fps.or(state.fps);
     state.interpolate = self.interpolate.unwrap_or(state.interpolate);
     state.velocity = Vec4f::new(

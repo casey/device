@@ -103,6 +103,7 @@ record-curtains:
 
 record-blaster:
   cargo run --release -- \
+    --fit \
     --fps 60 \
     --width 3840 \
     --height 2160 \
