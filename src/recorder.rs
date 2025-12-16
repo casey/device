@@ -133,7 +133,7 @@ impl Recorder {
     let encoders = Self::encoders()?;
 
     let encoder_options: &[&str] = if encoders.contains("h264_videotoolbox") {
-      &["-c:v", "h264_videotoolbox", "-q:v", "23"]
+      &["-c:v", "h264_videotoolbox", "-q:v", "100"]
     } else {
       &["-c:v", "libx264", "-crf", "18", "-preset", "slow"]
     };
