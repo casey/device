@@ -3,13 +3,13 @@ use {
   std::alloc::{GlobalAlloc, Layout, System},
 };
 
-pub(crate) struct Allocator;
+static ALLOCATED: AtomicUsize = AtomicUsize::new(0);
 
 #[cfg(feature = "allocator")]
 #[global_allocator]
 static ALLOCATOR: Allocator = Allocator;
 
-static ALLOCATED: AtomicUsize = AtomicUsize::new(0);
+pub(crate) struct Allocator;
 
 impl Allocator {
   pub(crate) fn allocated() -> usize {
