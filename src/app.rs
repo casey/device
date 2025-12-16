@@ -79,10 +79,16 @@ impl App {
       }
     }
 
-    if let Some(recorder) = self.recorder.take() {
-      Arc::try_unwrap(recorder)
-        .ok()
-        .unwrap()
+    if let Some(mut arc) = self.recorder.take() {
+      let mutex = loop {
+        match Arc::try_unwrap(arc) {
+          Ok(mutex) => break mutex,
+          Err(back) => arc = back,
+        }
+        hint::spin_loop();
+      };
+
+      mutex
         .into_inner()
         .unwrap()
         .finish(&self.options, &self.config)?;

@@ -89,6 +89,7 @@ use {
     env, f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},
+    hint,
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
