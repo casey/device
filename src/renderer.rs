@@ -7,7 +7,7 @@ pub(crate) struct Renderer {
   filter_pipeline: Pipeline,
   filtering_sampler: Sampler,
   font_context: FontContext,
-  format: Format,
+  format: ImageFormat,
   frame: u64,
   frame_times: VecDeque<Instant>,
   frequencies: TextureView,
@@ -211,7 +211,7 @@ impl Renderer {
   fn create_render_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &PipelineLayout,
-    format: Format,
+    format: ImageFormat,
     vertex: &str,
     fragment: &str,
   ) -> RenderPipeline {
@@ -402,7 +402,7 @@ impl Renderer {
   }
 
   pub(crate) async fn new(
-    format: Option<Format>,
+    format: Option<ImageFormat>,
     present_mode: Option<PresentMode>,
     resolution: NonZeroU32,
     size: Vector2<NonZeroU32>,
@@ -447,7 +447,7 @@ impl Renderer {
         }
         format
       } else {
-        Format::try_from(formats[0])?
+        ImageFormat::try_from(formats[0])?
       };
 
       let mut config = surface
