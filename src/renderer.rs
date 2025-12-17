@@ -37,7 +37,7 @@ impl Renderer {
 
   fn bytes_per_row_with_padding(&self) -> u32 {
     const MASK: u32 = COPY_BYTES_PER_ROW_ALIGNMENT - 1;
-    (self.resolution.get() * COLOR_CHANNELS + MASK) & !MASK
+    (self.resolution.get() * u32::try_from(COLOR_CHANNELS).unwrap() + MASK) & !MASK
   }
 
   pub(crate) fn capture(&self, callback: impl FnOnce(Image) + Send + 'static) -> Result {
@@ -95,8 +95,7 @@ impl Renderer {
       thread::spawn(move || {
         let view = buffer.get_mapped_range(..);
 
-        let channels = COLOR_CHANNELS.into_usize();
-        let bytes_per_row = size.x.get().into_usize() * channels;
+        let bytes_per_row = size.x.get().into_usize() * COLOR_CHANNELS;
 
         let mut image = Image::default();
         image.resize(size.x.get(), size.y.get());
@@ -106,8 +105,11 @@ impl Renderer {
           .take(size.y.get().into_usize())
           .zip(image.data_mut().chunks_mut(bytes_per_row))
         {
-          for (src, dst) in src.chunks(channels).zip(dst.chunks_mut(channels)) {
-            format.swizzle(src, dst);
+          for (src, dst) in src
+            .chunks(COLOR_CHANNELS)
+            .zip(dst.chunks_mut(COLOR_CHANNELS))
+          {
+            format.swizzle(src.try_into().unwrap(), dst.try_into().unwrap());
           }
         }
 

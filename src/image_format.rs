@@ -21,11 +21,10 @@ impl Display for ImageFormat {
 }
 
 impl ImageFormat {
-  pub(crate) fn swizzle(self, src: &[u8], dst: &mut [u8]) {
+  pub(crate) fn swizzle(self, src: [u8; COLOR_CHANNELS], dst: &mut [u8; COLOR_CHANNELS]) {
     match self {
       Self::Bgra8Unorm | Self::Bgra8UnormSrgb => {
-        let [b, g, r, a] = src.try_into().unwrap();
-        let dst = <&mut [u8; 4]>::try_from(dst).unwrap();
+        let [b, g, r, a] = src;
         *dst = [r, g, b, a];
       }
     }

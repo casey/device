@@ -213,7 +213,7 @@ const KIB: usize = 1 << 10;
 const MIB: usize = KIB << 10;
 
 const AUDIO: &str = "audio.wav";
-const COLOR_CHANNELS: u32 = 4;
+const COLOR_CHANNELS: usize = 4;
 const DEFAULT_BUFFER_SIZE: u32 = 128;
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
 const RECORDING: &str = "recording.mp4";
