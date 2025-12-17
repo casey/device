@@ -1,6 +1,7 @@
 use super::*;
 
 pub(crate) struct Renderer {
+  capture_thread: CaptureThread,
   composite_pipeline: Pipeline,
   device: wgpu::Device,
   error_channel: mpsc::Receiver<wgpu::Error>,
@@ -47,9 +48,9 @@ impl Renderer {
       .device
       .create_command_encoder(&CommandEncoderDescriptor::default());
 
-    let captures = self.resources().captures.clone();
+    let pool = self.resources().pool.clone();
 
-    let capture = captures.lock().unwrap().pop().unwrap_or_else(|| {
+    let buffer = pool.lock().unwrap().pop().unwrap_or_else(|| {
       log::info!("creating new capture buffer");
       self.device.create_buffer(&BufferDescriptor {
         label: label!(),
@@ -67,7 +68,7 @@ impl Renderer {
         aspect: TextureAspect::All,
       },
       TexelCopyBufferInfo {
-        buffer: &capture,
+        buffer: &buffer,
         layout: TexelCopyBufferLayout {
           bytes_per_row: Some(bytes_per_row_with_padding),
           rows_per_image: None,
@@ -83,51 +84,31 @@ impl Renderer {
 
     self.queue.submit([encoder.finish()]);
 
-    let buffer = capture.clone();
-    let format = self.format;
-    let size = self.size;
-    capture.map_async(MapMode::Read, .., move |result| {
+    let capture = Capture {
+      buffer: buffer.clone(),
+      bytes_per_row_with_padding: bytes_per_row_with_padding.into_usize(),
+      callback: Box::new(callback),
+      pool,
+      format: self.format,
+      size: self.size,
+    };
+
+    let tx = self.capture_thread.tx().clone();
+    buffer.map_async(MapMode::Read, .., move |result| {
       if let Err(err) = result {
         eprintln!("failed to map capture buffer: {err}");
         return;
       }
-
-      let result = thread_spawn("capture", move || {
-        let view = buffer.get_mapped_range(..);
-
-        let bytes_per_row = size.x.get().into_usize() * COLOR_CHANNELS;
-
-        let mut image = Image::default();
-        image.resize(size.x.get(), size.y.get());
-        for (src, dst) in view
-          .chunks(bytes_per_row_with_padding.into_usize())
-          .map(|src| &src[..bytes_per_row])
-          .take(size.y.get().into_usize())
-          .zip(image.data_mut().chunks_mut(bytes_per_row))
-        {
-          for (src, dst) in src
-            .chunks(COLOR_CHANNELS)
-            .zip(dst.chunks_mut(COLOR_CHANNELS))
-          {
-            format.swizzle(src.try_into().unwrap(), dst.try_into().unwrap());
-          }
-        }
-
-        drop(view);
-
-        buffer.unmap();
-
-        captures.lock().unwrap().push(buffer);
-
-        callback(image);
-      });
-
-      if let Err(err) = result {
-        eprintln!("{err}");
-      }
+      tx.send(capture).ok();
     });
 
     Ok(())
+  }
+
+  fn clamp_resolution(limits: &Limits, resolution: NonZeroU32) -> NonZeroU32 {
+    resolution
+      .min(limits.max_texture_dimension_2d.try_into().unwrap())
+      .min(5808.try_into().unwrap())
   }
 
   fn composite_bind_group(&self, back: &TextureView, front: &TextureView) -> BindGroup {
@@ -403,6 +384,10 @@ impl Renderer {
     })
   }
 
+  pub(crate) fn finish(self) -> Result {
+    self.capture_thread.finish()
+  }
+
   pub(crate) fn frame(&self) -> u64 {
     self.frame
   }
@@ -633,6 +618,7 @@ impl Renderer {
       filter_pipeline,
       filtering_sampler,
       font_context: FontContext::new(),
+      capture_thread: CaptureThread::new()?,
       format,
       frame: 0,
       frame_times: VecDeque::with_capacity(100),
@@ -1133,9 +1119,8 @@ impl Renderer {
       surface.configure(&self.device, config);
     }
 
-    self.resolution = resolution
-      .min(self.limits.max_texture_dimension_2d.try_into().unwrap())
-      .min(5808.try_into().unwrap());
+    self.resolution = Self::clamp_resolution(&self.limits, resolution);
+
     self.size = size;
 
     let tiling_view = self
@@ -1184,7 +1169,7 @@ impl Renderer {
     let overlay_bind_group = self.composite_bind_group(&tiling_view, &overlay_view);
 
     self.resources = Some(Resources {
-      captures: Arc::new(Mutex::new(Vec::new())),
+      pool: Arc::new(Mutex::new(Vec::new())),
       overlay_bind_group,
       overlay_view,
       targets,
@@ -1280,36 +1265,20 @@ mod tests {
   use super::*;
 
   #[test]
-  #[ignore]
   fn resolution_is_clamped_to_2d_texture_limit() {
-    let resolution = 65536.try_into().unwrap();
-    let size = Size::new(resolution, resolution);
-    let mut renderer =
-      pollster::block_on(Renderer::new(None, None, resolution, size, None)).unwrap();
-    renderer.resize(size, resolution);
+    let resolution = Renderer::clamp_resolution(
+      &Limits {
+        max_texture_dimension_2d: 100,
+        ..default()
+      },
+      101.try_into().unwrap(),
+    );
+    assert_eq!(resolution, 100.try_into().unwrap());
   }
 
   #[test]
-  #[ignore]
   fn resolution_is_clamped_to_vello_render_bug_limit() {
-    env_logger::init();
-
-    let resolution = 5809.try_into().unwrap();
-    let size = Size::new(resolution, resolution);
-    let mut renderer =
-      pollster::block_on(Renderer::new(None, None, resolution, size, None)).unwrap();
-    renderer.resize(size, resolution);
-    renderer
-      .render(
-        &Analyzer::new(),
-        State::default().text(Some(Text {
-          string: "hi".into(),
-          size: 1.0,
-          x: 1.0,
-          y: 1.0,
-        })),
-        Instant::now(),
-      )
-      .unwrap();
+    let resolution = Renderer::clamp_resolution(&Limits::default(), 5809.try_into().unwrap());
+    assert_eq!(resolution, 5808.try_into().unwrap());
   }
 }

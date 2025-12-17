@@ -47,21 +47,6 @@ impl App {
     }
   }
 
-  pub(crate) fn errors(self) -> Result {
-    let mut errors = self.errors.into_iter();
-
-    if let Some(source) = errors.next() {
-      Err(
-        error::AppExit {
-          additional: errors.collect::<Vec<Error>>(),
-        }
-        .into_error(Box::new(source)),
-      )
-    } else {
-      Ok(())
-    }
-  }
-
   fn exit(&mut self) -> Result {
     self.tap.pause();
 
@@ -74,6 +59,27 @@ impl App {
     }
 
     Ok(())
+  }
+
+  pub(crate) fn finish(mut self) -> Result {
+    if let Some(renderer) = self.renderer
+      && let Err(err) = renderer.finish()
+    {
+      self.errors.push(err);
+    }
+
+    let mut errors = self.errors.into_iter();
+
+    if let Some(source) = errors.next() {
+      Err(
+        error::AppExit {
+          additional: errors.collect::<Vec<Error>>(),
+        }
+        .into_error(Box::new(source)),
+      )
+    } else {
+      Ok(())
+    }
   }
 
   pub(crate) fn new(
