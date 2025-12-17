@@ -249,10 +249,17 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
+  #[snafu(display("Surface not compatible with adapter"))]
+  UnsupportedSurfaceAdapter { backtrace: Option<Backtrace> },
   #[snafu(display("Unsupported surface format `{format}`"))]
   UnsupportedSurfaceFormat {
     backtrace: Option<Backtrace>,
     format: ImageFormat,
+  },
+  #[snafu(display("Unsupported surface present mode `{present_mode}`"))]
+  UnsupportedSurfacePresentMode {
+    backtrace: Option<Backtrace>,
+    present_mode: PresentMode,
   },
   #[snafu(display("default texture format {texture_format:?} not supported"))]
   UnsupportedTextureFormat {
