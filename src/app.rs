@@ -322,7 +322,7 @@ impl App {
     self.process_messages(event_loop);
 
     let sound = if let Some(input) = &self.input {
-      input.drain(self.spf)
+      input.drain_exact(self.spf)
     } else {
       self.tap.drain_exact(self.spf)
     };

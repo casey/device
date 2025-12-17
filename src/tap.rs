@@ -35,17 +35,13 @@ impl Tap {
   pub(crate) fn drain_exact(&mut self, count: Option<usize>) -> Option<Sound> {
     let mut backend = self.backend.lock().unwrap();
 
-    if let Some(count) = count
-      && backend.samples.len() < count
-    {
+    let count = count.unwrap_or(backend.samples.len());
+
+    if backend.samples.len() < count {
       return None;
     }
 
-    let end = count.unwrap_or(backend.samples.len());
-
-    let samples = backend.samples.drain(..end).collect();
-
-    let sound = Sound::new(self.format, samples);
+    let sound = Sound::new(self.format, backend.samples.drain(..count).collect());
 
     self.time += sound.duration();
 
