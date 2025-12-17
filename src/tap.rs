@@ -43,12 +43,13 @@ impl Tap {
 
     let end = count.unwrap_or(backend.samples.len());
 
-    let samples = backend.samples.drain(..end).collect::<Vec<f32>>();
+    let samples = backend.samples.drain(..end).collect();
 
-    self.time +=
-      (samples.len() / Self::CHANNELS.into_usize()) as f64 / self.format.sample_rate as f64;
+    let sound = Sound::new(self.format, samples);
 
-    Some(Sound::new(self.format, samples))
+    self.time += sound.duration().as_secs_f64();
+
+    Some(sound)
   }
 
   pub(crate) fn format(&self) -> SoundFormat {
