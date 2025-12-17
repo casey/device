@@ -35,6 +35,8 @@ impl CaptureThread {
 
     capture.pool.lock().unwrap().push(capture.buffer);
 
+    drop(capture.pool);
+
     (capture.callback)(image);
   }
 
