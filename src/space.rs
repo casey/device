@@ -78,7 +78,7 @@ mod tests {
   use super::*;
 
   #[test]
-  fn composed_transformations_are_identity() {
+  fn composed_transformation_is_identity_transformation() {
     for space in Space::iter() {
       let net = space.inverse() * space.forward();
       assert!(net.is_identity(0.001));
