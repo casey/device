@@ -1,7 +1,7 @@
 use super::*;
 
 pub(crate) struct CaptureThread {
-  buffer_sender: mpsc::Sender<Capture>,
+  tx: mpsc::Sender<Capture>,
   join_handle: JoinHandle<()>,
 }
 
@@ -39,7 +39,7 @@ impl CaptureThread {
   }
 
   pub(crate) fn finish(self) -> Result {
-    drop(self.buffer_sender);
+    drop(self.tx);
 
     match self.join_handle.join() {
       Ok(()) => Ok(()),
@@ -48,7 +48,7 @@ impl CaptureThread {
   }
 
   pub(crate) fn new() -> Result<Self> {
-    let (buffer_sender, rx) = mpsc::channel();
+    let (tx, rx) = mpsc::channel();
 
     let join_handle = thread_spawn("capture", move || {
       loop {
@@ -60,13 +60,10 @@ impl CaptureThread {
       }
     })?;
 
-    Ok(Self {
-      buffer_sender,
-      join_handle,
-    })
+    Ok(Self { tx, join_handle })
   }
 
   pub(crate) fn tx(&self) -> &mpsc::Sender<Capture> {
-    &self.buffer_sender
+    &self.tx
   }
 }

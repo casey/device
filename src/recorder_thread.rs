@@ -1,13 +1,13 @@
 use super::*;
 
 pub(crate) struct RecorderThread {
-  frame_sender: mpsc::Sender<(u64, Image, Sound)>,
+  tx: mpsc::Sender<(u64, Image, Sound)>,
   join_handle: JoinHandle<Result<Recorder>>,
 }
 
 impl RecorderThread {
   pub(crate) fn finish(self, options: &Options, config: &Config) -> Result {
-    drop(self.frame_sender);
+    drop(self.tx);
 
     match self.join_handle.join() {
       Ok(Ok(recorder)) => recorder.finish(options, config),
@@ -21,7 +21,7 @@ impl RecorderThread {
   }
 
   pub(crate) fn new(mut recorder: Recorder) -> Result<Self> {
-    let (frame_sender, rx) = mpsc::channel();
+    let (tx, rx) = mpsc::channel();
 
     let join_handle = thread_spawn("recorder", move || {
       loop {
@@ -35,13 +35,10 @@ impl RecorderThread {
       Ok(recorder)
     })?;
 
-    Ok(Self {
-      frame_sender,
-      join_handle,
-    })
+    Ok(Self { tx, join_handle })
   }
 
   pub(crate) fn tx(&self) -> &mpsc::Sender<(u64, Image, Sound)> {
-    &self.frame_sender
+    &self.tx
   }
 }
