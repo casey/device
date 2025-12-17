@@ -8,6 +8,8 @@ use {
     bindings::Bindings,
     bool_ext::BoolExt,
     callback::Callback,
+    capture::Capture,
+    capture_thread::CaptureThread,
     command::Command,
     commands::Commands,
     composite_uniforms::CompositeUniforms,
@@ -151,6 +153,8 @@ mod axis;
 mod bindings;
 mod bool_ext;
 mod callback;
+mod capture;
+mod capture_thread;
 mod color;
 mod command;
 mod commands;

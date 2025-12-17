@@ -16,6 +16,7 @@ pub(crate) struct Renderer {
   non_filtering_sampler: Sampler,
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
+  capture_thread: CaptureThread,
   queue: Queue,
   resolution: NonZeroU32,
   resources: Option<Resources>,
@@ -49,7 +50,7 @@ impl Renderer {
 
     let captures = self.resources().captures.clone();
 
-    let capture = captures.lock().unwrap().pop().unwrap_or_else(|| {
+    let buffer = captures.lock().unwrap().pop().unwrap_or_else(|| {
       log::info!("creating new capture buffer");
       self.device.create_buffer(&BufferDescriptor {
         label: label!(),
@@ -67,7 +68,7 @@ impl Renderer {
         aspect: TextureAspect::All,
       },
       TexelCopyBufferInfo {
-        buffer: &capture,
+        buffer: &buffer,
         layout: TexelCopyBufferLayout {
           bytes_per_row: Some(bytes_per_row_with_padding),
           rows_per_image: None,
@@ -83,48 +84,24 @@ impl Renderer {
 
     self.queue.submit([encoder.finish()]);
 
-    let buffer = capture.clone();
+    let capture = Capture {
+      buffer: buffer.clone(),
+      bytes_per_row_with_padding: bytes_per_row_with_padding.into_usize(),
+      callback: Box::new(callback),
+      captures,
+      format: self.format,
+      size: self.size,
+    };
+
     let format = self.format;
     let size = self.size;
-    capture.map_async(MapMode::Read, .., move |result| {
+    let tx = self.capture_thread.tx().clone();
+    buffer.map_async(MapMode::Read, .., move |result| {
       if let Err(err) = result {
         eprintln!("failed to map capture buffer: {err}");
         return;
       }
-
-      let result = thread_spawn("capture", move || {
-        let view = buffer.get_mapped_range(..);
-
-        let bytes_per_row = size.x.get().into_usize() * COLOR_CHANNELS;
-
-        let mut image = Image::default();
-        image.resize(size.x.get(), size.y.get());
-        for (src, dst) in view
-          .chunks(bytes_per_row_with_padding.into_usize())
-          .map(|src| &src[..bytes_per_row])
-          .take(size.y.get().into_usize())
-          .zip(image.data_mut().chunks_mut(bytes_per_row))
-        {
-          for (src, dst) in src
-            .chunks(COLOR_CHANNELS)
-            .zip(dst.chunks_mut(COLOR_CHANNELS))
-          {
-            format.swizzle(src.try_into().unwrap(), dst.try_into().unwrap());
-          }
-        }
-
-        drop(view);
-
-        buffer.unmap();
-
-        captures.lock().unwrap().push(buffer);
-
-        callback(image);
-      });
-
-      if let Err(err) = result {
-        eprintln!("{err}");
-      }
+      tx.send(capture).ok();
     });
 
     Ok(())
@@ -633,6 +610,7 @@ impl Renderer {
       filter_pipeline,
       filtering_sampler,
       font_context: FontContext::new(),
+      capture_thread: CaptureThread::new()?,
       format,
       frame: 0,
       frame_times: VecDeque::with_capacity(100),

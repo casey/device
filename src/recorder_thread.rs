@@ -21,7 +21,7 @@ impl RecorderThread {
   }
 
   pub(crate) fn new(mut recorder: Recorder) -> Result<Self> {
-    let (frame_sender, rx) = mpsc::channel::<(u64, Image, Sound)>();
+    let (frame_sender, rx) = mpsc::channel();
 
     let join_handle = thread_spawn("recorder", move || {
       loop {
