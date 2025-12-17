@@ -65,7 +65,7 @@ impl Capture {
 
     let fps = options.fps.unwrap_or(DEFAULT_FPS.try_into().unwrap());
 
-    let spf = fps.spf(tap.sample_rate())?;
+    let spf = fps.spf(tap.format())?;
 
     let (tx, rx) = mpsc::channel();
 
@@ -82,7 +82,7 @@ impl Capture {
       ProgressBar::new_spinner().with_style(ProgressStyle::default_spinner().tick_chars(TICK_CHARS))
     };
 
-    let mut samples = vec![0.0; spf.into_usize() * sound_format.channels.into_usize()];
+    let mut samples = vec![0.0; spf];
 
     let mut recorder = Recorder::new(fps, &options, renderer.size(), sound_format)?;
 

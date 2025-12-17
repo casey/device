@@ -2,14 +2,28 @@ use super::*;
 
 pub(crate) struct Input {
   format: SoundFormat,
-  queue: Arc<Mutex<Vec<f32>>>,
+  samples: Arc<Mutex<Vec<f32>>>,
   #[allow(unused)]
   stream: Stream,
 }
 
 impl Input {
-  pub(crate) fn drain(&self) -> Sound {
-    Sound::new(self.format, self.queue.lock().unwrap().drain(..).collect())
+  pub(crate) fn drain(&self, min: Option<usize>) -> Option<Sound> {
+    let mut samples = self.samples.lock().unwrap();
+
+    if let Some(min) = min
+      && samples.len() < min
+    {
+      return None;
+    }
+
+    let end = min.unwrap_or(samples.len());
+
+    Some(Sound::new(self.format, samples.drain(..end).collect()))
+  }
+
+  pub(crate) fn format(&self) -> SoundFormat {
+    self.format
   }
 
   pub(crate) fn new(
@@ -25,15 +39,15 @@ impl Input {
       SupportedBufferSize::Unknown => BufferSize::Default,
     };
 
-    let queue = Arc::new(Mutex::new(Vec::new()));
+    let samples = Arc::new(Mutex::new(Vec::new()));
 
     let stream = device
       .build_input_stream(
         &stream_config,
         {
-          let queue = queue.clone();
+          let samples = samples.clone();
           move |data: &[f32], _: &cpal::InputCallbackInfo| {
-            queue.lock().unwrap().extend(data);
+            samples.lock().unwrap().extend(data);
           }
         },
         move |err| {
@@ -55,7 +69,7 @@ impl Input {
         channels: stream_config.channels,
         sample_rate: stream_config.sample_rate.0,
       },
-      queue,
+      samples,
       stream,
     })
   }
