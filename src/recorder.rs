@@ -141,7 +141,7 @@ impl Recorder {
       self.frames_encoded += 1;
     }
 
-    if self.heap.len() > 1 {
+    if !self.heap.is_empty() {
       log::warn!("pending frames: {}", self.heap.len());
     }
 
