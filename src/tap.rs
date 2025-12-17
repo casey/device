@@ -16,13 +16,13 @@ use {
 
 pub(crate) struct Tap {
   backend: Arc<Mutex<Backend>>,
-  done: f64,
+  done: Duration,
   format: SoundFormat,
   muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
   sequencer: Sequencer,
   stream: Option<Stream>,
-  time: f64,
+  time: Duration,
 }
 
 impl Tap {
@@ -47,7 +47,7 @@ impl Tap {
 
     let sound = Sound::new(self.format, samples);
 
-    self.time += sound.duration().as_secs_f64();
+    self.time += sound.duration();
 
     Some(sound)
   }
@@ -133,7 +133,7 @@ impl Tap {
         samples: Vec::new(),
         sequencer_backend,
       })),
-      done: 0.0,
+      done: Duration::ZERO,
       format: SoundFormat {
         channels: Self::CHANNELS,
         sample_rate,
@@ -142,7 +142,7 @@ impl Tap {
       paused,
       sequencer,
       stream: None,
-      time: 0.0,
+      time: Duration::ZERO,
     }
   }
 
@@ -158,7 +158,7 @@ impl Tap {
   where
     T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
   {
-    self.done = self.done.max(self.time + duration);
+    self.done = self.done.max(self.time + Duration::from_secs_f64(duration));
     self.sequencer.push_relative(
       0.0,
       duration,
