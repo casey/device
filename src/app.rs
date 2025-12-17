@@ -47,11 +47,25 @@ impl App {
     }
   }
 
+  fn exit(&mut self) -> Result {
+    self.tap.pause();
+
+    if let Some(renderer) = &self.renderer {
+      renderer.poll()?;
+    }
+
+    if let Some(recorder) = self.recorder.take() {
+      recorder.finish(&self.options, &self.config)?;
+    }
+
+    Ok(())
+  }
+
   pub(crate) fn finish(mut self) -> Result {
-    if let Some(renderer) = self.renderer {
-      if let Err(err) = renderer.finish() {
-        self.errors.push(err);
-      }
+    if let Some(renderer) = self.renderer
+      && let Err(err) = renderer.finish()
+    {
+      self.errors.push(err);
     }
 
     let mut errors = self.errors.into_iter();
@@ -66,20 +80,6 @@ impl App {
     } else {
       Ok(())
     }
-  }
-
-  fn exit(&mut self) -> Result {
-    self.tap.pause();
-
-    if let Some(renderer) = &self.renderer {
-      renderer.poll()?;
-    }
-
-    if let Some(recorder) = self.recorder.take() {
-      recorder.finish(&self.options, &self.config)?;
-    }
-
-    Ok(())
   }
 
   pub(crate) fn new(

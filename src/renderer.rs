@@ -378,6 +378,10 @@ impl Renderer {
     })
   }
 
+  pub(crate) fn finish(self) -> Result {
+    self.capture_thread.finish()
+  }
+
   pub(crate) fn frame(&self) -> u64 {
     self.frame
   }
@@ -925,10 +929,6 @@ impl Renderer {
     self.frame += 1;
 
     Ok(())
-  }
-
-  pub(crate) fn finish(self) -> Result {
-    self.capture_thread.finish()
   }
 
   pub(crate) fn render_overlay(&mut self, state: &State, fps: Option<f32>) -> Result {

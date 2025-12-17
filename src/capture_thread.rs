@@ -1,8 +1,8 @@
 use super::*;
 
 pub(crate) struct CaptureThread {
+  handle: JoinHandle<()>,
   tx: mpsc::Sender<Capture>,
-  join_handle: JoinHandle<()>,
 }
 
 impl CaptureThread {
@@ -41,7 +41,7 @@ impl CaptureThread {
   pub(crate) fn finish(self) -> Result {
     drop(self.tx);
 
-    match self.join_handle.join() {
+    match self.handle.join() {
       Ok(()) => Ok(()),
       Err(panic_value) => Err(error::RecordingJoin { panic_value }.build()),
     }
@@ -50,7 +50,7 @@ impl CaptureThread {
   pub(crate) fn new() -> Result<Self> {
     let (tx, rx) = mpsc::channel();
 
-    let join_handle = thread_spawn("capture", move || {
+    let handle = thread_spawn("capture", move || {
       loop {
         let Ok(capture) = rx.recv() else {
           break;
@@ -60,7 +60,7 @@ impl CaptureThread {
       }
     })?;
 
-    Ok(Self { tx, join_handle })
+    Ok(Self { handle, tx })
   }
 
   pub(crate) fn tx(&self) -> &mpsc::Sender<Capture> {
