@@ -112,7 +112,9 @@ impl Image {
   pub(crate) fn resize(&mut self, width: u32, height: u32) {
     self.height = height;
     self.width = width;
-    self.data.resize((width * height * 4).into_usize(), 0);
+    self
+      .data
+      .resize(width.into_usize() * height.into_usize() * COLOR_CHANNELS, 0);
   }
 
   pub(crate) fn save(&self, path: &Utf8Path) -> Result {
@@ -123,8 +125,8 @@ impl Image {
     let mut alpha = false;
     let mut color = false;
     let mut continuous = false;
-    for chunk in self.data.chunks(4) {
-      let chunk: [u8; 4] = chunk.try_into().unwrap();
+    for chunk in self.data.chunks(COLOR_CHANNELS) {
+      let chunk: [u8; COLOR_CHANNELS] = chunk.try_into().unwrap();
       let [r, g, b, a] = chunk;
 
       if a != OPAQUE {
@@ -163,10 +165,10 @@ impl Image {
       let stride = width.div_ceil(8);
       let mut data = vec![0; stride * height];
 
-      for (index, chunk) in self.data.chunks(4).enumerate() {
+      for (index, chunk) in self.data.chunks(COLOR_CHANNELS).enumerate() {
         let value = chunk[0];
 
-        assert_eq!(chunk.len(), 4);
+        assert_eq!(chunk.len(), COLOR_CHANNELS);
         assert!(value == 0 || value == u8::MAX);
 
         if value == u8::MAX {
@@ -184,21 +186,21 @@ impl Image {
         ColorType::Grayscale => Cow::Owned(
           self
             .data
-            .chunks(4)
+            .chunks(COLOR_CHANNELS)
             .map(|chunk| chunk[0])
             .collect::<Vec<u8>>(),
         ),
         ColorType::GrayscaleAlpha => Cow::Owned(
           self
             .data
-            .chunks(4)
+            .chunks(COLOR_CHANNELS)
             .flat_map(|chunk| [chunk[0], chunk[3]])
             .collect::<Vec<u8>>(),
         ),
         ColorType::Rgb => Cow::Owned(
           self
             .data
-            .chunks(4)
+            .chunks(COLOR_CHANNELS)
             .flat_map(|chunk| &chunk[0..3])
             .copied()
             .collect::<Vec<u8>>(),
