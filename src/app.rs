@@ -82,6 +82,70 @@ impl App {
     }
   }
 
+  fn initialize(&mut self, event_loop: &ActiveEventLoop) -> Result {
+    assert!(self.window.is_none());
+    assert!(self.renderer.is_none());
+
+    let window = Arc::new(
+      event_loop
+        .create_window(
+          WindowAttributes::default()
+            .with_inner_size(PhysicalSize {
+              width: self.options.width.unwrap_or(DEFAULT_RESOLUTION).get(),
+              height: self.options.height.unwrap_or(DEFAULT_RESOLUTION).get(),
+            })
+            .with_min_inner_size(PhysicalSize {
+              width: 256,
+              height: 256,
+            })
+            .with_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)))
+            .with_title("device")
+            .with_platform_attributes(),
+        )
+        .context(error::CreateWindow)?,
+    );
+
+    let (size, resolution) = self.size(window.inner_size());
+
+    if let Some(fps) = self.options.fps {
+      match window.current_monitor() {
+        Some(monitor) => match monitor.refresh_rate_millihertz() {
+          Some(mhz) => {
+            if mhz < fps.fps().get() * 1000 {
+              log::warn!(
+                "monitor refresh rate less than requested fps: {}.{} Hz",
+                mhz / 1000,
+                mhz % 1000,
+              );
+            }
+          }
+          None => log::warn!("failed to get current monitor refresh rate"),
+        },
+        None => log::warn!("failed to get current monitor"),
+      }
+    }
+
+    self.window = Some(window.clone());
+
+    let renderer = pollster::block_on(Renderer::new(
+      self.options.image_format(),
+      self.present_mode,
+      resolution,
+      size,
+      Some(window),
+    ))?;
+
+    self.renderer = Some(renderer);
+
+    self.last = Instant::now();
+
+    if self.input.is_none() {
+      self.tap.play();
+    }
+
+    Ok(())
+  }
+
   pub(crate) fn new(
     config: Config,
     fullscreen: bool,
@@ -405,80 +469,11 @@ impl ApplicationHandler for App {
   }
 
   fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-    if self.window.is_some() {
-      return;
-    }
-
-    assert!(self.renderer.is_none());
-
-    let window = match event_loop
-      .create_window(
-        WindowAttributes::default()
-          .with_inner_size(PhysicalSize {
-            width: self.options.width.unwrap_or(DEFAULT_RESOLUTION).get(),
-            height: self.options.height.unwrap_or(DEFAULT_RESOLUTION).get(),
-          })
-          .with_min_inner_size(PhysicalSize {
-            width: 256,
-            height: 256,
-          })
-          .with_fullscreen(self.fullscreen.then_some(Fullscreen::Borderless(None)))
-          .with_title("device")
-          .with_platform_attributes(),
-      )
-      .context(error::CreateWindow)
+    if self.window.is_none()
+      && let Err(err) = self.initialize(event_loop)
     {
-      Ok(window) => Arc::new(window),
-      Err(err) => {
-        self.errors.push(err);
-        event_loop.exit();
-        return;
-      }
-    };
-
-    let (size, resolution) = self.size(window.inner_size());
-
-    if let Some(fps) = self.options.fps {
-      match window.current_monitor() {
-        Some(monitor) => match monitor.refresh_rate_millihertz() {
-          Some(mhz) => {
-            if mhz < fps.fps().get() * 1000 {
-              log::warn!(
-                "monitor refresh rate less than requested fps: {}.{} Hz",
-                mhz / 1000,
-                mhz % 1000,
-              );
-            }
-          }
-          None => log::warn!("failed to get current monitor refresh rate"),
-        },
-        None => log::warn!("failed to get current monitor"),
-      }
-    }
-
-    self.window = Some(window.clone());
-
-    let renderer = match pollster::block_on(Renderer::new(
-      self.options.image_format(),
-      self.present_mode,
-      resolution,
-      size,
-      Some(window),
-    )) {
-      Ok(renderer) => renderer,
-      Err(err) => {
-        self.errors.push(err);
-        event_loop.exit();
-        return;
-      }
-    };
-
-    self.renderer = Some(renderer);
-
-    self.last = Instant::now();
-
-    if self.input.is_none() {
-      self.tap.play();
+      self.errors.push(err);
+      event_loop.exit();
     }
   }
 
