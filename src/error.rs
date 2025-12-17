@@ -249,6 +249,8 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
+  #[snafu(display("Surface not compatible with adapter"))]
+  UnsupportedSurfaceAdapter { backtrace: Option<Backtrace> },
   #[snafu(display("Unsupported surface format `{format}`"))]
   UnsupportedSurfaceFormat {
     backtrace: Option<Backtrace>,

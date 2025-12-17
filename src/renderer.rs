@@ -442,7 +442,7 @@ impl Renderer {
       let capabilities = surface.get_capabilities(&adapter);
 
       let Some(preferred_format) = capabilities.formats.first() else {
-        todo!()
+        return Err(error::UnsupportedSurfaceAdapter.build());
       };
 
       let mut config = surface
