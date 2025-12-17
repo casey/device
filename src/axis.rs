@@ -31,7 +31,6 @@ impl Axis {
   }
 
   pub(crate) fn rotate(self, angle: f32) -> Mat4f {
-    let transformation = Mat4f::from_axis_angle(&self.axis(), angle);
-    color::CENTERED_RGB_INVERSE * transformation * color::CENTERED_RGB
+    Space::CenteredRgb.transform(Mat4f::from_axis_angle(&self.axis(), angle))
   }
 }
