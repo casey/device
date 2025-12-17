@@ -27,7 +27,7 @@ impl Run {
 
     event_loop.run_app(&mut app).context(error::AppRun)?;
 
-    app.errors()?;
+    app.finish()?;
 
     Ok(())
   }

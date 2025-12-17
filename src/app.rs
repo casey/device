@@ -47,7 +47,13 @@ impl App {
     }
   }
 
-  pub(crate) fn errors(self) -> Result {
+  pub(crate) fn finish(mut self) -> Result {
+    if let Some(renderer) = self.renderer {
+      if let Err(err) = renderer.finish() {
+        self.errors.push(err);
+      }
+    }
+
     let mut errors = self.errors.into_iter();
 
     if let Some(source) = errors.next() {
