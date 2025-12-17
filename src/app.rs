@@ -217,11 +217,12 @@ impl App {
     let now = Instant::now();
 
     let spf = if let Some(fps) = record {
-      if let Some(input) = &input {
-        Some(fps.spf(input.format())?)
+      let format = if let Some(input) = &input {
+        input.format()
       } else {
-        Some(fps.spf(tap.format())?)
-      }
+        tap.format()
+      };
+      Some(fps.spf(format)?)
     } else {
       None
     };
