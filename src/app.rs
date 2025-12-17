@@ -400,8 +400,8 @@ impl App {
     }
   }
 
-  fn size(&self, size: PhysicalSize<u32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
-    self.options.size(Vector2::new(
+  fn size(&self, size: PhysicalSize<u32>) -> (Size, NonZeroU32) {
+    self.options.size(Size::new(
       size.width.max(1).try_into().unwrap(),
       size.height.max(1).try_into().unwrap(),
     ))

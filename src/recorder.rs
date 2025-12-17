@@ -13,7 +13,7 @@ pub(crate) struct Recorder {
   frames: HashMap<u64, (Image, Sound)>,
   frames_encoded: u64,
   heap: BinaryHeap<Reverse<u64>>,
-  size: Vector2<NonZeroU32>,
+  size: Size,
   stdin: BufWriter<ChildStdin>,
   #[allow(unused)]
   tempdir: TempDir,
@@ -159,7 +159,7 @@ impl Recorder {
   pub(crate) fn new(
     fps: Fps,
     options: &Options,
-    size: Vector2<NonZeroU32>,
+    size: Size,
     sound_format: SoundFormat,
   ) -> Result<Self> {
     let (tempdir, tempdir_path) = tempdir()?;

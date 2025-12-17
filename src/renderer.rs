@@ -20,7 +20,7 @@ pub(crate) struct Renderer {
   resolution: NonZeroU32,
   resources: Option<Resources>,
   samples: TextureView,
-  size: Vector2<NonZeroU32>,
+  size: Size,
   surface: Option<(Surface<'static>, SurfaceConfiguration)>,
 }
 
@@ -407,7 +407,7 @@ impl Renderer {
     format: Option<ImageFormat>,
     present_mode: Option<PresentMode>,
     resolution: NonZeroU32,
-    size: Vector2<NonZeroU32>,
+    size: Size,
     window: Option<Arc<Window>>,
   ) -> Result<Self> {
     let instance = Instance::default();
@@ -1117,7 +1117,7 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn resize(&mut self, size: Vector2<NonZeroU32>, resolution: NonZeroU32) {
+  pub(crate) fn resize(&mut self, size: Size, resolution: NonZeroU32) {
     if let Some((surface, config)) = &mut self.surface {
       config.height = size.y.get();
       config.width = size.x.get();
@@ -1188,7 +1188,7 @@ impl Renderer {
     self.resources.as_ref().unwrap()
   }
 
-  pub(crate) fn size(&self) -> Vector2<NonZeroU32> {
+  pub(crate) fn size(&self) -> Size {
     self.size
   }
 
@@ -1274,7 +1274,7 @@ mod tests {
   #[ignore]
   fn resolution_is_clamped_to_2d_texture_limit() {
     let resolution = 65536.try_into().unwrap();
-    let size = Vector2::new(resolution, resolution);
+    let size = Size::new(resolution, resolution);
     let mut renderer =
       pollster::block_on(Renderer::new(None, None, resolution, size, None)).unwrap();
     renderer.resize(size, resolution);
@@ -1286,7 +1286,7 @@ mod tests {
     env_logger::init();
 
     let resolution = 5809.try_into().unwrap();
-    let size = Vector2::new(resolution, resolution);
+    let size = Size::new(resolution, resolution);
     let mut renderer =
       pollster::block_on(Renderer::new(None, None, resolution, size, None)).unwrap();
     renderer.resize(size, resolution);

@@ -95,8 +95,8 @@ impl Options {
       })
   }
 
-  pub(crate) fn size(&self, size: Vector2<NonZeroU32>) -> (Vector2<NonZeroU32>, NonZeroU32) {
-    let size = Vector2::new(self.width.unwrap_or(size.x), self.height.unwrap_or(size.y));
+  pub(crate) fn size(&self, size: Size) -> (Size, NonZeroU32) {
+    let size = Size::new(self.width.unwrap_or(size.x), self.height.unwrap_or(size.y));
     let resolution = self.resolution.unwrap_or(size.x.max(size.y));
     (size, resolution)
   }
