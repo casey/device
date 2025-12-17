@@ -107,7 +107,7 @@ impl Preset {
     let mut filter = match self {
       Self::Circle => Filter {
         color: color::invert(),
-        field: Field::Circle { size: None },
+        field: Field::Circle { radius: 0.5 },
         ..default()
       },
       Self::Cross => Filter {

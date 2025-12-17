@@ -112,7 +112,7 @@ impl Scene {
 
         state
           .rotate_color(Axis::Green, 0.05 * TAU)
-          .field(Field::Circle { size: Some(1.0) })
+          .field(Field::Circle { radius: 1.0 })
           .scale(s)
           .wrap(true)
           .db(-24.0)
@@ -153,7 +153,7 @@ impl Scene {
       Self::Pattern => {
         state
           .invert()
-          .field(Field::Circle { size: Some(1.0) })
+          .field(Field::Circle { radius: 1.0 })
           .alpha(0.75)
           .scale(2.0);
 
@@ -180,7 +180,7 @@ impl Scene {
           Field::X,
           Field::Top,
           Field::All,
-          Field::Circle { size: Some(1.0) },
+          Field::Circle { radius: 1.0 },
           Field::All,
           Field::Cross,
           Field::Square,
@@ -190,7 +190,7 @@ impl Scene {
           Field::All,
           Field::Square,
           Field::Top,
-          Field::Circle { size: Some(1.0) },
+          Field::Circle { radius: 1.0 },
           Field::Top,
           Field::All,
           Field::X,
@@ -199,11 +199,11 @@ impl Scene {
 
         const B: [Field; 10] = [
           Field::Cross,
-          Field::Circle { size: Some(1.0) },
+          Field::Circle { radius: 1.0 },
           Field::Top,
-          Field::Circle { size: Some(1.0) },
+          Field::Circle { radius: 1.0 },
           Field::Top,
-          Field::Circle { size: Some(1.0) },
+          Field::Circle { radius: 1.0 },
           Field::X,
           Field::X,
           Field::Cross,
@@ -234,7 +234,7 @@ impl Scene {
       Self::StarburstRandom => {
         const FIELDS: [Field; 6] = [
           Field::All,
-          Field::Circle { size: Some(1.0) },
+          Field::Circle { radius: 1.0 },
           Field::Cross,
           Field::Square,
           Field::Top,
