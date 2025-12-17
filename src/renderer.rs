@@ -1,6 +1,7 @@
 use super::*;
 
 pub(crate) struct Renderer {
+  capture_thread: CaptureThread,
   composite_pipeline: Pipeline,
   device: wgpu::Device,
   error_channel: mpsc::Receiver<wgpu::Error>,
@@ -16,7 +17,6 @@ pub(crate) struct Renderer {
   non_filtering_sampler: Sampler,
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
-  capture_thread: CaptureThread,
   queue: Queue,
   resolution: NonZeroU32,
   resources: Option<Resources>,
@@ -48,9 +48,9 @@ impl Renderer {
       .device
       .create_command_encoder(&CommandEncoderDescriptor::default());
 
-    let captures = self.resources().captures.clone();
+    let pool = self.resources().pool.clone();
 
-    let buffer = captures.lock().unwrap().pop().unwrap_or_else(|| {
+    let buffer = pool.lock().unwrap().pop().unwrap_or_else(|| {
       log::info!("creating new capture buffer");
       self.device.create_buffer(&BufferDescriptor {
         label: label!(),
@@ -88,13 +88,11 @@ impl Renderer {
       buffer: buffer.clone(),
       bytes_per_row_with_padding: bytes_per_row_with_padding.into_usize(),
       callback: Box::new(callback),
-      captures,
+      pool,
       format: self.format,
       size: self.size,
     };
 
-    let format = self.format;
-    let size = self.size;
     let tx = self.capture_thread.tx().clone();
     buffer.map_async(MapMode::Read, .., move |result| {
       if let Err(err) = result {
@@ -1162,7 +1160,7 @@ impl Renderer {
     let overlay_bind_group = self.composite_bind_group(&tiling_view, &overlay_view);
 
     self.resources = Some(Resources {
-      captures: Arc::new(Mutex::new(Vec::new())),
+      pool: Arc::new(Mutex::new(Vec::new())),
       overlay_bind_group,
       overlay_view,
       targets,

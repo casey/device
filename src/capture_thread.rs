@@ -7,42 +7,35 @@ pub(crate) struct CaptureThread {
 
 impl CaptureThread {
   fn capture(capture: Capture) {
-    let Capture {
-      buffer,
-      bytes_per_row_with_padding,
-      callback,
-      captures,
-      format,
-      size,
-    } = capture;
+    let view = capture.buffer.get_mapped_range(..);
 
-    let view = buffer.get_mapped_range(..);
-
-    let bytes_per_row = size.x.get().into_usize() * COLOR_CHANNELS;
+    let bytes_per_row = capture.size.x.get().into_usize() * COLOR_CHANNELS;
 
     let mut image = Image::default();
-    image.resize(size.x.get(), size.y.get());
+    image.resize(capture.size.x.get(), capture.size.y.get());
     for (src, dst) in view
-      .chunks(bytes_per_row_with_padding)
+      .chunks(capture.bytes_per_row_with_padding)
       .map(|src| &src[..bytes_per_row])
-      .take(size.y.get().into_usize())
+      .take(capture.size.y.get().into_usize())
       .zip(image.data_mut().chunks_mut(bytes_per_row))
     {
       for (src, dst) in src
         .chunks(COLOR_CHANNELS)
         .zip(dst.chunks_mut(COLOR_CHANNELS))
       {
-        format.swizzle(src.try_into().unwrap(), dst.try_into().unwrap());
+        capture
+          .format
+          .swizzle(src.try_into().unwrap(), dst.try_into().unwrap());
       }
     }
 
     drop(view);
 
-    buffer.unmap();
+    capture.buffer.unmap();
 
-    captures.lock().unwrap().push(buffer);
+    capture.pool.lock().unwrap().push(capture.buffer);
 
-    callback(image);
+    (capture.callback)(image);
   }
 
   pub(crate) fn finish(self) -> Result {
