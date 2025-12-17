@@ -226,6 +226,7 @@ type Mat2x3f = nalgebra::Matrix2x3<f32>;
 type Mat3f = nalgebra::Matrix3<f32>;
 type Mat3x4f = nalgebra::Matrix3x4<f32>;
 type Mat4f = nalgebra::Matrix4<f32>;
+type Size = nalgebra::Vector2<NonZeroU32>;
 type Vec2f = nalgebra::Vector2<f32>;
 type Vec3f = nalgebra::Vector3<f32>;
 type Vec4f = nalgebra::Vector4<f32>;

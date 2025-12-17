@@ -48,7 +48,7 @@ impl Capture {
 
     let resolution = options.resolution.unwrap_or(DEFAULT_RESOLUTION);
 
-    let size = Vector2::new(
+    let size = Size::new(
       options.width.unwrap_or(resolution),
       options.height.unwrap_or(resolution),
     );

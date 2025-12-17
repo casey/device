@@ -23,7 +23,7 @@ static RENDERER: LazyLock<Mutex<Renderer>> = LazyLock::new(|| {
       None,
       None,
       resolution,
-      Vector2::new(resolution, resolution),
+      Size::new(resolution, resolution),
       None,
     ))
     .unwrap(),
@@ -98,7 +98,7 @@ impl Test {
 
     let height = self.height.unwrap_or(resolution).try_into().unwrap();
 
-    renderer.resize(Vector2::new(width, height), resolution.try_into().unwrap());
+    renderer.resize(Size::new(width, height), resolution.try_into().unwrap());
 
     renderer
       .render(&Analyzer::new(), &self.state, Instant::now())
