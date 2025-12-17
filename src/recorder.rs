@@ -59,7 +59,7 @@ impl Recorder {
 
     let frame_imbalance = self.frame_imbalance();
 
-    if frame_imbalance.abs() > 0.0 {
+    if frame_imbalance.abs() >= 0.01 {
       log::warn!("frame imbalance: {frame_imbalance:+.2}");
     }
 

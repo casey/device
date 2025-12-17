@@ -23,6 +23,7 @@ pub(crate) struct App {
   pub(crate) record: Option<Fps>,
   pub(crate) recorder_thread: Option<RecorderThread>,
   pub(crate) renderer: Option<Renderer>,
+  pub(crate) spf: Option<usize>,
   pub(crate) state: State,
   pub(crate) tap: Tap,
   pub(crate) unwind: bool,
@@ -215,6 +216,16 @@ impl App {
 
     let now = Instant::now();
 
+    let spf = if let Some(fps) = record {
+      if let Some(input) = &input {
+        Some(fps.spf(input.format())?)
+      } else {
+        Some(fps.spf(tap.format())?)
+      }
+    } else {
+      None
+    };
+
     Ok(Self {
       allocated: 0,
       analyzer: Analyzer::new(),
@@ -239,6 +250,7 @@ impl App {
       recorder_thread: None,
       renderer: None,
       state,
+      spf,
       tap,
       unwind: false,
       window: None,
@@ -308,6 +320,23 @@ impl App {
 
     self.process_messages(event_loop);
 
+    let sound = if let Some(input) = &self.input {
+      input.drain(self.spf)
+    } else {
+      self.tap.drain_exact(self.spf)
+    };
+
+    let Some(sound) = sound else {
+      self.window().request_redraw();
+      return Ok(());
+    };
+
+    self.analyzer.update(
+      &sound,
+      self.input.is_none() && self.tap.is_done(),
+      &self.state,
+    );
+
     let now = Instant::now();
     let dt = now - self.last;
     self.last = now;
@@ -321,18 +350,6 @@ impl App {
     }
 
     self.state.tick(dt);
-
-    let sound = if let Some(input) = &self.input {
-      input.drain()
-    } else {
-      self.tap.drain()
-    };
-
-    self.analyzer.update(
-      &sound,
-      self.input.is_none() && self.tap.is_done(),
-      &self.state,
-    );
 
     let renderer = self.renderer.as_mut().unwrap();
 
@@ -447,12 +464,14 @@ impl App {
 
 impl ApplicationHandler for App {
   fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-    if let Some(fps) = self.options.fps {
+    if self.recorder_thread.is_none()
+      && let Some(fps) = self.options.fps
+    {
       let now = Instant::now();
 
       while self.deadline <= now {
         self.deadline += fps.duration();
-        self.window.as_ref().unwrap().request_redraw();
+        self.window().request_redraw();
       }
 
       event_loop.set_control_flow(ControlFlow::WaitUntil(self.deadline));

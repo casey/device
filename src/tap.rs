@@ -20,7 +20,6 @@ pub(crate) struct Tap {
   format: SoundFormat,
   muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
-  sample_rate: u32,
   sequencer: Sequencer,
   stream: Option<Stream>,
   time: f64,
@@ -30,15 +29,26 @@ impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
   pub(crate) fn drain(&mut self) -> Sound {
-    let samples = self
-      .backend
-      .lock()
-      .unwrap()
-      .samples
-      .drain(..)
-      .collect::<Vec<f32>>();
-    self.time += (samples.len() / Self::CHANNELS.into_usize()) as f64 / self.sample_rate as f64;
-    Sound::new(self.format, samples)
+    self.drain_exact(None).unwrap()
+  }
+
+  pub(crate) fn drain_exact(&mut self, count: Option<usize>) -> Option<Sound> {
+    let mut backend = self.backend.lock().unwrap();
+
+    if let Some(count) = count
+      && backend.samples.len() < count
+    {
+      return None;
+    }
+
+    let end = count.unwrap_or(backend.samples.len());
+
+    let samples = backend.samples.drain(..end).collect::<Vec<f32>>();
+
+    self.time +=
+      (samples.len() / Self::CHANNELS.into_usize()) as f64 / self.format.sample_rate as f64;
+
+    Some(Sound::new(self.format, samples))
   }
 
   pub(crate) fn format(&self) -> SoundFormat {
@@ -53,7 +63,7 @@ impl Tap {
     let mut input = Wave::load(path).context(error::WaveLoad)?;
 
     if input.is_empty() {
-      return Ok(Arc::new(Wave::new(1, self.sample_rate as f64)));
+      return Ok(Arc::new(Wave::new(1, self.format.sample_rate as f64)));
     }
 
     while input.channels() > Self::CHANNELS.into_usize() {
@@ -69,7 +79,7 @@ impl Tap {
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     let sample_rate = sample_rate as usize;
 
-    if sample_rate == self.sample_rate.into_usize() {
+    if sample_rate == self.format.sample_rate.into_usize() {
       return Ok(Arc::new(input));
     }
 
@@ -77,7 +87,7 @@ impl Tap {
 
     let mut resampler = FftFixedIn::<f32>::new(
       sample_rate,
-      self.sample_rate.into_usize(),
+      self.format.sample_rate.into_usize(),
       1024,
       2,
       input.channels(),
@@ -92,13 +102,13 @@ impl Tap {
       .process_all(
         &input_channels,
         None,
-        self.sample_rate as f64 / sample_rate as f64,
+        self.format.sample_rate as f64 / sample_rate as f64,
       )
       .context(error::WaveResample)?;
 
     log::info!("resampled {path} in {:.2}s", start.elapsed().as_secs_f32());
 
-    let mut output = Wave::new(0, self.sample_rate as f64);
+    let mut output = Wave::new(0, self.format.sample_rate as f64);
 
     for channel in output_channels {
       output.push_channel(&channel);
@@ -129,7 +139,6 @@ impl Tap {
       },
       muted,
       paused,
-      sample_rate,
       sequencer,
       stream: None,
       time: 0.0,
@@ -142,10 +151,6 @@ impl Tap {
 
   pub(crate) fn play(&self) {
     self.paused.store(false, atomic::Ordering::Relaxed);
-  }
-
-  pub(crate) fn sample_rate(&self) -> u32 {
-    self.sample_rate
   }
 
   pub(crate) fn sequence<T>(&mut self, node: An<T>, duration: f64, fade_in: f64, fade_out: f64)

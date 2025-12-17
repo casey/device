@@ -15,18 +15,18 @@ impl Fps {
     self.fps
   }
 
-  pub(crate) fn spf(self, sample_rate: u32) -> Result<u32> {
-    if !sample_rate.is_multiple_of(self.fps.get()) {
+  pub(crate) fn spf(self, format: SoundFormat) -> Result<usize> {
+    if !format.sample_rate.is_multiple_of(self.fps.get()) {
       return Err(
         error::SamplesPerFrame {
           fps: self,
-          sample_rate,
+          sample_rate: format.sample_rate,
         }
         .build(),
       );
     }
 
-    Ok(sample_rate / self.fps)
+    Ok(format.sample_rate.into_usize() / self.fps.get().into_usize() * format.channels.into_usize())
   }
 }
 
