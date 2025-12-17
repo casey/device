@@ -21,7 +21,7 @@ pub(crate) struct App {
   pub(crate) patch: Patch,
   pub(crate) present_mode: Option<PresentMode>,
   pub(crate) record: Option<Fps>,
-  pub(crate) recorder: Option<RecorderThread>,
+  pub(crate) recorder_thread: Option<RecorderThread>,
   pub(crate) renderer: Option<Renderer>,
   pub(crate) state: State,
   pub(crate) tap: Tap,
@@ -54,8 +54,8 @@ impl App {
       renderer.poll()?;
     }
 
-    if let Some(recorder) = self.recorder.take() {
-      recorder.finish(&self.options, &self.config)?;
+    if let Some(recorder_thread) = self.recorder_thread.take() {
+      recorder_thread.finish(&self.options, &self.config)?;
     }
 
     Ok(())
@@ -83,7 +83,7 @@ impl App {
   }
 
   fn initialize(&mut self, event_loop: &ActiveEventLoop) -> Result {
-    assert!(self.recorder.is_none());
+    assert!(self.recorder_thread.is_none());
     assert!(self.renderer.is_none());
     assert!(self.window.is_none());
 
@@ -137,7 +137,7 @@ impl App {
     ))?;
 
     if let Some(fps) = self.record {
-      self.recorder = Some(RecorderThread::new(Recorder::new(
+      self.recorder_thread = Some(RecorderThread::new(Recorder::new(
         fps,
         &self.options,
         renderer.size(),
@@ -236,7 +236,7 @@ impl App {
       patch: Patch::default(),
       present_mode,
       record,
-      recorder: None,
+      recorder_thread: None,
       renderer: None,
       state,
       tap,
@@ -340,7 +340,7 @@ impl App {
 
     renderer.render(&self.analyzer, &self.state, now)?;
 
-    if let Some(recorder) = &self.recorder {
+    if let Some(recorder) = &self.recorder_thread {
       let tx = recorder.tx().clone();
       renderer.capture({
         move |image| {
@@ -350,11 +350,11 @@ impl App {
     }
 
     if self
-      .recorder
+      .recorder_thread
       .as_ref()
       .is_some_and(RecorderThread::is_finished)
     {
-      mem::take(&mut self.recorder)
+      mem::take(&mut self.recorder_thread)
         .unwrap()
         .finish(&self.options, &self.config)?;
       log::warn!("recording unexpectedly finished");
