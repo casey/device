@@ -1,20 +1,22 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, Default, ValueEnum)]
+#[derive(Clone, Copy, Debug, Default, ValueEnum, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
 pub(crate) enum ImageFormat {
-  #[value(name("bgra8unorm"))]
   Bgra8Unorm,
   #[default]
-  #[value(name("bgra8unorm-srgb"))]
   Bgra8UnormSrgb,
+}
+
+impl ImageFormat {
+  fn name(self) -> &'static str {
+    self.into()
+  }
 }
 
 impl Display for ImageFormat {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-    match self {
-      Self::Bgra8Unorm => write!(f, "bgra8unorm"),
-      Self::Bgra8UnormSrgb => write!(f, "bgra8unorm-srgb"),
-    }
+    f.write_str(self.name())
   }
 }
 
