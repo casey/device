@@ -8,18 +8,16 @@ pub(crate) struct Input {
 }
 
 impl Input {
-  pub(crate) fn drain(&self, min: Option<usize>) -> Option<Sound> {
+  pub(crate) fn drain_exact(&self, count: Option<usize>) -> Option<Sound> {
     let mut samples = self.samples.lock().unwrap();
 
-    if let Some(min) = min
-      && samples.len() < min
-    {
+    let count = count.unwrap_or(samples.len());
+
+    if samples.len() < count {
       return None;
     }
 
-    let end = min.unwrap_or(samples.len());
-
-    Some(Sound::new(self.format, samples.drain(..end).collect()))
+    Some(Sound::new(self.format, samples.drain(..count).collect()))
   }
 
   pub(crate) fn format(&self) -> SoundFormat {
