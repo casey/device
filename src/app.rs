@@ -464,9 +464,9 @@ impl App {
 
 impl ApplicationHandler for App {
   fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-    if self.recorder_thread.is_none()
-      && let Some(fps) = self.options.fps
-    {
+    if self.spf.is_some() {
+      self.window().request_redraw();
+    } else if let Some(fps) = self.options.fps {
       let now = Instant::now();
 
       while self.deadline <= now {
