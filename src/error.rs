@@ -249,6 +249,12 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: walkdir::Error,
   },
+  #[snafu(display("failed to spawn thread `{name}`"))]
+  ThreadSpawn {
+    backtrace: Option<Backtrace>,
+    name: String,
+    source: io::Error,
+  },
   #[snafu(display("I/O error creating tempdir"))]
   TempdirIo {
     backtrace: Option<Backtrace>,

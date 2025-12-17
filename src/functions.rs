@@ -23,3 +23,14 @@ pub(crate) fn tempdir() -> Result<(TempDir, Utf8PathBuf)> {
 
   Ok((tempdir, path))
 }
+
+pub(crate) fn thread_spawn<F, T>(name: &str, f: F) -> Result<JoinHandle<T>>
+where
+  F: FnOnce() -> T + Send + 'static,
+  T: Send + 'static,
+{
+  std::thread::Builder::new()
+    .name(name.into())
+    .spawn(f)
+    .context(error::ThreadSpawn { name })
+}

@@ -92,7 +92,7 @@ impl Renderer {
         return;
       }
 
-      thread::spawn(move || {
+      let result = thread_spawn("capture", move || {
         let view = buffer.get_mapped_range(..);
 
         let bytes_per_row = size.x.get().into_usize() * COLOR_CHANNELS;
@@ -121,6 +121,10 @@ impl Renderer {
 
         callback(image);
       });
+
+      if let Err(err) = result {
+        eprintln!("{err}");
+      }
     });
 
     Ok(())

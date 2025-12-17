@@ -20,10 +20,10 @@ impl RecorderThread {
     self.join_handle.is_finished()
   }
 
-  pub(crate) fn new(mut recorder: Recorder) -> Self {
+  pub(crate) fn new(mut recorder: Recorder) -> Result<Self> {
     let (frame_sender, rx) = mpsc::channel::<(u64, Image, Sound)>();
 
-    let join_handle = thread::spawn(move || {
+    let join_handle = thread_spawn("recorder", move || {
       loop {
         let Ok((frame, image, sound)) = rx.recv() else {
           break;
@@ -33,12 +33,12 @@ impl RecorderThread {
       }
 
       Ok(recorder)
-    });
+    })?;
 
-    Self {
+    Ok(Self {
       frame_sender,
       join_handle,
-    }
+    })
   }
 
   pub(crate) fn tx(&self) -> &mpsc::Sender<(u64, Image, Sound)> {

@@ -268,7 +268,7 @@ impl App {
         &self.options,
         renderer.size(),
         sound.format(),
-      )?));
+      )?)?);
     }
 
     if let Some(recorder) = &self.recorder {
