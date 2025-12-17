@@ -4,9 +4,6 @@ pub(crate) struct App {
   pub(crate) allocated: usize,
   pub(crate) analyzer: Analyzer,
   pub(crate) bindings: Bindings,
-  pub(crate) capture_rx: mpsc::Receiver<Result>,
-  pub(crate) capture_tx: mpsc::Sender<Result>,
-  pub(crate) captures_pending: u64,
   pub(crate) commands: Commands,
   pub(crate) config: Config,
   pub(crate) cursor_moved: Instant,
@@ -24,7 +21,7 @@ pub(crate) struct App {
   pub(crate) patch: Patch,
   pub(crate) present_mode: Option<PresentMode>,
   pub(crate) record: Option<Fps>,
-  pub(crate) recorder: Option<Arc<Mutex<Recorder>>>,
+  pub(crate) recorder: Option<RecorderThread>,
   pub(crate) renderer: Option<Renderer>,
   pub(crate) state: State,
   pub(crate) tap: Tap,
@@ -72,27 +69,8 @@ impl App {
       renderer.poll()?;
     }
 
-    for _ in 0..self.captures_pending {
-      match self.capture_rx.recv() {
-        Ok(Ok(())) => {}
-        Ok(Err(err)) => return Err(err),
-        Err(mpsc::RecvError) => return Err(Error::internal("capture channel unexpectedly closed")),
-      }
-    }
-
-    if let Some(mut arc) = self.recorder.take() {
-      let mutex = loop {
-        match Arc::try_unwrap(arc) {
-          Ok(mutex) => break mutex,
-          Err(back) => arc = back,
-        }
-        hint::spin_loop();
-      };
-
-      mutex
-        .into_inner()
-        .unwrap()
-        .finish(&self.options, &self.config)?;
+    if let Some(recorder) = self.recorder.take() {
+      recorder.finish(&self.options, &self.config)?;
     }
 
     Ok(())
@@ -155,17 +133,12 @@ impl App {
 
     let state = options.state();
 
-    let (capture_tx, capture_rx) = mpsc::channel();
-
     let now = Instant::now();
 
     Ok(Self {
       allocated: 0,
       analyzer: Analyzer::new(),
       bindings: Bindings::new(),
-      capture_rx,
-      capture_tx,
-      captures_pending: 0,
       commands: Commands::new(),
       config,
       cursor_moved: now,
@@ -290,41 +263,32 @@ impl App {
     if self.recorder.is_none()
       && let Some(fps) = self.record
     {
-      self.recorder = Some(Arc::new(Mutex::new(Recorder::new(
+      self.recorder = Some(RecorderThread::new(Recorder::new(
         fps,
         &self.options,
         renderer.size(),
         sound.format(),
-      )?)));
+      )?));
     }
 
     if let Some(recorder) = &self.recorder {
-      let recorder = recorder.clone();
-      let tx = self.capture_tx.clone();
+      let tx = recorder.tx().clone();
       renderer.capture({
         move |image| {
-          if let Err(err) = tx.send(recorder.lock().unwrap().frame(frame, image, sound)) {
-            eprintln!("failed to send captured frame: {err}");
-          }
+          tx.send((frame, image, sound)).ok();
         }
       })?;
-      self.captures_pending += 1;
     }
 
-    if self.captures_pending > 0 {
-      loop {
-        match self.capture_rx.try_recv() {
-          Err(mpsc::TryRecvError::Empty) => {
-            break;
-          }
-          Err(mpsc::TryRecvError::Disconnected) => {
-            return Err(Error::internal("capture channel unexpectedly closed"));
-          }
-          Ok(result) => result?,
-        }
-
-        self.captures_pending -= 1;
-      }
+    if self
+      .recorder
+      .as_ref()
+      .is_some_and(RecorderThread::is_finished)
+    {
+      mem::take(&mut self.recorder)
+        .unwrap()
+        .finish(&self.options, &self.config)?;
+      log::warn!("recording unexpectedly finished");
     }
 
     let allocated = Allocator::allocated();

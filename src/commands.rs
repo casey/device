@@ -70,13 +70,11 @@ pub(crate) fn bottom(state: &mut State) {
 
 pub(crate) fn capture(app: &mut App) -> Result {
   let destination = app.config.capture("png");
-  let tx = app.capture_tx.clone();
   app.renderer.as_ref().unwrap().capture(move |capture| {
-    if let Err(err) = tx.send(capture.save(&destination)) {
-      eprintln!("failed to send capture result: {err}");
+    if let Err(err) = capture.save(&destination) {
+      log::error!("failed to send capture: {err}");
     }
   })?;
-  app.captures_pending += 1;
   Ok(())
 }
 

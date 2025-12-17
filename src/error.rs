@@ -163,6 +163,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
+  #[snafu(display("failed to join recording thread"))]
+  RecordingJoin {
+    backtrace: Option<Backtrace>,
+    panic_value: Box<dyn Any + Send + 'static>,
+  },
   #[snafu(display("recording command failed"))]
   RecordingStatus {
     backtrace: Option<Backtrace>,
