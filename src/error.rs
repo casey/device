@@ -254,6 +254,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     format: ImageFormat,
   },
+  #[snafu(display("Unsupported surface present mode `{present_mode}`"))]
+  UnsupportedSurfacePresentMode {
+    backtrace: Option<Backtrace>,
+    present_mode: PresentMode,
+  },
   #[snafu(display("default texture format {texture_format:?} not supported"))]
   UnsupportedTextureFormat {
     backtrace: Option<Backtrace>,
