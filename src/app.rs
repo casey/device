@@ -308,6 +308,18 @@ impl App {
 
     self.process_messages(event_loop);
 
+    let sound = if let Some(input) = &self.input {
+      input.drain()
+    } else {
+      self.tap.drain()
+    };
+
+    self.analyzer.update(
+      &sound,
+      self.input.is_none() && self.tap.is_done(),
+      &self.state,
+    );
+
     let now = Instant::now();
     let dt = now - self.last;
     self.last = now;
@@ -321,18 +333,6 @@ impl App {
     }
 
     self.state.tick(dt);
-
-    let sound = if let Some(input) = &self.input {
-      input.drain()
-    } else {
-      self.tap.drain()
-    };
-
-    self.analyzer.update(
-      &sound,
-      self.input.is_none() && self.tap.is_done(),
-      &self.state,
-    );
 
     let renderer = self.renderer.as_mut().unwrap();
 
