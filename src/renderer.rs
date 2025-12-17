@@ -1101,6 +1101,12 @@ impl Renderer {
     Ok(())
   }
 
+  fn clamp_resolution(limits: &Limits, resolution: NonZeroU32) -> NonZeroU32 {
+    resolution
+      .min(limits.max_texture_dimension_2d.try_into().unwrap())
+      .min(5808.try_into().unwrap())
+  }
+
   pub(crate) fn resize(&mut self, size: Size, resolution: NonZeroU32) {
     if self.resources.is_some() && self.size == size && self.resolution == resolution {
       log::info!("skipping resize to same size");
@@ -1113,9 +1119,8 @@ impl Renderer {
       surface.configure(&self.device, config);
     }
 
-    self.resolution = resolution
-      .min(self.limits.max_texture_dimension_2d.try_into().unwrap())
-      .min(5808.try_into().unwrap());
+    self.resolution = Self::clamp_resolution(&self.limits, resolution);
+
     self.size = size;
 
     let tiling_view = self
@@ -1260,36 +1265,20 @@ mod tests {
   use super::*;
 
   #[test]
-  #[ignore]
   fn resolution_is_clamped_to_2d_texture_limit() {
-    let resolution = 65536.try_into().unwrap();
-    let size = Size::new(resolution, resolution);
-    let mut renderer =
-      pollster::block_on(Renderer::new(None, None, resolution, size, None)).unwrap();
-    renderer.resize(size, resolution);
+    let resolution = Renderer::clamp_resolution(
+      &Limits {
+        max_texture_dimension_2d: 100,
+        ..default()
+      },
+      101.try_into().unwrap(),
+    );
+    assert_eq!(resolution, 100.try_into().unwrap());
   }
 
   #[test]
-  #[ignore]
   fn resolution_is_clamped_to_vello_render_bug_limit() {
-    env_logger::init();
-
-    let resolution = 5809.try_into().unwrap();
-    let size = Size::new(resolution, resolution);
-    let mut renderer =
-      pollster::block_on(Renderer::new(None, None, resolution, size, None)).unwrap();
-    renderer.resize(size, resolution);
-    renderer
-      .render(
-        &Analyzer::new(),
-        State::default().text(Some(Text {
-          string: "hi".into(),
-          size: 1.0,
-          x: 1.0,
-          y: 1.0,
-        })),
-        Instant::now(),
-      )
-      .unwrap();
+    let resolution = Renderer::clamp_resolution(&Limits::default(), 5809.try_into().unwrap());
+    assert_eq!(resolution, 5808.try_into().unwrap());
   }
 }
