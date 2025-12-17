@@ -186,21 +186,21 @@ impl Image {
         ColorType::Grayscale => Cow::Owned(
           self
             .data
-            .chunks(4)
+            .chunks(COLOR_CHANNELS)
             .map(|chunk| chunk[0])
             .collect::<Vec<u8>>(),
         ),
         ColorType::GrayscaleAlpha => Cow::Owned(
           self
             .data
-            .chunks(4)
+            .chunks(COLOR_CHANNELS)
             .flat_map(|chunk| [chunk[0], chunk[3]])
             .collect::<Vec<u8>>(),
         ),
         ColorType::Rgb => Cow::Owned(
           self
             .data
-            .chunks(4)
+            .chunks(COLOR_CHANNELS)
             .flat_map(|chunk| &chunk[0..3])
             .copied()
             .collect::<Vec<u8>>(),
