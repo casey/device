@@ -21,7 +21,7 @@ pub(crate) struct App {
   pub(crate) patch: Patch,
   pub(crate) present_mode: Option<PresentMode>,
   pub(crate) record: Option<Fps>,
-  pub(crate) recorder: Option<RecorderThread>,
+  pub(crate) recorder_thread: Option<RecorderThread>,
   pub(crate) renderer: Option<Renderer>,
   pub(crate) state: State,
   pub(crate) tap: Tap,
@@ -54,8 +54,8 @@ impl App {
       renderer.poll()?;
     }
 
-    if let Some(recorder) = self.recorder.take() {
-      recorder.finish(&self.options, &self.config)?;
+    if let Some(recorder_thread) = self.recorder_thread.take() {
+      recorder_thread.finish(&self.options, &self.config)?;
     }
 
     Ok(())
@@ -83,8 +83,9 @@ impl App {
   }
 
   fn initialize(&mut self, event_loop: &ActiveEventLoop) -> Result {
-    assert!(self.window.is_none());
+    assert!(self.recorder_thread.is_none());
     assert!(self.renderer.is_none());
+    assert!(self.window.is_none());
 
     let window = Arc::new(
       event_loop
@@ -134,6 +135,15 @@ impl App {
       size,
       Some(window),
     ))?;
+
+    if let Some(fps) = self.record {
+      self.recorder_thread = Some(RecorderThread::new(Recorder::new(
+        fps,
+        &self.options,
+        renderer.size(),
+        self.tap.format(),
+      )?)?);
+    }
 
     self.renderer = Some(renderer);
 
@@ -226,7 +236,7 @@ impl App {
       patch: Patch::default(),
       present_mode,
       record,
-      recorder: None,
+      recorder_thread: None,
       renderer: None,
       state,
       tap,
@@ -298,18 +308,6 @@ impl App {
 
     self.process_messages(event_loop);
 
-    let sound = if let Some(input) = &self.input {
-      input.drain()
-    } else {
-      self.tap.drain()
-    };
-
-    self.analyzer.update(
-      &sound,
-      self.input.is_none() && self.tap.is_done(),
-      &self.state,
-    );
-
     let now = Instant::now();
     let dt = now - self.last;
     self.last = now;
@@ -324,24 +322,25 @@ impl App {
 
     self.state.tick(dt);
 
+    let sound = if let Some(input) = &self.input {
+      input.drain()
+    } else {
+      self.tap.drain()
+    };
+
+    self.analyzer.update(
+      &sound,
+      self.input.is_none() && self.tap.is_done(),
+      &self.state,
+    );
+
     let renderer = self.renderer.as_mut().unwrap();
 
     let frame = renderer.frame();
 
     renderer.render(&self.analyzer, &self.state, now)?;
 
-    if self.recorder.is_none()
-      && let Some(fps) = self.record
-    {
-      self.recorder = Some(RecorderThread::new(Recorder::new(
-        fps,
-        &self.options,
-        renderer.size(),
-        sound.format(),
-      )?)?);
-    }
-
-    if let Some(recorder) = &self.recorder {
+    if let Some(recorder) = &self.recorder_thread {
       let tx = recorder.tx().clone();
       renderer.capture({
         move |image| {
@@ -351,11 +350,11 @@ impl App {
     }
 
     if self
-      .recorder
+      .recorder_thread
       .as_ref()
       .is_some_and(RecorderThread::is_finished)
     {
-      mem::take(&mut self.recorder)
+      mem::take(&mut self.recorder_thread)
         .unwrap()
         .finish(&self.options, &self.config)?;
       log::warn!("recording unexpectedly finished");

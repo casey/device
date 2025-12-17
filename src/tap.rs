@@ -41,6 +41,10 @@ impl Tap {
     Sound::new(self.format, samples)
   }
 
+  pub(crate) fn format(&self) -> SoundFormat {
+    self.format
+  }
+
   pub(crate) fn is_done(&self) -> bool {
     self.time >= self.done
   }
