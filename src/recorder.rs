@@ -141,6 +141,10 @@ impl Recorder {
       self.frames_encoded += 1;
     }
 
+    if self.heap.len() > 1 {
+      log::warn!("pending frames: {}", self.heap.len());
+    }
+
     let frame_imbalance = self.frame_imbalance();
 
     if frame_imbalance.abs() > 1.0 {
