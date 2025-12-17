@@ -21,7 +21,7 @@ use {
     filter_uniforms::FilterUniforms,
     fps::Fps,
     frame::Frame,
-    functions::{default, display, pad, tempdir},
+    functions::{default, display, pad, tempdir, thread_spawn},
     hub::Hub,
     image::Image,
     image_format::ImageFormat,
@@ -39,6 +39,7 @@ use {
     press::Press,
     program::Program,
     recorder::Recorder,
+    recorder_thread::RecorderThread,
     renderer::Renderer,
     resampler_ext::ResamplerExt,
     resources::Resources,
@@ -84,6 +85,7 @@ use {
   serde::Deserialize,
   snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu},
   std::{
+    any::Any,
     backtrace::{Backtrace, BacktraceStatus},
     borrow::Cow,
     cmp::Reverse,
@@ -91,7 +93,6 @@ use {
     env, f32,
     fmt::{self, Display, Formatter},
     fs::{self, File},
-    hint,
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
@@ -103,7 +104,7 @@ use {
       atomic::{self, AtomicBool, AtomicUsize},
       mpsc,
     },
-    thread,
+    thread::JoinHandle,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
   },
   strum::{EnumDiscriminants, EnumIter, IntoEnumIterator, IntoStaticStr},
@@ -183,6 +184,7 @@ mod preset;
 mod press;
 mod program;
 mod recorder;
+mod recorder_thread;
 #[cfg(test)]
 mod reference;
 mod renderer;

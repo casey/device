@@ -163,6 +163,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
+  #[snafu(display("failed to join recording thread"))]
+  RecordingJoin {
+    backtrace: Option<Backtrace>,
+    panic_value: Box<dyn Any + Send + 'static>,
+  },
   #[snafu(display("recording command failed"))]
   RecordingStatus {
     backtrace: Option<Backtrace>,
@@ -247,6 +252,12 @@ pub(crate) enum Error {
   #[snafu(display("I/O error creating tempdir"))]
   TempdirIo {
     backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
+  #[snafu(display("failed to spawn thread `{name}`"))]
+  ThreadSpawn {
+    backtrace: Option<Backtrace>,
+    name: String,
     source: io::Error,
   },
   #[snafu(display("Surface not compatible with adapter"))]
