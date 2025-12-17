@@ -83,8 +83,9 @@ impl App {
   }
 
   fn initialize(&mut self, event_loop: &ActiveEventLoop) -> Result {
-    assert!(self.window.is_none());
+    assert!(self.recorder.is_none());
     assert!(self.renderer.is_none());
+    assert!(self.window.is_none());
 
     let window = Arc::new(
       event_loop
@@ -134,6 +135,15 @@ impl App {
       size,
       Some(window),
     ))?;
+
+    if let Some(fps) = self.record {
+      self.recorder = Some(RecorderThread::new(Recorder::new(
+        fps,
+        &self.options,
+        renderer.size(),
+        self.tap.format(),
+      )?)?);
+    }
 
     self.renderer = Some(renderer);
 
@@ -298,18 +308,6 @@ impl App {
 
     self.process_messages(event_loop);
 
-    let sound = if let Some(input) = &self.input {
-      input.drain()
-    } else {
-      self.tap.drain()
-    };
-
-    self.analyzer.update(
-      &sound,
-      self.input.is_none() && self.tap.is_done(),
-      &self.state,
-    );
-
     let now = Instant::now();
     let dt = now - self.last;
     self.last = now;
@@ -324,22 +322,23 @@ impl App {
 
     self.state.tick(dt);
 
+    let sound = if let Some(input) = &self.input {
+      input.drain()
+    } else {
+      self.tap.drain()
+    };
+
+    self.analyzer.update(
+      &sound,
+      self.input.is_none() && self.tap.is_done(),
+      &self.state,
+    );
+
     let renderer = self.renderer.as_mut().unwrap();
 
     let frame = renderer.frame();
 
     renderer.render(&self.analyzer, &self.state, now)?;
-
-    if self.recorder.is_none()
-      && let Some(fps) = self.record
-    {
-      self.recorder = Some(RecorderThread::new(Recorder::new(
-        fps,
-        &self.options,
-        renderer.size(),
-        sound.format(),
-      )?)?);
-    }
 
     if let Some(recorder) = &self.recorder {
       let tx = recorder.tx().clone();
