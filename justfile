@@ -106,7 +106,6 @@ record-curtains:
 record-blaster:
   cargo run \
     --release \
-    --features allocator \
     -- \
     --fit \
     --fps 60 \
