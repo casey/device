@@ -105,6 +105,12 @@ impl Renderer {
     Ok(())
   }
 
+  fn clamp_resolution(limits: &Limits, resolution: NonZeroU32) -> NonZeroU32 {
+    resolution
+      .min(limits.max_texture_dimension_2d.try_into().unwrap())
+      .min(5808.try_into().unwrap())
+  }
+
   fn composite_bind_group(&self, back: &TextureView, front: &TextureView) -> BindGroup {
     let mut binding = Counter::default();
 
@@ -1099,12 +1105,6 @@ impl Renderer {
       .context(error::RenderOverlay)?;
 
     Ok(())
-  }
-
-  fn clamp_resolution(limits: &Limits, resolution: NonZeroU32) -> NonZeroU32 {
-    resolution
-      .min(limits.max_texture_dimension_2d.try_into().unwrap())
-      .min(5808.try_into().unwrap())
   }
 
   pub(crate) fn resize(&mut self, size: Size, resolution: NonZeroU32) {
