@@ -1118,6 +1118,11 @@ impl Renderer {
   }
 
   pub(crate) fn resize(&mut self, size: Size, resolution: NonZeroU32) {
+    if self.resources.is_some() && self.size == size && self.resolution == resolution {
+      log::info!("skipping resize to same size");
+      return;
+    }
+
     if let Some((surface, config)) = &mut self.surface {
       config.height = size.y.get();
       config.width = size.x.get();
