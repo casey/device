@@ -1,11 +1,11 @@
 [package]
 name = "device"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Casey Rodarmor <casey@rodarmor.com>"]
 description = "A generative engine"
 edition = "2024"
 homepage = "https://github.com/casey/device"
-include = ["/src", "/templates"]
+include = ["/build.rs", "/src", "/templates"]
 license = "CC0-1.0"
 repository = "https://github.com/casey/device"
 
@@ -22,7 +22,7 @@ log = "0.4.22"
 midir = "0.10.1"
 midly = "0.5.3"
 nalgebra = "0.34.1"
-parley = "0.6.0"
+parley = "0.7.0"
 png = "0.18.0"
 pollster = "0.4.0"
 rand = "0.9.2"
