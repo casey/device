@@ -81,7 +81,7 @@ pub(crate) fn capture(app: &mut App) -> Result {
 pub(crate) fn circle(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),
-    field: Field::Circle { size: None },
+    field: Field::Circle { radius: 0.5 },
     wrap: state.wrap,
     ..default()
   });

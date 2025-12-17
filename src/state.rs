@@ -78,7 +78,7 @@ impl State {
   }
 
   pub(crate) fn circle(&mut self) -> &mut Self {
-    self.filter.field = Field::Circle { size: None };
+    self.filter.field = Field::Circle { radius: 0.5 };
     self
   }
 
