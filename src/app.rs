@@ -468,6 +468,24 @@ impl ApplicationHandler for App {
 
     let (size, resolution) = self.size(window.inner_size());
 
+    if let Some(fps) = self.options.fps {
+      match window.current_monitor() {
+        Some(monitor) => match monitor.refresh_rate_millihertz() {
+          Some(mhz) => {
+            if mhz < fps.fps().get() * 1000 {
+              log::warn!(
+                "monitor refresh rate less than requested fps: {}.{} Hz",
+                mhz / 1000,
+                mhz % 1000,
+              );
+            }
+          }
+          None => log::warn!("failed to get current monitor refresh rate"),
+        },
+        None => log::warn!("failed to get current monitor"),
+      }
+    }
+
     self.window = Some(window.clone());
 
     let renderer = match pollster::block_on(Renderer::new(
