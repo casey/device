@@ -112,7 +112,7 @@ impl Renderer {
       .min(5808.try_into().unwrap())
   }
 
-  fn composite_bind_group(&self, back: &TextureView, front: &TextureView) -> BindGroup {
+  fn composite_bind_group(&self, destination: &TextureView, source: &TextureView) -> BindGroup {
     let mut binding = Counter::default();
 
     self.device.create_bind_group(&BindGroupDescriptor {
@@ -120,11 +120,11 @@ impl Renderer {
       entries: &[
         BindGroupEntry {
           binding: binding.next(),
-          resource: BindingResource::TextureView(back),
+          resource: BindingResource::TextureView(destination),
         },
         BindGroupEntry {
           binding: binding.next(),
-          resource: BindingResource::TextureView(front),
+          resource: BindingResource::TextureView(source),
         },
         BindGroupEntry {
           binding: binding.next(),
@@ -804,21 +804,21 @@ impl Renderer {
           base: filter.base,
           color: filter.color_uniform(response),
           coordinates: filter.coordinates,
+          destination_offset: tiling.destination_offset(i),
           field: filter.field,
           frequency_range,
-          front_offset: tiling.source_offset(i),
           gain,
           grid: filter.grid,
           grid_alpha: filter.grid_alpha,
           interpolate: state.interpolate,
           mirror: filter.mirror_uniform(),
-          offset: tiling.offset(i),
           parameter: filter.field.parameter(),
           position: filter.position_uniform(response),
           repeat: filter.repeat,
           resolution: tiling.resolution as f32,
           response,
           sample_range,
+          source_offset: tiling.source_offset(i),
           tiling: tiling.size,
           wrap: filter.wrap,
         });

@@ -36,21 +36,21 @@ struct Uniforms {
   base: f32,
   color: mat4x3f,
   coordinates: u32,
+  destination_offset: vec2f,
   field: u32,
   frequency_range: f32,
-  front_offset: vec2f,
   gain: f32,
   grid: f32,
   grid_alpha: f32,
   interpolate: u32,
   mirror: vec4f,
-  offset: vec2f,
   parameter: f32,
   position: mat3x2f,
   repeat: u32,
   resolution: f32,
   response: f32,
   sample_range: f32,
+  source_offset: vec2f,
   tiling: u32,
   wrap: u32,
 }
@@ -139,7 +139,7 @@ fn mirror(uv: vec2f) -> vec2f {
 @fragment
 fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // subtract offset get tile coordinates
-  let tile = position.xy - uniforms.offset;
+  let tile = position.xy - uniforms.destination_offset;
 
   // convert to uv coordinates
   let source_uv = tile / vec2(uniforms.resolution, uniforms.resolution);
@@ -171,7 +171,7 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
       input_color = vec4(uv, 1.0, 1.0);
     } else {
       // convert uv coordinates to tile source coordinates
-      let tile_uv = (uv / f32(uniforms.tiling) + uniforms.front_offset) * tile_scale;
+      let tile_uv = (uv / f32(uniforms.tiling) + uniforms.source_offset) * tile_scale;
 
       // read input color
       if bool(uniforms.interpolate) {
@@ -186,7 +186,7 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   let original_color = textureSample(
     source,
     non_filtering_sampler,
-    (mirrored_uv / f32(uniforms.tiling) + uniforms.front_offset) * tile_scale,
+    (mirrored_uv / f32(uniforms.tiling) + uniforms.source_offset) * tile_scale,
   );
 
   var on: bool;

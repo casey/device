@@ -7,15 +7,7 @@ pub(crate) struct Tiling {
 }
 
 impl Tiling {
-  pub(crate) fn destination_read(self, filters: u32) -> bool {
-    if self.size == 1 {
-      filters.is_multiple_of(2)
-    } else {
-      true
-    }
-  }
-
-  pub(crate) fn offset(self, filter: u32) -> Vec2f {
+  pub(crate) fn destination_offset(self, filter: u32) -> Vec2f {
     if self.size == 1 {
       return Vec2f::new(0.0, 0.0);
     }
@@ -27,6 +19,14 @@ impl Tiling {
       (self.resolution * col) as f32,
       (self.resolution * row) as f32,
     )
+  }
+
+  pub(crate) fn destination_read(self, filters: u32) -> bool {
+    if self.size == 1 {
+      filters.is_multiple_of(2)
+    } else {
+      true
+    }
   }
 
   pub(crate) fn set_viewport(self, render_pass: &mut RenderPass, filter: u32) {
@@ -85,7 +85,7 @@ mod tests {
       };
 
       assert_eq!(tiling.source_offset(filter), source_offset,);
-      assert_eq!(tiling.offset(filter), offset,);
+      assert_eq!(tiling.destination_offset(filter), offset,);
     }
 
     case(0, vector!(0.0, 0.0), vector!(0.0, 0.0));
