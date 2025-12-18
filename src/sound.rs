@@ -50,6 +50,7 @@ impl Sound {
   }
 
   pub(crate) fn new(format: SoundFormat, samples: Vec<f32>) -> Self {
+    assert!(samples.len().is_multiple_of(format.channels.into()));
     Self { format, samples }
   }
 
