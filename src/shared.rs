@@ -1,17 +1,17 @@
 use super::*;
 
 pub(crate) trait Shared {
-  const ALIGNMENT: usize;
+  const ALIGNMENT: Alignment;
   const SIZE: usize;
 
   fn slot(i: &mut usize) -> usize {
-    let start = pad(*i, Self::ALIGNMENT);
+    let start = Self::ALIGNMENT.pad(*i);
     *i = start + Self::SIZE;
     start
   }
 
-  fn write(&self, buffer: &mut [u8], i: &mut usize, alignment: &mut usize) {
-    *alignment = (*alignment).max(Self::ALIGNMENT);
+  fn write(&self, buffer: &mut [u8], i: &mut usize, alignment: &mut Alignment) {
+    *alignment = alignment.max(Self::ALIGNMENT);
     let start = Self::slot(i);
     self.write_aligned(&mut buffer[start..*i]);
   }
@@ -20,8 +20,8 @@ pub(crate) trait Shared {
 }
 
 impl Shared for bool {
-  const ALIGNMENT: usize = u32::ALIGNMENT;
-  const SIZE: usize = u32::ALIGNMENT;
+  const ALIGNMENT: Alignment = u32::ALIGNMENT;
+  const SIZE: usize = u32::ALIGNMENT.n();
 
   fn write_aligned(&self, buffer: &mut [u8]) {
     u32::from(*self).write_aligned(buffer);
@@ -29,7 +29,7 @@ impl Shared for bool {
 }
 
 impl Shared for f32 {
-  const ALIGNMENT: usize = 4;
+  const ALIGNMENT: Alignment = Alignment::new(4);
   const SIZE: usize = 4;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
@@ -38,7 +38,7 @@ impl Shared for f32 {
 }
 
 impl Shared for u32 {
-  const ALIGNMENT: usize = 4;
+  const ALIGNMENT: Alignment = Alignment::new(4);
   const SIZE: usize = 4;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
@@ -47,7 +47,7 @@ impl Shared for u32 {
 }
 
 impl Shared for Field {
-  const ALIGNMENT: usize = u32::ALIGNMENT;
+  const ALIGNMENT: Alignment = u32::ALIGNMENT;
   const SIZE: usize = u32::SIZE;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
@@ -56,7 +56,7 @@ impl Shared for Field {
 }
 
 impl Shared for Mat3f {
-  const ALIGNMENT: usize = 16;
+  const ALIGNMENT: Alignment = Alignment::new(16);
   const SIZE: usize = 48;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
@@ -69,7 +69,7 @@ impl Shared for Mat3f {
 }
 
 impl Shared for Mat2x3f {
-  const ALIGNMENT: usize = 8;
+  const ALIGNMENT: Alignment = Alignment::new(8);
   const SIZE: usize = 24;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
@@ -82,7 +82,7 @@ impl Shared for Mat2x3f {
 }
 
 impl Shared for Mat4f {
-  const ALIGNMENT: usize = 16;
+  const ALIGNMENT: Alignment = Alignment::new(16);
   const SIZE: usize = 64;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
@@ -93,7 +93,7 @@ impl Shared for Mat4f {
 }
 
 impl Shared for Mat3x4f {
-  const ALIGNMENT: usize = 16;
+  const ALIGNMENT: Alignment = Alignment::new(16);
   const SIZE: usize = 64;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
@@ -106,7 +106,7 @@ impl Shared for Mat3x4f {
 }
 
 impl Shared for Vec2f {
-  const ALIGNMENT: usize = 8;
+  const ALIGNMENT: Alignment = Alignment::new(8);
   const SIZE: usize = 8;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
@@ -117,7 +117,7 @@ impl Shared for Vec2f {
 }
 
 impl Shared for Vec4f {
-  const ALIGNMENT: usize = 16;
+  const ALIGNMENT: Alignment = Alignment::new(16);
   const SIZE: usize = 16;
 
   fn write_aligned(&self, buffer: &mut [u8]) {

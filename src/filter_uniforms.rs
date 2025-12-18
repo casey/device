@@ -28,7 +28,7 @@ pub(crate) struct FilterUniforms {
 impl Uniforms for FilterUniforms {
   fn write(&self, dst: &mut [u8]) -> usize {
     let mut i = 0;
-    let mut a = 0;
+    let mut a = Alignment::new(0);
     self.alpha.write(dst, &mut i, &mut a);
     self.base.write(dst, &mut i, &mut a);
     self.color.write(dst, &mut i, &mut a);
@@ -50,6 +50,6 @@ impl Uniforms for FilterUniforms {
     self.sample_range.write(dst, &mut i, &mut a);
     self.tiling.write(dst, &mut i, &mut a);
     self.wrap.write(dst, &mut i, &mut a);
-    pad(i, a)
+    a.pad(i)
   }
 }
