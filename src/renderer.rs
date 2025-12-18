@@ -14,6 +14,7 @@ pub(crate) struct Renderer {
   frequencies: TextureView,
   layout_context: LayoutContext,
   limits: Limits,
+  mirroring_sampler: Sampler,
   non_filtering_sampler: Sampler,
   overlay_renderer: vello::Renderer,
   overlay_scene: vello::Scene,
@@ -127,7 +128,7 @@ impl Renderer {
         },
         BindGroupEntry {
           binding: binding.next(),
-          resource: BindingResource::Sampler(&self.non_filtering_sampler),
+          resource: BindingResource::Sampler(&self.mirroring_sampler),
         },
         BindGroupEntry {
           binding: binding.next(),
@@ -484,6 +485,14 @@ impl Renderer {
       ..default()
     });
 
+    let mirroring_sampler = device.create_sampler(&SamplerDescriptor {
+      address_mode_u: AddressMode::MirrorRepeat,
+      address_mode_v: AddressMode::MirrorRepeat,
+      mag_filter: FilterMode::Nearest,
+      min_filter: FilterMode::Nearest,
+      ..default()
+    });
+
     let limits = device.limits();
 
     let uniform_buffer_stride = |uniform_buffer_size| {
@@ -612,19 +621,20 @@ impl Renderer {
     .context(error::CreateOverlayRenderer)?;
 
     let mut renderer = Self {
+      capture_thread: CaptureThread::new()?,
       composite_pipeline,
       device,
       error_channel,
       filter_pipeline,
       filtering_sampler,
       font_context: FontContext::new(),
-      capture_thread: CaptureThread::new()?,
       format,
       frame: 0,
       frame_times: VecDeque::with_capacity(100),
       frequencies,
       layout_context: LayoutContext::new(),
       limits,
+      mirroring_sampler,
       non_filtering_sampler,
       overlay_renderer,
       overlay_scene: vello::Scene::new(),
