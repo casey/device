@@ -9,11 +9,11 @@ pub(crate) struct Recorder {
   audio: Sound,
   encoder: Child,
   end: Option<u64>,
-  fps: Fps,
   frames: HashMap<u64, (Image, Sound)>,
   frames_encoded: u64,
   heap: BinaryHeap<Reverse<u64>>,
   size: Size,
+  spf: usize,
   stdin: BufWriter<ChildStdin>,
   #[allow(unused)]
   tempdir: TempDir,
@@ -59,8 +59,8 @@ impl Recorder {
 
     let frame_imbalance = self.frame_imbalance();
 
-    if frame_imbalance.abs() >= 0.01 {
-      log::warn!("frame imbalance: {frame_imbalance:+.2}");
+    if frame_imbalance != 0.0 {
+      log::warn!("frame imbalance: {frame_imbalance:+}");
     }
 
     self.stdin.flush().context(error::RecordingFlush)?;
@@ -122,6 +122,17 @@ impl Recorder {
       return Ok(());
     }
 
+    if sound.samples() != self.spf {
+      return Err(
+        error::RecordingSamplesPerFrame {
+          actual: sound.samples(),
+          expected: self.spf,
+          frame,
+        }
+        .build(),
+      );
+    }
+
     self.heap.push(Reverse(frame));
     self.frames.insert(frame, (image, sound));
 
@@ -145,19 +156,13 @@ impl Recorder {
       log::warn!("pending frames: {}", self.heap.len());
     }
 
-    let frame_imbalance = self.frame_imbalance();
-
-    if frame_imbalance.abs() > 1.0 {
-      log::warn!("frame imbalance: {frame_imbalance:+.2}");
-    }
-
     Ok(())
   }
 
   fn frame_imbalance(&self) -> f64 {
-    let audio_duration = self.audio.duration();
-    let expected_frames = audio_duration.div_duration_f64(self.fps.duration());
-    self.frames_encoded as f64 - expected_frames
+    (i128::from(self.spf.into_u64()) * i128::from(self.frames_encoded)
+      - i128::from(self.audio.samples().into_u64())) as f64
+      / self.spf as f64
   }
 
   pub(crate) fn new(
@@ -212,11 +217,11 @@ impl Recorder {
       audio: Sound::empty(sound_format),
       encoder,
       end: None,
-      fps,
       frames: HashMap::new(),
       frames_encoded: 0,
       heap: BinaryHeap::new(),
       size,
+      spf: fps.spf(sound_format)?,
       stdin,
       tempdir,
       tempdir_path,
