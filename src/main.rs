@@ -1,5 +1,6 @@
 use {
   self::{
+    alignment::Alignment,
     allocator::Allocator,
     analyzer::Analyzer,
     app::App,
@@ -23,7 +24,7 @@ use {
     filter_uniforms::FilterUniforms,
     fps::Fps,
     frame::Frame,
-    functions::{default, display, pad, tempdir, thread_spawn},
+    functions::{default, display, tempdir, thread_spawn},
     hub::Hub,
     image::Image,
     image_format::ImageFormat,
@@ -145,6 +146,7 @@ macro_rules! label {
   };
 }
 
+mod alignment;
 mod allocator;
 mod analyzer;
 mod app;
