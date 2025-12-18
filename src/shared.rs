@@ -21,7 +21,7 @@ pub(crate) trait Shared {
 
 impl Shared for bool {
   const ALIGNMENT: Alignment = u32::ALIGNMENT;
-  const SIZE: usize = u32::ALIGNMENT.n();
+  const SIZE: usize = u32::SIZE;
 
   fn write_aligned(&self, buffer: &mut [u8]) {
     u32::from(*self).write_aligned(buffer);
