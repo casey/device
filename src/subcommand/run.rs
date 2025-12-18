@@ -14,8 +14,7 @@ impl Run {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
     let record = self
       .record
-      .then(|| options.fps.context(error::RecordRequiresFps))
-      .transpose()?;
+      .then(|| options.fps.unwrap_or(DEFAULT_FPS.into()));
 
     let mut app = App::new(config, self.fullscreen, options, self.present_mode, record)?;
 

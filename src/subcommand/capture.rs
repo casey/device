@@ -1,7 +1,5 @@
 use super::*;
 
-const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
-
 const DEFAULT_SAMPLE_RATE: u32 = 48_000;
 
 const PROGRESS_CHARS: &str = "█▉▊▋▌▍▎▏ ";
@@ -63,7 +61,7 @@ impl Capture {
       None,
     ))?;
 
-    let fps = options.fps.unwrap_or(DEFAULT_FPS.try_into().unwrap());
+    let fps = options.fps.unwrap_or(DEFAULT_FPS.into());
 
     let spf = fps.spf(tap.format())?;
 

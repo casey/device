@@ -151,8 +151,6 @@ pub(crate) enum Error {
     path: Utf8PathBuf,
     source: png::EncodingError,
   },
-  #[snafu(display("`--record` requires `--fps`"))]
-  RecordRequiresFps { backtrace: Option<Backtrace> },
   #[snafu(display("failed to flush recorded video"))]
   RecordingFlush {
     backtrace: Option<Backtrace>,

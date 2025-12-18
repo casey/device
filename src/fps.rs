@@ -34,25 +34,36 @@ impl FromStr for Fps {
   type Err = String;
 
   fn from_str(s: &str) -> Result<Self, String> {
-    s.parse::<NonZeroU32>()
-      .map_err(|err| format!("failed to parse fps: {err}"))?
-      .try_into()
+    Ok(
+      s.parse::<NonZeroU32>()
+        .map_err(|err| format!("failed to parse fps: {err}"))?
+        .into(),
+    )
   }
 }
 
-impl TryFrom<NonZeroU32> for Fps {
-  type Error = String;
-
-  fn try_from(fps: NonZeroU32) -> Result<Self, String> {
-    let duration = Duration::try_from_secs_f64(1.0 / fps.get() as f64)
-      .map_err(|err| format!("failed to calculate fps duration: {err}"))?;
-
-    Ok(Self { duration, fps })
+impl From<NonZeroU32> for Fps {
+  fn from(fps: NonZeroU32) -> Self {
+    Self {
+      duration: Duration::try_from_secs_f64(1.0 / fps.get() as f64).unwrap(),
+      fps,
+    }
   }
 }
 
 impl Display for Fps {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     write!(f, "{}", self.fps)
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn new() {
+    let _ = Fps::from(NonZeroU32::MIN);
+    let _ = Fps::from(NonZeroU32::MAX);
   }
 }
