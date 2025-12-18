@@ -19,7 +19,7 @@ pub(crate) struct FilterUniforms {
   pub(crate) position: Mat2x3f,
   pub(crate) repeat: bool,
   pub(crate) resolution: f32,
-  pub(crate) rms: f32,
+  pub(crate) response: f32,
   pub(crate) sample_range: f32,
   pub(crate) tiling: u32,
   pub(crate) wrap: bool,
@@ -46,7 +46,7 @@ impl Uniforms for FilterUniforms {
     self.position.write(dst, &mut i, &mut a);
     self.repeat.write(dst, &mut i, &mut a);
     self.resolution.write(dst, &mut i, &mut a);
-    self.rms.write(dst, &mut i, &mut a);
+    self.response.write(dst, &mut i, &mut a);
     self.sample_range.write(dst, &mut i, &mut a);
     self.tiling.write(dst, &mut i, &mut a);
     self.wrap.write(dst, &mut i, &mut a);
