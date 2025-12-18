@@ -62,7 +62,18 @@ noise: (program "noise")
 expo: (program "expo")
 transit: (program "transit")
 radio: (program "radio")
-blaster: (program "blaster")
+
+blaster:
+  cargo run \
+    --release \
+    -- \
+    --fit \
+    --fps 60 \
+    --width 3840 \
+    --height 2160 \
+    --program blaster \
+    --verbose \
+    run
 
 curtains:
   cargo run --release -- --song 'curtains closing' run
