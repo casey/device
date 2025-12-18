@@ -1,7 +1,5 @@
 use super::*;
 
-const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
-
 const DEFAULT_SAMPLE_RATE: u32 = 48_000;
 
 const PROGRESS_CHARS: &str = "█▉▊▋▌▍▎▏ ";
