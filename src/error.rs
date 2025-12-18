@@ -166,6 +166,13 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     panic_value: Box<dyn Any + Send + 'static>,
   },
+  #[snafu(display("expected {expected} but got {actual} audio samples with frame {frame}"))]
+  RecordingSamplesPerFrame {
+    actual: usize,
+    backtrace: Option<Backtrace>,
+    expected: usize,
+    frame: u64,
+  },
   #[snafu(display("recording command failed"))]
   RecordingStatus {
     backtrace: Option<Backtrace>,

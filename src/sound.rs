@@ -53,6 +53,10 @@ impl Sound {
     Self { format, samples }
   }
 
+  pub(crate) fn samples(&self) -> usize {
+    self.samples.len()
+  }
+
   pub(crate) fn save(&self, path: &Utf8Path) -> Result {
     let mut writer = WavWriter::create(
       path,
