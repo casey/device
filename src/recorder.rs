@@ -173,7 +173,7 @@ impl Recorder {
     let encoder_options: &[[&str; 2]] = if encoders.contains("h264_videotoolbox") {
       &[
         ["-c:v", "h264_videotoolbox"],
-        ["-q:v", "100"],
+        ["-q:v", "90"],
         ["-realtime", "true"],
       ]
     } else {
@@ -192,10 +192,11 @@ impl Recorder {
       .args(["-video_size", &format!("{}x{}", size.x, size.y)])
       .args(["-i", "-"])
       .args(encoder_options.iter().flatten())
-      .args(["-color_range", "pc"])
-      .args(["-colorspace", "bt709"])
       .args(["-color_primaries", "bt709"])
+      .args(["-color_range", "pc"])
       .args(["-color_trc", "bt709"])
+      .args(["-colorspace", "bt709"])
+      .args(["-level:v", "5.1"])
       .args(["-pix_fmt", "yuv420p"])
       .arg(VIDEO)
       .current_dir(&tempdir_path)
