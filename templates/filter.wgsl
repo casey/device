@@ -49,14 +49,14 @@ struct Uniforms {
   position: mat3x2f,
   repeat: u32,
   resolution: f32,
-  rms: f32,
+  response: f32,
   sample_range: f32,
   tiling: u32,
   wrap: u32,
 }
 
 fn coefficient() -> f32 {
-  return uniforms.base + uniforms.rms / 10 * uniforms.gain;
+  return uniforms.base + uniforms.response;
 }
 
 fn field_all(p: vec2f) -> bool {
