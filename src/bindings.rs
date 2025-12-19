@@ -156,14 +156,14 @@ const NAMED_BINDINGS: &[(ModeKind, NamedKey, ModifiersState, (&str, Command))] =
   };
 
   &[
-    (Command, Backspace,  OFF,   POP_COMMAND),
-    (Command, Enter,      OFF,   EXECUTE_COMMAND),
-    (Command, Escape,     OFF,   ENTER_NORMAL_MODE),
-    (Command, Tab,        OFF,   COMPLETE_COMMAND),
-    (Normal,  ArrowLeft,  OFF,   NEGATIVE_ROTATION),
-    (Normal,  ArrowRight, OFF,   POSITIVE_ROTATION),
-    (Normal,  Backspace,  OFF,   POP),
-    (Play,    Escape,     OFF,   ENTER_NORMAL_MODE),
+    (Command, Backspace,  OFF, POP_COMMAND),
+    (Command, Enter,      OFF, EXECUTE_COMMAND),
+    (Command, Escape,     OFF, ENTER_NORMAL_MODE),
+    (Command, Tab,        OFF, COMPLETE_COMMAND),
+    (Normal,  ArrowLeft,  OFF, NEGATIVE_ROTATION),
+    (Normal,  ArrowRight, OFF, POSITIVE_ROTATION),
+    (Normal,  Backspace,  OFF, POP),
+    (Play,    Escape,     OFF, ENTER_NORMAL_MODE),
   ]
 };
 
