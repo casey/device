@@ -71,7 +71,7 @@ pub(crate) enum Error {
     stderr: Vec<u8>,
   },
   #[snafu(display(
-    "command `{}` output was not UTF-8", program.display(),
+    "command `{}` output not UTF-8", program.display(),
   ))]
   CommandUtf8 {
     backtrace: Option<Backtrace>,
