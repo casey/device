@@ -1,12 +1,12 @@
 use {super::*, std::process::Command};
 
+static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+\.\d+) bpm\n$").unwrap());
+
 #[derive(Clone, Copy)]
 pub(crate) struct Tempo {
   pub(crate) bpm: f64,
   pub(crate) offset: f64,
 }
-
-const RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+\.\d+) bpm\n$").unwrap());
 
 impl Tempo {
   pub(crate) fn load(path: &Utf8Path, offset: f64) -> Result<Self> {

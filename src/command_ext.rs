@@ -13,7 +13,7 @@ impl CommandExt for Command {
     ensure! {
       output.status.success(),
       error::CommandStatus {
-        program; self.get_program(),
+        program: self.get_program(),
         status: output.status,
         stderr: output.stderr,
       },

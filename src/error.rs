@@ -17,30 +17,6 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: winit::error::EventLoopError,
   },
-  #[snafu(display("failed to launch command `{}`", program.display()))]
-  CommandRun {
-    backtrace: Option<Backtrace>,
-    program: OsString,
-    source: io::Error,
-  },
-  #[snafu(display(
-    "command `{}` failed with status {status}: {}", program.display(),
-    String::from_utf8_lossy(stderr),
-  ))]
-  CommandStatus {
-    backtrace: Option<Backtrace>,
-    program: OsString,
-    status: ExitStatus,
-    stderr: Vec<u8>,
-  },
-  #[snafu(display(
-    "command `{}` output was not UTF-8", program.display(),
-  ))]
-  CommandUtf8 {
-    backtrace: Option<Backtrace>,
-    program: OsString,
-    source: FromUtf8Error,
-  },
   #[snafu(display("failed to build audio input stream"))]
   AudioBuildInputStream {
     backtrace: Option<Backtrace>,
@@ -76,6 +52,30 @@ pub(crate) enum Error {
   AudioSupportedStreamConfigs {
     backtrace: Option<Backtrace>,
     source: cpal::SupportedStreamConfigsError,
+  },
+  #[snafu(display("failed to launch command `{}`", program.display()))]
+  CommandRun {
+    backtrace: Option<Backtrace>,
+    program: OsString,
+    source: io::Error,
+  },
+  #[snafu(display(
+    "command `{}` failed with status {status}: {}", program.display(),
+    String::from_utf8_lossy(stderr),
+  ))]
+  CommandStatus {
+    backtrace: Option<Backtrace>,
+    program: OsString,
+    status: ExitStatus,
+    stderr: Vec<u8>,
+  },
+  #[snafu(display(
+    "command `{}` output was not UTF-8", program.display(),
+  ))]
+  CommandUtf8 {
+    backtrace: Option<Backtrace>,
+    program: OsString,
+    source: FromUtf8Error,
   },
   #[snafu(display("failed to deserialize config file at `{path}`"))]
   ConfigDeserialize {

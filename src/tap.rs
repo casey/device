@@ -16,18 +16,29 @@ use {
 
 pub(crate) struct Tap {
   backend: Arc<Mutex<Backend>>,
-  tempo: Option<Tempo>,
   done: f64,
   format: SoundFormat,
   muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
   sequencer: Sequencer,
   stream: Option<Stream>,
+  tempo: Option<Tempo>,
   time: f64,
 }
 
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
+
+  pub(crate) fn beat(&self) -> Option<u64> {
+    let tempo = self.tempo?;
+
+    if self.time < tempo.offset {
+      return Some(0);
+    }
+
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    Some(((self.time - tempo.offset) / 60.0 * tempo.bpm) as u64)
+  }
 
   pub(crate) fn drain(&mut self) -> Sound {
     self.drain_exact(None).unwrap()
@@ -180,16 +191,6 @@ impl Tap {
       bpm: track.tempo.bpm,
       offset: self.time + track.tempo.offset,
     });
-  }
-
-  pub(crate) fn beat(&self) -> Option<u64> {
-    let tempo = self.tempo?;
-
-    if self.time < tempo.offset {
-      return Some(0);
-    }
-
-    Some(((self.time - tempo.offset) / 60.0 * tempo.bpm) as u64)
   }
 
   pub(crate) fn sequence_wave(&mut self, wave: &Arc<Wave>, fade_in: f64, fade_out: f64) {
