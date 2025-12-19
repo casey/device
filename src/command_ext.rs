@@ -12,7 +12,11 @@ impl CommandExt for Command {
 
     ensure! {
       output.status.success(),
-      error::CommandStatus { status: output.status, stderr: output.stderr, program: self.get_program() },
+      error::CommandStatus {
+        program; self.get_program(),
+        status: output.status,
+        stderr: output.stderr,
+      },
     }
 
     String::from_utf8(output.stdout).context(error::CommandUtf8 {
