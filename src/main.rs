@@ -12,6 +12,7 @@ use {
     capture::Capture,
     capture_thread::CaptureThread,
     command::Command,
+    command_ext::CommandExt,
     commands::Commands,
     composite_uniforms::CompositeUniforms,
     config::Config,
@@ -59,9 +60,11 @@ use {
     tap::Tap,
     target::Target,
     templates::{CompositeWgsl, FilterWgsl, VertexWgsl},
+    tempo::Tempo,
     text::Text,
     tiling::Tiling,
     to_affine::ToAffine,
+    track::Track,
     transformation2::Transformation2,
     transformation3::Transformation3,
     uniforms::Uniforms,
@@ -75,6 +78,7 @@ use {
     SupportedStreamConfig, SupportedStreamConfigRange,
     traits::{DeviceTrait, HostTrait, StreamTrait},
   },
+  fundsp::wave::Wave,
   hound::{WavSpec, WavWriter},
   indicatif::{ProgressBar, ProgressStyle},
   midly::num::u7,
@@ -86,7 +90,7 @@ use {
   regex::{Regex, RegexBuilder},
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
-  snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu},
+  snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu, ensure},
   std::{
     any::Any,
     backtrace::{Backtrace, BacktraceStatus},
@@ -94,16 +98,18 @@ use {
     cmp::Reverse,
     collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, VecDeque},
     env, f32,
+    ffi::OsString,
     fmt::{self, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
     mem,
-    num::NonZeroU32,
+    num::{NonZeroU32, ParseFloatError},
     ops::Bound,
     process::{self, ExitStatus, Stdio},
     str::FromStr,
+    string::FromUtf8Error,
     sync::{
-      Arc, Mutex,
+      Arc, LazyLock, Mutex,
       atomic::{self, AtomicBool, AtomicUsize},
       mpsc,
     },
@@ -159,6 +165,7 @@ mod capture;
 mod capture_thread;
 mod color;
 mod command;
+mod command_ext;
 mod commands;
 mod composite_uniforms;
 mod config;
@@ -209,9 +216,11 @@ mod tally;
 mod tap;
 mod target;
 mod templates;
+mod tempo;
 mod text;
 mod tiling;
 mod to_affine;
+mod track;
 mod transformation2;
 mod transformation3;
 mod uniforms;

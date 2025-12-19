@@ -387,6 +387,10 @@ impl App {
 
     self.allocated = allocated;
 
+    if let Some(beat) = self.tap.beat() {
+      log::trace!("beat: {}.{}", beat / 4 + 1, beat % 4 + 1);
+    }
+
     Ok(())
   }
 
