@@ -60,7 +60,8 @@ pub(crate) enum Error {
     source: io::Error,
   },
   #[snafu(display(
-    "command `{}` failed with status {status}: {}", program.display(),
+    "command `{}` failed with status {status}: {}",
+    program.display(),
     String::from_utf8_lossy(stderr),
   ))]
   CommandStatus {
