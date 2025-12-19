@@ -332,6 +332,8 @@ impl App {
       return Ok(());
     };
 
+    self.state.beat = self.tap.beat();
+
     self.analyzer.update(
       &sound,
       self.input.is_none() && self.tap.is_done(),
@@ -386,10 +388,6 @@ impl App {
     );
 
     self.allocated = allocated;
-
-    if let Some(beat) = self.tap.beat() {
-      log::trace!("beat: {}.{}", beat / 4 + 1, beat % 4 + 1);
-    }
 
     Ok(())
   }

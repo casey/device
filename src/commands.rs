@@ -29,13 +29,13 @@ impl Commands {
 }
 
 pub(crate) fn advance(state: &mut State) {
-  if state.beat % 4 == 3 {
+  if state.count % 4 == 3 {
     state.pop();
     state.pop();
   } else {
     push_top(state);
   }
-  state.beat += 1;
+  state.count += 1;
 }
 
 pub(crate) fn all(state: &mut State) {
@@ -139,25 +139,25 @@ pub(crate) fn cross(state: &mut State) {
 }
 
 pub(crate) fn cycle(state: &mut State) {
-  if state.beat % 4 == 3 {
+  if state.count % 4 == 3 {
     state.pop();
     state.pop();
     state.pop();
   } else {
     push_top(state);
   }
-  state.beat += 1;
+  state.count += 1;
 }
 
 pub(crate) fn cycle_zoom(state: &mut State) {
-  if state.beat % 4 == 3 {
+  if state.count % 4 == 3 {
     state.pop();
     state.pop();
     state.pop();
   } else {
     zoom_out(state);
   }
-  state.beat += 1;
+  state.count += 1;
 }
 
 pub(crate) fn decrement_db(state: &mut State) {
