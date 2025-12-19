@@ -67,10 +67,11 @@ blaster:
   cargo run \
     --release \
     -- \
-    --fit \
     --width 3840 \
     --height 2160 \
+    --fit \
     --program blaster \
+    --status \
     --verbose \
     run
 

@@ -48,6 +48,8 @@ pub(crate) struct Options {
   pub(crate) seed: Option<u64>,
   #[arg(group = AUDIO, long)]
   pub(crate) song: Option<String>,
+  #[arg(long, action = ArgAction::SetTrue)]
+  pub(crate) status: Option<bool>,
   #[arg(group = AUDIO, long)]
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
@@ -120,6 +122,7 @@ impl Options {
     state.db = self.db.unwrap_or(state.db);
     state.fit = self.fit.unwrap_or(state.fit);
     state.interpolate = self.interpolate.unwrap_or(state.interpolate);
+    state.status = self.status.unwrap_or(state.status);
     state.velocity = Vec4f::new(
       self.vx.unwrap_or(state.velocity.x),
       self.vy.unwrap_or(state.velocity.y),
