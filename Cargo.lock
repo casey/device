@@ -197,6 +197,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "assert_float_eq"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd9777fd8234cccd34019d9e26d70c8247f9baf24c8fdc0b56c548cf943af2ed"
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -728,6 +734,7 @@ dependencies = [
 name = "device"
 version = "0.0.4"
 dependencies = [
+ "assert_float_eq",
  "boilerplate",
  "camino",
  "clap",
