@@ -397,6 +397,10 @@ pub(crate) fn toggle_muted(app: &mut App) {
   app.tap.toggle_muted();
 }
 
+pub(crate) fn toggle_paused(app: &mut App) {
+  app.tap.toggle_paused();
+}
+
 pub(crate) fn toggle_repeat(state: &mut State) {
   state.filter.repeat.toggle();
 }

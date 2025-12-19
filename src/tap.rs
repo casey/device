@@ -244,6 +244,10 @@ impl Tap {
     self.muted.fetch_xor(true, atomic::Ordering::Relaxed);
   }
 
+  pub(crate) fn toggle_paused(&self) {
+    self.paused.fetch_xor(true, atomic::Ordering::Relaxed);
+  }
+
   pub(crate) fn write(&self, buffer: &mut [f32]) {
     self.backend.lock().unwrap().write(buffer);
   }
