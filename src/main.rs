@@ -72,7 +72,7 @@ use {
   },
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
-  clap::{Parser, ValueEnum},
+  clap::{ArgAction, Parser, ValueEnum},
   cpal::{
     self, BufferSize, SampleFormat, Stream, StreamConfig, SupportedBufferSize,
     SupportedStreamConfig, SupportedStreamConfigRange,

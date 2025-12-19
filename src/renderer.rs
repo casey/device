@@ -27,7 +27,7 @@ pub(crate) struct Renderer {
 }
 
 impl Renderer {
-  const COMPOSITE_UNIFORMS: usize = 2;
+  const COMPOSITE_UNIFORMS: usize = 3;
 
   const IMAGE_SUBRESOURCE_RANGE_FULL: ImageSubresourceRange = ImageSubresourceRange {
     array_layer_count: None,
@@ -836,6 +836,21 @@ impl Renderer {
     };
 
     {
+      let aspect_ratio_correction_uniforms = CompositeUniforms {
+        destination: true,
+        source: true,
+        viewport: Mat3f::new_nonuniform_scaling(&Vec2f::new(
+          1.0 / self.size.x.get() as f32,
+          1.0 / self.size.y.get() as f32,
+        ))
+        .append_scaling(2.0)
+        .append_translation(&Vec2f::new(-1.0, -1.0))
+        .append_nonuniform_scaling(&aspect_ratio_correction)
+        .append_translation(&Vec2f::new(1.0, 1.0))
+        .append_scaling(1.0 / 2.0)
+        .to_affine(),
+      };
+
       let uniforms: [CompositeUniforms; Self::COMPOSITE_UNIFORMS] = [
         CompositeUniforms {
           destination: tiling.destination_read(filter_count),
@@ -843,19 +858,10 @@ impl Renderer {
           viewport: Mat3f::new_scaling(1.0 / self.resolution.get() as f32).to_affine(),
         },
         CompositeUniforms {
-          destination: true,
-          source: true,
-          viewport: Mat3f::new_nonuniform_scaling(&Vec2f::new(
-            1.0 / self.size.x.get() as f32,
-            1.0 / self.size.y.get() as f32,
-          ))
-          .append_scaling(2.0)
-          .append_translation(&Vec2f::new(-1.0, -1.0))
-          .append_nonuniform_scaling(&aspect_ratio_correction)
-          .append_translation(&Vec2f::new(1.0, 1.0))
-          .append_scaling(1.0 / 2.0)
-          .to_affine(),
+          source: false,
+          ..aspect_ratio_correction_uniforms
         },
+        aspect_ratio_correction_uniforms,
       ];
 
       self.write_uniform_buffer(&self.composite_pipeline, &uniforms);
@@ -911,7 +917,7 @@ impl Renderer {
       &self.resources().overlay_bind_group,
       &mut encoder,
       None,
-      1,
+      if state.status { 1 } else { 2 },
       &self.resources().targets[0].texture_view,
       &self.composite_pipeline,
     );
@@ -921,7 +927,7 @@ impl Renderer {
         &self.resources().overlay_bind_group,
         &mut encoder,
         None,
-        1,
+        2,
         &frame.texture.create_view(&TextureViewDescriptor::default()),
         &self.composite_pipeline,
       );
@@ -1201,24 +1207,25 @@ impl Renderer {
   }
 
   fn target(&self) -> Target {
-    let texture = self.device.create_texture(&TextureDescriptor {
-      dimension: TextureDimension::D2,
-      format: self.format.into(),
-      label: label!(),
-      mip_level_count: 1,
-      sample_count: 1,
-      size: Extent3d {
-        depth_or_array_layers: 1,
-        height: self.resolution.get(),
-        width: self.resolution.get(),
-      },
-      usage: TextureUsages::COPY_SRC
-        | TextureUsages::RENDER_ATTACHMENT
-        | TextureUsages::TEXTURE_BINDING,
-      view_formats: &[self.format.into()],
-    });
-
-    let texture_view = texture.create_view(&TextureViewDescriptor::default());
+    let texture_view = self
+      .device
+      .create_texture(&TextureDescriptor {
+        dimension: TextureDimension::D2,
+        format: self.format.into(),
+        label: label!(),
+        mip_level_count: 1,
+        sample_count: 1,
+        size: Extent3d {
+          depth_or_array_layers: 1,
+          height: self.resolution.get(),
+          width: self.resolution.get(),
+        },
+        usage: TextureUsages::COPY_SRC
+          | TextureUsages::RENDER_ATTACHMENT
+          | TextureUsages::TEXTURE_BINDING,
+        view_formats: &[self.format.into()],
+      })
+      .create_view(&TextureViewDescriptor::default());
 
     let bind_group = self.filter_bind_group(&self.frequencies, &texture_view, &self.samples);
 
