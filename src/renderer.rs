@@ -966,7 +966,7 @@ impl Renderer {
       let mut items = Vec::new();
 
       if let Some(beat) = state.beat {
-        items.push(format!("{}.{}", beat / 4 + 1, beat % 4 + 1));
+        items.push(format!("{}.{}", beat / TIME + 1, beat % TIME + 1));
       }
 
       if let Some(fps) = fps {

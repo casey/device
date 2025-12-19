@@ -29,7 +29,7 @@ impl Commands {
 }
 
 pub(crate) fn advance(state: &mut State) {
-  if state.count % 4 == 3 {
+  if state.count % TIME == 3 {
     state.pop();
     state.pop();
   } else {
@@ -139,7 +139,7 @@ pub(crate) fn cross(state: &mut State) {
 }
 
 pub(crate) fn cycle(state: &mut State) {
-  if state.count % 4 == 3 {
+  if state.count % TIME == 3 {
     state.pop();
     state.pop();
     state.pop();
@@ -150,7 +150,7 @@ pub(crate) fn cycle(state: &mut State) {
 }
 
 pub(crate) fn cycle_zoom(state: &mut State) {
-  if state.count % 4 == 3 {
+  if state.count % TIME == 3 {
     state.pop();
     state.pop();
     state.pop();
