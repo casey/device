@@ -8,6 +8,8 @@ pub(crate) struct Run {
   present_mode: Option<PresentMode>,
   #[arg(long)]
   record: bool,
+  #[arg(long, action = ArgAction::SetTrue)]
+  pub(crate) status: Option<bool>,
 }
 
 impl Run {

@@ -1,9 +1,6 @@
 use {
   super::*,
-  clap::{
-    ArgAction,
-    builder::styling::{AnsiColor, Effects, Styles},
-  },
+  clap::builder::styling::{AnsiColor, Effects, Styles},
 };
 
 const AUDIO: &str = "audio";
@@ -33,7 +30,7 @@ pub(crate) struct Options {
   pub(crate) image_format: Option<ImageFormat>,
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
-  #[arg(long)]
+  #[arg(long, action = ArgAction::SetTrue)]
   pub(crate) interpolate: Option<bool>,
   #[arg(long)]
   pub(crate) mute: bool,
