@@ -904,32 +904,6 @@ impl Renderer {
       (source, destination) = (destination, source);
     }
 
-    // todo:
-    // 1. filters draw back and forth
-    // 2. tiling bind group composites into the tiling view
-    // 3. overlay bind group draws from tiling view into target 0 texture
-    //
-    // - we need to draw from the tiling view into a texture which is not one of the two targets
-    //
-    // - tiling bind group cannot draw into target 0 or 1, since it reads from both
-    //
-    // - cannot draw into the the tiling view, because we need to read from that
-    //   to blit to the screen
-    //
-    // target 0
-    // target 1
-    // tiling
-    // overlay
-    //
-    // - composite tiles
-    //   read: target 0 and target 1
-    //   write: tiling view
-    //
-    // - viewport transform into capture texture
-    //   read: tiling view and overlay, but disable overlay read
-    //   write: texture 0
-    //   uniforms: fit fill uniforms, but only read from one texture
-
     Self::draw(
       &self.resources().tiling_bind_group,
       &mut encoder,
@@ -943,7 +917,7 @@ impl Renderer {
       &self.resources().overlay_bind_group,
       &mut encoder,
       None,
-      1,
+      if state.status { 1 } else { 2 },
       &self.resources().targets[0].texture_view,
       &self.composite_pipeline,
     );
