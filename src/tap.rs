@@ -68,10 +68,10 @@ impl Tap {
     self.time >= self.done
   }
 
-  pub(crate) fn load_track(&self, path: &Utf8Path, offset: f64) -> Result<Track> {
+  pub(crate) fn load_track(&self, path: &Utf8Path) -> Result<Track> {
     Ok(Track {
       audio: self.load_wave(path)?,
-      tempo: Tempo::load(path, offset)?,
+      tempo: Tempo::load(path)?,
     })
   }
 
