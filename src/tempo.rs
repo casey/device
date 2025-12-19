@@ -18,7 +18,8 @@ impl Tempo {
 
     let bpm = captures[1]
       .parse::<f64>()
-      .context(error::TempoBpm { stdout })?;
+      .ok()
+      .context(error::TempoParse { stdout: &stdout })?;
 
     Ok(Self { bpm, offset })
   }

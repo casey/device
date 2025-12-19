@@ -284,12 +284,6 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
-  #[snafu(display("failed to parse tempo from aubio: {stdout}"))]
-  TempoBpm {
-    backtrace: Option<Backtrace>,
-    source: ParseFloatError,
-    stdout: String,
-  },
   #[snafu(display("failed to parse tempo from aubio stdout: {stdout}"))]
   TempoParse {
     backtrace: Option<Backtrace>,

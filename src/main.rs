@@ -103,7 +103,7 @@ use {
     fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
     mem,
-    num::{NonZeroU32, ParseFloatError},
+    num::NonZeroU32,
     ops::Bound,
     process::{self, ExitStatus, Stdio},
     str::FromStr,
