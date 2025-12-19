@@ -2,6 +2,7 @@ use super::*;
 
 pub(crate) struct Renderer {
   capture_thread: CaptureThread,
+  clamp_to_border_sampler: Sampler,
   composite_pipeline: Pipeline,
   device: wgpu::Device,
   error_channel: mpsc::Receiver<wgpu::Error>,
@@ -112,7 +113,13 @@ impl Renderer {
       .min(5808.try_into().unwrap())
   }
 
-  fn composite_bind_group(&self, destination: &TextureView, source: &TextureView) -> BindGroup {
+  fn composite_bind_group(
+    &self,
+    destination: &TextureView,
+    destination_sampler: &Sampler,
+    source: &TextureView,
+    source_sampler: &Sampler,
+  ) -> BindGroup {
     let mut binding = Counter::default();
 
     self.device.create_bind_group(&BindGroupDescriptor {
@@ -124,11 +131,15 @@ impl Renderer {
         },
         BindGroupEntry {
           binding: binding.next(),
+          resource: BindingResource::Sampler(destination_sampler),
+        },
+        BindGroupEntry {
+          binding: binding.next(),
           resource: BindingResource::TextureView(source),
         },
         BindGroupEntry {
           binding: binding.next(),
-          resource: BindingResource::Sampler(&self.mirroring_sampler),
+          resource: BindingResource::Sampler(source_sampler),
         },
         BindGroupEntry {
           binding: binding.next(),
@@ -163,6 +174,12 @@ impl Renderer {
             sample_type: TextureSampleType::Float { filterable: true },
             view_dimension: TextureViewDimension::D2,
           },
+          visibility: ShaderStages::FRAGMENT,
+        },
+        BindGroupLayoutEntry {
+          binding: binding.next(),
+          count: None,
+          ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
           visibility: ShaderStages::FRAGMENT,
         },
         BindGroupLayoutEntry {
@@ -423,7 +440,7 @@ impl Renderer {
       .request_device(&DeviceDescriptor {
         label: label!(),
         memory_hints: MemoryHints::Performance,
-        required_features: Features::CLEAR_TEXTURE,
+        required_features: Features::ADDRESS_MODE_CLAMP_TO_BORDER | Features::CLEAR_TEXTURE,
         required_limits: Limits::default(),
         trace: Trace::Off,
       })
@@ -488,6 +505,14 @@ impl Renderer {
     let mirroring_sampler = device.create_sampler(&SamplerDescriptor {
       address_mode_u: AddressMode::MirrorRepeat,
       address_mode_v: AddressMode::MirrorRepeat,
+      mag_filter: FilterMode::Nearest,
+      min_filter: FilterMode::Nearest,
+      ..default()
+    });
+
+    let clamp_to_border_sampler = device.create_sampler(&SamplerDescriptor {
+      address_mode_u: AddressMode::ClampToBorder,
+      address_mode_v: AddressMode::ClampToBorder,
       mag_filter: FilterMode::Nearest,
       min_filter: FilterMode::Nearest,
       ..default()
@@ -622,6 +647,7 @@ impl Renderer {
 
     let mut renderer = Self {
       capture_thread: CaptureThread::new()?,
+      clamp_to_border_sampler,
       composite_pipeline,
       device,
       error_channel,
@@ -1165,8 +1191,12 @@ impl Renderer {
 
     let targets = [self.target(), self.target()];
 
-    let tiling_bind_group =
-      self.composite_bind_group(&targets[0].texture_view, &targets[1].texture_view);
+    let tiling_bind_group = self.composite_bind_group(
+      &targets[0].texture_view,
+      &self.mirroring_sampler,
+      &targets[1].texture_view,
+      &self.mirroring_sampler,
+    );
 
     let overlay_view = self
       .device
@@ -1186,7 +1216,12 @@ impl Renderer {
       })
       .create_view(&TextureViewDescriptor::default());
 
-    let overlay_bind_group = self.composite_bind_group(&tiling_view, &overlay_view);
+    let overlay_bind_group = self.composite_bind_group(
+      &tiling_view,
+      &self.mirroring_sampler,
+      &overlay_view,
+      &self.clamp_to_border_sampler,
+    );
 
     self.resources = Some(Resources {
       pool: Arc::new(Mutex::new(Vec::new())),

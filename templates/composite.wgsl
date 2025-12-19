@@ -6,11 +6,15 @@ var destination: texture_2d<f32>;
 
 @group(0)
 @binding({{ binding.next() }})
+var destination_sampler: sampler;
+
+@group(0)
+@binding({{ binding.next() }})
 var source: texture_2d<f32>;
 
 @group(0)
 @binding({{ binding.next() }})
-var texture_sampler: sampler;
+var source_sampler: sampler;
 
 @group(0)
 @binding({{ binding.next() }})
@@ -22,7 +26,7 @@ struct Uniforms {
   viewport: mat3x2f,
 }
 
-fn sample(condition: u32, texture: texture_2d<f32>, uv: vec2f) -> vec4f {
+fn sample(condition: u32, texture: texture_2d<f32>, texture_sampler: sampler, uv: vec2f) -> vec4f {
   if bool(condition) {
     return textureSample(texture, texture_sampler, uv);
   } else {
@@ -34,9 +38,9 @@ fn sample(condition: u32, texture: texture_2d<f32>, uv: vec2f) -> vec4f {
 fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   let uv = uniforms.viewport * vec3(position.xy, 1.0);
 
-  let src = sample(uniforms.source, source, uv);
+  let src = sample(uniforms.source, source, source_sampler, uv);
 
-  let dst = sample(uniforms.destination, destination, uv);
+  let dst = sample(uniforms.destination, destination, destination_sampler, uv);
 
   let blend = mix(dst.rgb, src.rgb, src.a);
 
