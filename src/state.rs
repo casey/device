@@ -3,9 +3,10 @@ use super::*;
 #[derive(Clone)]
 pub(crate) struct State {
   pub(crate) alpha: f32,
-  pub(crate) beat: u64,
+  pub(crate) beat: Option<u64>,
   pub(crate) callback: Option<Box<dyn Callback>>,
   pub(crate) complexity: f32,
+  pub(crate) count: u64,
   pub(crate) db: f32,
   pub(crate) encoder: f32,
   pub(crate) filter: Filter,
@@ -26,14 +27,16 @@ impl Default for State {
   fn default() -> Self {
     Self {
       alpha: 0.5,
-      beat: 0,
+      beat: None,
       callback: None,
+      complexity: 0.0,
+      count: 0,
       db: 0.0,
+      encoder: 0.0,
       filter: Filter::default(),
       filters: Vec::new(),
       fit: false,
       interpolate: false,
-      encoder: 0.0,
       rng: SmallRng::from_rng(&mut rand::rng()),
       spread: false,
       status: false,
@@ -41,7 +44,6 @@ impl Default for State {
       tile: false,
       transient: Transformation2::default(),
       velocity: Vec4f::zeros(),
-      complexity: 0.0,
       wrap: true,
     }
   }

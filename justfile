@@ -68,7 +68,6 @@ blaster:
     --release \
     -- \
     --fit \
-    --fps 60 \
     --width 3840 \
     --height 2160 \
     --program blaster \

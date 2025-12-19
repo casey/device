@@ -236,6 +236,7 @@ const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
 const RECORDING: &str = "recording.mp4";
 const TAU: f32 = f32::consts::TAU;
+const TIME: u64 = 4;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 
