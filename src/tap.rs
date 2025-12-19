@@ -16,17 +16,29 @@ use {
 
 pub(crate) struct Tap {
   backend: Arc<Mutex<Backend>>,
-  done: Duration,
+  done: f64,
   format: SoundFormat,
   muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
   sequencer: Sequencer,
   stream: Option<Stream>,
-  time: Duration,
+  tempo: Option<Tempo>,
+  time: f64,
 }
 
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
+
+  pub(crate) fn beat(&self) -> Option<u64> {
+    let tempo = self.tempo?;
+
+    if self.time < tempo.offset {
+      return Some(0);
+    }
+
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    Some(((self.time - tempo.offset) / 60.0 * tempo.bpm) as u64)
+  }
 
   pub(crate) fn drain(&mut self) -> Sound {
     self.drain_exact(None).unwrap()
@@ -43,7 +55,7 @@ impl Tap {
 
     let sound = Sound::new(self.format, backend.samples.drain(..count).collect());
 
-    self.time += sound.duration();
+    self.time += sound.duration().as_secs_f64();
 
     Some(sound)
   }
@@ -54,6 +66,13 @@ impl Tap {
 
   pub(crate) fn is_done(&self) -> bool {
     self.time >= self.done
+  }
+
+  pub(crate) fn load_track(&self, path: &Utf8Path, offset: f64) -> Result<Track> {
+    Ok(Track {
+      audio: self.load_wave(path)?,
+      tempo: Tempo::load(path, offset)?,
+    })
   }
 
   pub(crate) fn load_wave(&self, path: &Utf8Path) -> Result<Arc<Wave>> {
@@ -129,7 +148,7 @@ impl Tap {
         samples: Vec::new(),
         sequencer_backend,
       })),
-      done: Duration::ZERO,
+      done: 0.0,
       format: SoundFormat {
         channels: Self::CHANNELS,
         sample_rate,
@@ -138,7 +157,8 @@ impl Tap {
       paused,
       sequencer,
       stream: None,
-      time: Duration::ZERO,
+      tempo: None,
+      time: 0.0,
     }
   }
 
@@ -154,7 +174,7 @@ impl Tap {
   where
     T: AudioNode<Inputs = U0> + IntoStereo<T::Outputs> + 'static,
   {
-    self.done = self.done.max(self.time + Duration::from_secs_f64(duration));
+    self.done = self.done.max(self.time + duration);
     self.sequencer.push_relative(
       0.0,
       duration,
@@ -163,6 +183,14 @@ impl Tap {
       fade_out,
       node.0.into_stereo(),
     );
+  }
+
+  pub(crate) fn sequence_track(&mut self, track: &Track, fade_in: f64, fade_out: f64) {
+    self.sequence_wave(&track.audio, fade_in, fade_out);
+    self.tempo = Some(Tempo {
+      bpm: track.tempo.bpm,
+      offset: self.time + track.tempo.offset,
+    });
   }
 
   pub(crate) fn sequence_wave(&mut self, wave: &Arc<Wave>, fade_in: f64, fade_out: f64) {

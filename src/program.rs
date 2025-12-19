@@ -34,8 +34,8 @@ impl Program {
         tap.sequence_wave(&wave, 0.0, 0.0);
       }
       Self::Blaster => {
-        let wave = tap.load_wave(&config.find_song("total 4/13 maria")?)?;
-        tap.sequence_wave(&wave, 0.0, 0.0);
+        let track = tap.load_track(&config.find_song("total 4/13 maria")?, 0.348)?;
+        tap.sequence_track(&track, 0.0, 0.0);
       }
     }
     Ok(())
