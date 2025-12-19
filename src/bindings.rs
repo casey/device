@@ -1,6 +1,10 @@
 use super::*;
 
 const OFF: ModifiersState = ModifiersState::empty();
+const CTRL: ModifiersState = ModifiersState::CONTROL;
+const CTRL_SUPER: ModifiersState = CTRL.union(SUPER);
+const SHIFT: ModifiersState = ModifiersState::SHIFT;
+const SUPER: ModifiersState = ModifiersState::SUPER;
 
 #[rustfmt::skip]
 const BUTTON_BINDINGS: &[(Controller, u8, Press, (&str, Command))] = {
@@ -30,10 +34,6 @@ const BUTTON_BINDINGS: &[(Controller, u8, Press, (&str, Command))] = {
 const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] = {
   use {generated::*, ModeKind::*};
 
-  const CTRL: ModifiersState = ModifiersState::CONTROL;
-  const CTRL_SUPER: ModifiersState = CTRL.union(SUPER);
-  const SHIFT: ModifiersState = ModifiersState::SHIFT;
-  const SUPER: ModifiersState = ModifiersState::SUPER;
 
   &[
     (Normal, '+',  OFF,        INCREMENT_DB),
@@ -53,6 +53,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] =
     (Normal, 'L',  OFF,        FREQUENCIES),
     (Normal, 'N',  OFF,        NONE),
     (Normal, 'P',  OFF,        ENTER_PLAY_MODE),
+    (Normal, 'P',  SUPER,      TOGGLE_PAUSED),
     (Normal, 'R',  OFF,        TOGGLE_REPEAT),
     (Normal, 'R',  SHIFT,      RELOAD_SHADERS),
     (Normal, 'S',  OFF,        SAMPLES),
@@ -62,7 +63,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] =
     (Normal, 'X',  OFF,        X),
     (Normal, 'Z',  OFF,        ZOOM_OUT),
     (Normal, 'Z',  SUPER,      UNDO),
-    (Normal, '\\', SUPER,     TOGGLE_MUTED),
+    (Normal, '\\', SUPER,      TOGGLE_MUTED),
     (Play,   '1',  OFF,        SET_PATCH_SINE),
     (Play,   '2',  OFF,        SET_PATCH_SAW),
   ]
