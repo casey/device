@@ -71,7 +71,7 @@ impl Tap {
   pub(crate) fn load_track(&self, path: &Utf8Path) -> Result<Track> {
     Ok(Track {
       audio: self.load_wave(path)?,
-      tempo: Tempo::load(path)?,
+      tempo: Tempo::detect(path)?,
     })
   }
 

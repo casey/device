@@ -9,7 +9,7 @@ pub(crate) struct Tempo {
 }
 
 impl Tempo {
-  pub(crate) fn load(path: &Utf8Path) -> Result<Self> {
+  pub(crate) fn detect(path: &Utf8Path) -> Result<Self> {
     let bpm = {
       let stdout = Command::new("aubio").arg("tempo").arg(path).stdout_utf8()?;
 
