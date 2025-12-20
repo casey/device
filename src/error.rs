@@ -259,6 +259,11 @@ pub(crate) enum Error {
     path: Utf8PathBuf,
     source: boilerplate::Error,
   },
+  #[snafu(display("failed to register signal handler"))]
+  SignalRegister {
+    backtrace: Option<Backtrace>,
+    source: io::Error,
+  },
   #[snafu(
     display(
       "more than one match for song: {}",

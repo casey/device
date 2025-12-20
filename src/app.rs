@@ -14,6 +14,7 @@ pub(crate) struct App {
   pub(crate) history: History,
   pub(crate) hub: Hub,
   pub(crate) input: Option<Input>,
+  pub(crate) interrupt: Interrupt,
   pub(crate) last: Instant,
   pub(crate) mode: Mode,
   pub(crate) modifiers: Modifiers,
@@ -234,6 +235,8 @@ impl App {
       None
     };
 
+    let script = options.script();
+
     Ok(Self {
       allocated: 0,
       analyzer: Analyzer::new(),
@@ -244,11 +247,11 @@ impl App {
       cursors: HashSet::new(),
       deadline: now,
       errors: Vec::new(),
-      script: options.script(),
       fullscreen,
       history: History::default(),
       hub: Hub::new()?,
       input,
+      interrupt: Interrupt::register()?,
       last: now,
       mode: Mode::Normal,
       modifiers: Modifiers::default(),
@@ -258,8 +261,9 @@ impl App {
       record,
       recorder_thread: None,
       renderer: None,
-      state,
+      script,
       spf,
+      state,
       tap,
       window: None,
     })
@@ -322,6 +326,11 @@ impl App {
   }
 
   fn redraw(&mut self, event_loop: &ActiveEventLoop) -> Result {
+    if self.interrupt.interrupted() {
+      event_loop.exit();
+      return Ok(());
+    }
+
     self.window().set_cursor_visible(
       self.cursors.is_empty() || self.cursor_moved.elapsed().as_secs_f32() < 2.0,
     );
