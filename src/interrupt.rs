@@ -5,6 +5,10 @@ pub(crate) struct Interrupt {
 }
 
 impl Interrupt {
+  pub(crate) fn interrupted(&self) -> bool {
+    self.interrupted.load(atomic::Ordering::Relaxed)
+  }
+
   pub(crate) fn register() -> Result<Self> {
     let interrupted = Arc::new(AtomicBool::new(false));
 
@@ -12,9 +16,5 @@ impl Interrupt {
       .context(error::SignalRegister)?;
 
     Ok(Self { interrupted })
-  }
-
-  pub(crate) fn interrupted(&self) -> bool {
-    self.interrupted.load(atomic::Ordering::Relaxed)
   }
 }
