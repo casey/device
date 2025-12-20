@@ -21,7 +21,7 @@ pub(crate) struct Script {
 }
 
 impl Script {
-  pub(crate) fn tick(&self, tick: Tick) -> &[(&'static str, Command)] {
+  pub(crate) fn tick(&self, tick: Tick) -> &[CommandEntry] {
     if !tick.advance {
       return default();
     }

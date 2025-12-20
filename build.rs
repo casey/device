@@ -111,7 +111,7 @@ fn main() {
 
   for (name, variant) in &commands {
     lines.push(format!(
-      "pub(crate) const {}: (&str, Command) = (\"{}\", {variant}({name}));",
+      "pub(crate) const {}: CommandEntry = (\"{}\", {variant}({name}));",
       name.to_uppercase(),
       name.replace('_', "-"),
     ));
@@ -119,7 +119,7 @@ fn main() {
 
   lines.push(String::new());
 
-  lines.push("pub(crate) const COMMANDS: &[(&str, Command)] = &[".into());
+  lines.push("pub(crate) const COMMANDS: &[CommandEntry] = &[".into());
 
   for name in commands.keys() {
     lines.push(format!("  {},", name.to_uppercase()));
