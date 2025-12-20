@@ -9,6 +9,10 @@ include = ["/build.rs", "/src", "/templates"]
 license = "CC0-1.0"
 repository = "https://github.com/casey/device"
 
+[package.metadata.bundle]
+name = "Device"
+identifier = "com.rodarmor.device"
+
 [dependencies]
 assert_float_eq = "1.2.0"
 boilerplate = { version = "1.1.0", features = ["reload"]}
