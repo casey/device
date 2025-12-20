@@ -31,6 +31,8 @@ pub(crate) struct Capture {
 
 impl Capture {
   pub(crate) fn run(self, options: Options, config: Config) -> Result {
+    let interrupt = Interrupt::register()?;
+
     let sound_format = SoundFormat {
       sample_rate: DEFAULT_SAMPLE_RATE,
       channels: Tap::CHANNELS,
@@ -101,7 +103,7 @@ impl Capture {
 
     let mut done = false;
     for frame in 0.. {
-      if frames.map_or(done, |frames| frame == frames) {
+      if frames.map_or(done, |frames| frame == frames) || interrupt.interrupted() {
         break;
       }
 

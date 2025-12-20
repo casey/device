@@ -31,6 +31,7 @@ use {
     image::Image,
     image_format::ImageFormat,
     input::Input,
+    interrupt::Interrupt,
     into_stereo::IntoStereo,
     into_utf8_path::IntoUtf8Path,
     message::Message,
@@ -188,6 +189,7 @@ mod hub;
 mod image;
 mod image_format;
 mod input;
+mod interrupt;
 mod into_stereo;
 mod into_utf8_path;
 mod maria;
