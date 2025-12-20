@@ -53,6 +53,11 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: cpal::SupportedStreamConfigsError,
   },
+  #[snafu(display("app command {command} cannot be used in capture subcommand"))]
+  CaptureScriptAppCommand {
+    backtrace: Option<Backtrace>,
+    command: &'static str,
+  },
   #[snafu(display("failed to launch command `{}`", program.display()))]
   CommandRun {
     backtrace: Option<Backtrace>,

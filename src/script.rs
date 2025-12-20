@@ -13,11 +13,11 @@ macro_rules! script {
   }
 }
 
-pub(crate) type Slice = &'static [(u64, &'static [(&'static str, Command)])];
+pub(crate) type Slice = &'static [(u64, &'static [CommandEntry])];
 
 #[derive(Debug)]
 pub(crate) struct Script {
-  commands: BTreeMap<u64, Vec<(&'static str, Command)>>,
+  commands: BTreeMap<u64, Vec<CommandEntry>>,
 }
 
 impl Script {
@@ -36,11 +36,15 @@ impl Script {
       .map(Vec::as_slice)
       .unwrap_or_default()
   }
+
+  pub(crate) fn commands(&self) -> impl Iterator<Item = CommandEntry> {
+    self.commands.values().flatten().copied()
+  }
 }
 
 impl From<Slice> for Script {
   fn from(slice: Slice) -> Self {
-    let mut commands = BTreeMap::<u64, Vec<(&'static str, Command)>>::new();
+    let mut commands = BTreeMap::<u64, Vec<CommandEntry>>::new();
 
     for (measure, line) in slice {
       let beat = measure.checked_sub(1).unwrap() * TIME;

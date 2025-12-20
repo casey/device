@@ -88,12 +88,14 @@ fn main() {
     let inputs = inputs.iter().map(String::as_str).collect::<Vec<&str>>();
 
     let variant = match (inputs.as_slice(), fallible) {
+      (["app", "event_loop"], false) => "AppEventLoop",
       (["app"], false) => "App",
       (["app"], true) => "AppFallible",
-      (["app", "event_loop"], false) => "AppEventLoop",
+      (["history", "state"], false) => "HistoryState",
+      (["history"], false) => "History",
       (["state"], false) => "State",
       _ => panic!(
-        "unsupported combination of inputs and fallibility: ({}, {fallible}",
+        "unsupported combination of inputs and fallibility: ({}, {fallible})",
         inputs.join(" ")
       ),
     };
