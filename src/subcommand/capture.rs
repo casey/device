@@ -103,11 +103,7 @@ impl Capture {
 
     let mut done = false;
     for frame in 0.. {
-      if interrupt.interrupted() {
-        break;
-      }
-
-      if frames.map_or(done, |frames| frame == frames) {
+      if frames.map_or(done, |frames| frame == frames) || interrupt.interrupted() {
         break;
       }
 
