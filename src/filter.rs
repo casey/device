@@ -75,7 +75,7 @@ impl Filter {
       .to_affine()
   }
 
-  pub(crate) fn tick(&mut self, dt: Duration) {
-    self.elapsed += dt;
+  pub(crate) fn tick(&mut self, tick: Tick) {
+    self.elapsed += tick.dt;
   }
 }

@@ -1,0 +1,58 @@
+use super::*;
+
+#[macro_export]
+macro_rules! script {
+  {
+    $($beat:literal $($command:ident)+)*
+  } => {
+    &[
+      $(
+        ($beat, &[$($command,)*]),
+      )*
+    ]
+  }
+}
+
+pub(crate) type Slice = &'static [(u64, &'static [(&'static str, Command)])];
+
+#[derive(Debug)]
+pub(crate) struct Script {
+  commands: BTreeMap<u64, Vec<(&'static str, Command)>>,
+}
+
+impl Script {
+  pub(crate) fn tick(&self, tick: Tick) -> &[(&'static str, Command)] {
+    if !tick.advance {
+      return default();
+    }
+
+    let Some(beat) = tick.beat else {
+      return default();
+    };
+
+    self
+      .commands
+      .get(&beat)
+      .map(Vec::as_slice)
+      .unwrap_or_default()
+  }
+}
+
+impl From<Slice> for Script {
+  fn from(slice: Slice) -> Self {
+    let mut commands = BTreeMap::<u64, Vec<(&'static str, Command)>>::new();
+
+    for (measure, line) in slice {
+      let beat = measure.checked_sub(1).unwrap() * TIME;
+
+      for (i, command) in line.iter().enumerate() {
+        commands
+          .entry(beat + i.into_u64())
+          .or_default()
+          .push(*command);
+      }
+    }
+
+    Script { commands }
+  }
+}

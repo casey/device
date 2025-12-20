@@ -23,6 +23,7 @@ pub(crate) struct App {
   pub(crate) record: Option<Fps>,
   pub(crate) recorder_thread: Option<RecorderThread>,
   pub(crate) renderer: Option<Renderer>,
+  pub(crate) script: Option<Script>,
   pub(crate) spf: Option<usize>,
   pub(crate) state: State,
   pub(crate) tap: Tap,
@@ -141,6 +142,7 @@ impl App {
       self.recorder_thread = Some(RecorderThread::new(Recorder::new(
         fps,
         &self.options,
+        true,
         renderer.size(),
         self.tap.format(),
       )?)?);
@@ -237,6 +239,7 @@ impl App {
       cursors: HashSet::new(),
       deadline: now,
       errors: Vec::new(),
+      script: options.script(),
       fullscreen,
       history: Vec::new(),
       hub: Hub::new()?,
@@ -321,6 +324,8 @@ impl App {
 
     self.process_messages(event_loop);
 
+    let last = self.tap.beat();
+
     let sound = if let Some(input) = &self.input {
       input.drain_exact(self.spf)
     } else {
@@ -331,8 +336,6 @@ impl App {
       self.window().request_redraw();
       return Ok(());
     };
-
-    self.state.beat = self.tap.beat();
 
     self.analyzer.update(
       &sound,
@@ -352,7 +355,25 @@ impl App {
       }
     }
 
-    self.state.tick(dt);
+    let beat = self.tap.beat();
+
+    let advance = beat != last;
+
+    let tick = Tick { advance, beat, dt };
+
+    let commands = self
+      .script
+      .as_ref()
+      .map(|script| script.tick(tick))
+      .unwrap_or_default()
+      .to_vec();
+
+    for (name, command) in commands {
+      log::info!("dispatching script command {name}");
+      self.dispatch(event_loop, command);
+    }
+
+    self.state.tick(tick);
 
     let renderer = self.renderer.as_mut().unwrap();
 
@@ -473,7 +494,7 @@ impl ApplicationHandler for App {
       let now = Instant::now();
 
       while self.deadline <= now {
-        self.deadline += fps.duration();
+        self.deadline += fps.dt();
         self.window().request_redraw();
       }
 
