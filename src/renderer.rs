@@ -7,6 +7,7 @@ pub(crate) struct Renderer {
   device: wgpu::Device,
   error_channel: mpsc::Receiver<wgpu::Error>,
   filter_pipeline: Pipeline,
+  field_texture_bind_group_layout: BindGroupLayout,
   filtering_sampler: Sampler,
   font_context: FontContext,
   format: ImageFormat,
@@ -17,18 +18,26 @@ pub(crate) struct Renderer {
   limits: Limits,
   mirroring_sampler: Sampler,
   non_filtering_sampler: Sampler,
-  overlay_renderer: vello::Renderer,
-  overlay_scene: vello::Scene,
   queue: Queue,
   resolution: NonZeroU32,
   resources: Option<Resources>,
   samples: TextureView,
   size: Size,
   surface: Option<(Surface<'static>, SurfaceConfiguration)>,
+  vello_renderer: vello::Renderer,
+  vello_scene: vello::Scene,
 }
 
 impl Renderer {
   const COMPOSITE_UNIFORMS: usize = 3;
+
+  const FONT_STACK: FontStack<'static> = FontStack::List(Cow::Borrowed(&[
+    FontFamily::Named(Cow::Borrowed("Helvetica Neue")),
+    FontFamily::Generic(GenericFamily::SansSerif),
+    FontFamily::Named(Cow::Borrowed("Apple Symbols")),
+    FontFamily::Named(Cow::Borrowed("Zapf Dingbats")),
+    FontFamily::Named(Cow::Borrowed("Last Resort")),
+  ]));
 
   const IMAGE_SUBRESOURCE_RANGE_FULL: ImageSubresourceRange = ImageSubresourceRange {
     array_layer_count: None,
@@ -37,6 +46,24 @@ impl Renderer {
     base_mip_level: 0,
     mip_level_count: None,
   };
+
+  fn begin_render_pass<'a>(encoder: &'a mut CommandEncoder, view: &TextureView) -> RenderPass<'a> {
+    encoder.begin_render_pass(&RenderPassDescriptor {
+      color_attachments: &[Some(RenderPassColorAttachment {
+        depth_slice: None,
+        ops: Operations {
+          load: LoadOp::Load,
+          store: StoreOp::Store,
+        },
+        resolve_target: None,
+        view,
+      })],
+      depth_stencil_attachment: None,
+      label: label!(),
+      occlusion_query_set: None,
+      timestamp_writes: None,
+    })
+  }
 
   fn bytes_per_row_with_padding(&self) -> u32 {
     const MASK: u32 = COPY_BYTES_PER_ROW_ALIGNMENT - 1;
@@ -253,41 +280,68 @@ impl Renderer {
     })
   }
 
-  fn draw(
+  pub(crate) fn create_vello_texture(&self, size: NonZeroU32) -> TextureView {
+    self
+      .device
+      .create_texture(&TextureDescriptor {
+        dimension: TextureDimension::D2,
+        format: TextureFormat::Rgba8Unorm,
+        label: label!(),
+        mip_level_count: 1,
+        sample_count: 1,
+        size: Extent3d {
+          depth_or_array_layers: 1,
+          height: size.get(),
+          width: size.get(),
+        },
+        usage: TextureUsages::STORAGE_BINDING | TextureUsages::TEXTURE_BINDING,
+        view_formats: &[TextureFormat::Rgba8Unorm],
+      })
+      .create_view(&TextureViewDescriptor::default())
+  }
+
+  fn draw_composite(
+    &self,
     bind_group: &BindGroup,
     encoder: &mut CommandEncoder,
-    tiling: Option<(Tiling, u32)>,
     uniform: u32,
     view: &TextureView,
-    pipeline: &Pipeline,
   ) {
-    let mut pass = encoder.begin_render_pass(&RenderPassDescriptor {
-      color_attachments: &[Some(RenderPassColorAttachment {
-        depth_slice: None,
-        ops: Operations {
-          load: LoadOp::Load,
-          store: StoreOp::Store,
-        },
-        resolve_target: None,
-        view,
-      })],
-      depth_stencil_attachment: None,
-      label: label!(),
-      occlusion_query_set: None,
-      timestamp_writes: None,
-    });
+    let mut pass = Self::begin_render_pass(encoder, view);
 
     pass.set_bind_group(
       0,
       Some(bind_group),
-      &[pipeline.uniform_buffer_stride * uniform],
+      &[self.composite_pipeline.uniform_buffer_stride * uniform],
     );
 
-    pass.set_pipeline(&pipeline.render_pipeline);
+    pass.set_pipeline(&self.composite_pipeline.render_pipeline);
 
-    if let Some((tiling, filter)) = tiling {
-      tiling.set_viewport(&mut pass, filter);
-    }
+    pass.draw(0..3, 0..1);
+  }
+
+  fn draw_filter(
+    &self,
+    bind_group: &BindGroup,
+    encoder: &mut CommandEncoder,
+    filter: u32,
+    field_texture_bind_group: &BindGroup,
+    tiling: Tiling,
+    view: &TextureView,
+  ) {
+    let mut pass = Self::begin_render_pass(encoder, view);
+
+    pass.set_bind_group(
+      0,
+      Some(bind_group),
+      &[self.filter_pipeline.uniform_buffer_stride * filter],
+    );
+
+    pass.set_bind_group(1, Some(field_texture_bind_group), &[]);
+
+    pass.set_pipeline(&self.filter_pipeline.render_pipeline);
+
+    tiling.set_viewport(&mut pass, filter);
 
     pass.draw(0..3, 0..1);
   }
@@ -398,6 +452,37 @@ impl Renderer {
           visibility: ShaderStages::FRAGMENT,
         },
       ],
+      label: label!(),
+    })
+  }
+
+  fn field_texture_bind_group(&self, filter: &TextureView) -> BindGroup {
+    let mut binding = Counter::default();
+
+    self.device.create_bind_group(&BindGroupDescriptor {
+      layout: &self.field_texture_bind_group_layout,
+      entries: &[BindGroupEntry {
+        binding: binding.next(),
+        resource: BindingResource::TextureView(filter),
+      }],
+      label: label!(),
+    })
+  }
+
+  fn field_texture_bind_group_layout(device: &wgpu::Device) -> BindGroupLayout {
+    let mut binding = Counter::default();
+
+    device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+      entries: &[BindGroupLayoutEntry {
+        binding: binding.next(),
+        count: None,
+        ty: BindingType::Texture {
+          multisampled: false,
+          sample_type: TextureSampleType::Float { filterable: true },
+          view_dimension: TextureViewDimension::D2,
+        },
+        visibility: ShaderStages::FRAGMENT,
+      }],
       label: label!(),
     })
   }
@@ -576,8 +661,10 @@ impl Renderer {
 
       let bind_group_layout = Self::filter_bind_group_layout(&device, uniform_buffer_size);
 
+      let texture_bind_group_layout = Self::field_texture_bind_group_layout(&device);
+
       let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
-        bind_group_layouts: &[&bind_group_layout],
+        bind_group_layouts: &[&bind_group_layout, &texture_bind_group_layout],
         label: label!(),
         push_constant_ranges: &[],
       });
@@ -634,7 +721,7 @@ impl Renderer {
       })
       .create_view(&TextureViewDescriptor::default());
 
-    let overlay_renderer = vello::Renderer::new(
+    let vello_renderer = vello::Renderer::new(
       &device,
       vello::RendererOptions {
         antialiasing_support: vello::AaSupport::all(),
@@ -643,7 +730,9 @@ impl Renderer {
         use_cpu: false,
       },
     )
-    .context(error::CreateOverlayRenderer)?;
+    .context(error::CreateVelloRenderer)?;
+
+    let field_texture_bind_group_layout = Self::field_texture_bind_group_layout(&device);
 
     let mut renderer = Self {
       capture_thread: CaptureThread::new()?,
@@ -652,6 +741,7 @@ impl Renderer {
       device,
       error_channel,
       filter_pipeline,
+      field_texture_bind_group_layout,
       filtering_sampler,
       font_context: FontContext::new(),
       format,
@@ -662,14 +752,14 @@ impl Renderer {
       limits,
       mirroring_sampler,
       non_filtering_sampler,
-      overlay_renderer,
-      overlay_scene: vello::Scene::new(),
       queue,
       resolution,
       resources: None,
       samples,
       size,
       surface,
+      vello_renderer,
+      vello_scene: vello::Scene::new(),
     };
 
     renderer.resize(size, resolution);
@@ -762,6 +852,10 @@ impl Renderer {
     };
 
     self.render_overlay(state, fps)?;
+
+    for filter in &state.filters {
+      self.render_field_texture(filter)?;
+    }
 
     let transient = state.transient();
 
@@ -917,45 +1011,45 @@ impl Renderer {
 
     let mut source = 0;
     let mut destination = 1;
-    for i in 0..filters {
-      let i = u32::try_from(i).unwrap();
-      Self::draw(
+    for filter in 0..filters {
+      let texture_bind_group =
+        if let Some(key) = state.filters.get(filter).and_then(Filter::texture_key) {
+          self.resources().field_textures.get(&key).unwrap()
+        } else {
+          &self.resources().default_field_texture
+        };
+
+      self.draw_filter(
         &self.resources().targets[source].bind_group,
         &mut encoder,
-        Some((tiling, i)),
-        i,
+        filter.try_into().unwrap(),
+        texture_bind_group,
+        tiling,
         &self.resources().targets[destination].texture_view,
-        &self.filter_pipeline,
       );
       (source, destination) = (destination, source);
     }
 
-    Self::draw(
+    self.draw_composite(
       &self.resources().tiling_bind_group,
       &mut encoder,
-      None,
       0,
       &self.resources().tiling_view,
-      &self.composite_pipeline,
     );
 
-    Self::draw(
+    self.draw_composite(
       &self.resources().overlay_bind_group,
       &mut encoder,
-      None,
       if state.status { 1 } else { 2 },
       &self.resources().targets[0].texture_view,
-      &self.composite_pipeline,
     );
 
     if let Some(frame) = &frame {
-      Self::draw(
+      self.draw_composite(
         &self.resources().overlay_bind_group,
         &mut encoder,
-        None,
         2,
         &frame.texture.create_view(&TextureViewDescriptor::default()),
-        &self.composite_pipeline,
       );
     }
 
@@ -979,18 +1073,132 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn render_overlay(&mut self, state: &State, fps: Option<f32>) -> Result {
+  pub(crate) fn render_field_texture(&mut self, filter: &Filter) -> Result {
     use {
-      kurbo::{Affine, Rect, Vec2},
-      parley::{
-        Alignment, AlignmentOptions, FontFamily, FontStack, FontWeight, GenericFamily,
-        PositionedLayoutItem, StyleProperty,
-      },
+      kurbo::{Affine, Vec2},
+      parley::{Alignment, AlignmentOptions, PositionedLayoutItem, StyleProperty},
       peniko::{Brush, Color, Fill},
       vello::{AaConfig, RenderParams},
     };
 
-    self.overlay_scene.reset();
+    let Some(key) = filter.texture_key() else {
+      return Ok(());
+    };
+
+    if self.resources().field_textures.contains_key(&key) {
+      return Ok(());
+    }
+
+    let Field::Texture(character) = filter.field else {
+      return Ok(());
+    };
+
+    let text = character.to_string();
+
+    self.vello_scene.reset();
+
+    let mut layout = |font_size| {
+      let mut builder =
+        self
+          .layout_context
+          .ranged_builder(&mut self.font_context, &text, 1.0, true);
+      builder.push_default(StyleProperty::FontSize(font_size));
+      builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
+      let mut layout = builder.build(&text);
+      layout.break_all_lines(None);
+      layout
+    };
+
+    let font_size = {
+      let layout = layout(1.0);
+      self.resolution.get() as f32 / layout.width().max(layout.height())
+    };
+
+    let mut layout = layout(font_size);
+
+    layout.align(
+      Some(self.resolution.get() as f32),
+      Alignment::Center,
+      AlignmentOptions {
+        align_when_overflowing: true,
+      },
+    );
+
+    let y = (self.resolution.get() as f64 - layout.height() as f64) * 0.5;
+
+    for line in layout.lines() {
+      for item in line.items() {
+        match item {
+          PositionedLayoutItem::GlyphRun(glyph_run) => {
+            let run = glyph_run.run();
+            self
+              .vello_scene
+              .draw_glyphs(run.font())
+              .brush(&Brush::Solid(Color::WHITE))
+              .font_size(font_size)
+              .glyph_transform(
+                run
+                  .synthesis()
+                  .skew()
+                  .map(|angle| Affine::skew(angle.to_radians().tan().into(), 0.0)),
+              )
+              .hint(true)
+              .normalized_coords(run.normalized_coords())
+              .transform(Affine::translate(Vec2 { x: 0.0, y }))
+              .draw(
+                Fill::NonZero,
+                glyph_run.positioned_glyphs().map(|glyph| vello::Glyph {
+                  id: glyph.id,
+                  x: glyph.x,
+                  y: glyph.y,
+                }),
+              );
+          }
+          PositionedLayoutItem::InlineBox(_) => {
+            return Err(Error::internal(
+              "unexpected inline box while rendering filter texture",
+            ));
+          }
+        }
+      }
+    }
+
+    log::info!("allocating new filter texture");
+
+    let view = self.create_vello_texture(self.resolution);
+
+    self
+      .vello_renderer
+      .render_to_texture(
+        &self.device,
+        &self.queue,
+        &self.vello_scene,
+        &view,
+        &RenderParams {
+          antialiasing_method: AaConfig::Msaa16,
+          base_color: Color::TRANSPARENT,
+          height: self.resolution.get(),
+          width: self.resolution.get(),
+        },
+      )
+      .context(error::RenderVello)?;
+
+    let bind_group = self.field_texture_bind_group(&view);
+
+    self.resources_mut().field_textures.insert(key, bind_group);
+
+    Ok(())
+  }
+
+  pub(crate) fn render_overlay(&mut self, state: &State, fps: Option<f32>) -> Result {
+    use {
+      kurbo::{Affine, Rect, Vec2},
+      parley::{Alignment, AlignmentOptions, FontWeight, PositionedLayoutItem, StyleProperty},
+      peniko::{Brush, Color, Fill},
+      vello::{AaConfig, RenderParams},
+    };
+
+    self.vello_scene.reset();
 
     let text = if let Some(text) = state.text.clone() {
       text
@@ -1072,13 +1280,7 @@ impl Renderer {
         .layout_context
         .ranged_builder(&mut self.font_context, &text.string, 1.0, true);
     builder.push_default(StyleProperty::FontSize(font_size));
-    builder.push_default(StyleProperty::FontStack(FontStack::List(Cow::Borrowed(&[
-      FontFamily::Named("Helvetica Neue".into()),
-      FontFamily::Generic(GenericFamily::SansSerif),
-      FontFamily::Named("Apple Symbols".into()),
-      FontFamily::Named("Zapf Dingbats".into()),
-      FontFamily::Named("Last Resort".into()),
-    ]))));
+    builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
     builder.push_default(StyleProperty::FontWeight(FontWeight::LIGHT));
 
     let mut layout = builder.build(&text.string);
@@ -1091,9 +1293,8 @@ impl Renderer {
           PositionedLayoutItem::GlyphRun(glyph_run) => {
             let run = glyph_run.run();
             let mut offset = glyph_run.offset();
-
             self
-              .overlay_scene
+              .vello_scene
               .draw_glyphs(run.font())
               .brush(&Brush::Solid(Color::WHITE))
               .font_size(font_size)
@@ -1135,11 +1336,11 @@ impl Renderer {
     }
 
     self
-      .overlay_renderer
+      .vello_renderer
       .render_to_texture(
         &self.device,
         &self.queue,
-        &self.overlay_scene,
+        &self.vello_scene,
         &self.resources.as_ref().unwrap().overlay_view,
         &RenderParams {
           antialiasing_method: AaConfig::Msaa16,
@@ -1148,7 +1349,7 @@ impl Renderer {
           width: self.resolution.get(),
         },
       )
-      .context(error::RenderOverlay)?;
+      .context(error::RenderVello)?;
 
     Ok(())
   }
@@ -1198,23 +1399,7 @@ impl Renderer {
       &self.mirroring_sampler,
     );
 
-    let overlay_view = self
-      .device
-      .create_texture(&TextureDescriptor {
-        dimension: TextureDimension::D2,
-        format: TextureFormat::Rgba8Unorm,
-        label: label!(),
-        mip_level_count: 1,
-        sample_count: 1,
-        size: Extent3d {
-          depth_or_array_layers: 1,
-          height: self.resolution.get(),
-          width: self.resolution.get(),
-        },
-        usage: TextureUsages::STORAGE_BINDING | TextureUsages::TEXTURE_BINDING,
-        view_formats: &[TextureFormat::Rgba8Unorm],
-      })
-      .create_view(&TextureViewDescriptor::default());
+    let overlay_view = self.create_vello_texture(self.resolution);
 
     let overlay_bind_group = self.composite_bind_group(
       &tiling_view,
@@ -1223,10 +1408,14 @@ impl Renderer {
       &self.clamp_to_border_sampler,
     );
 
+    let field_texture_view = self.create_vello_texture(1.try_into().unwrap());
+
     self.resources = Some(Resources {
-      pool: Arc::new(Mutex::new(Vec::new())),
+      default_field_texture: self.field_texture_bind_group(&field_texture_view),
+      field_textures: HashMap::new(),
       overlay_bind_group,
       overlay_view,
+      pool: Arc::new(Mutex::new(Vec::new())),
       targets,
       tiling_bind_group,
       tiling_view,
@@ -1235,6 +1424,10 @@ impl Renderer {
 
   fn resources(&self) -> &Resources {
     self.resources.as_ref().unwrap()
+  }
+
+  fn resources_mut(&mut self) -> &mut Resources {
+    self.resources.as_mut().unwrap()
   }
 
   pub(crate) fn size(&self) -> Size {

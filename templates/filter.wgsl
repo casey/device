@@ -24,6 +24,12 @@ var samples: texture_1d<f32>;
 @binding({{ binding.next() }})
 var<uniform> uniforms: Uniforms;
 
+%% let mut binding = Counter::default();
+
+@group(1)
+@binding({{ binding.next() }})
+var field_texture: texture_2d<f32>;
+
 const ERROR = vec4f(0, 1, 0, 1);
 const TRANSPARENT = vec4f(0, 0, 0, 0);
 
@@ -103,6 +109,12 @@ fn field_samples(p: vec2f) -> bool {
 
 fn field_square(p: vec2f) -> bool {
   return max(abs(p.x), abs(p.y)) < 0.5 * coefficient();
+}
+
+fn field_texture(p: vec2f) -> bool {
+  let uv = p * 0.5 + 0.5;
+  let s = textureSample(field_texture, non_filtering_sampler, uv);
+  return s.a > 0.0;
 }
 
 fn field_top(p: vec2f) -> bool {

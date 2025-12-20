@@ -89,7 +89,7 @@ use {
   nalgebra::{
     Rotation2, Translation2, Translation3, Unit, UnitQuaternion, Vector2, matrix, vector,
   },
-  parley::{FontContext, LayoutContext},
+  parley::{FontContext, FontFamily, FontStack, GenericFamily, LayoutContext},
   rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
   rustfft::{FftPlanner, num_complex::Complex},

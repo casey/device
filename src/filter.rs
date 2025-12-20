@@ -75,6 +75,14 @@ impl Filter {
       .to_affine()
   }
 
+  pub(crate) fn texture_key(&self) -> Option<char> {
+    if let Field::Texture(character) = self.field {
+      Some(character)
+    } else {
+      None
+    }
+  }
+
   pub(crate) fn tick(&mut self, tick: Tick) {
     self.elapsed += tick.dt;
   }
