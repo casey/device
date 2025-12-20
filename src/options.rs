@@ -94,6 +94,10 @@ impl Options {
       })
   }
 
+  pub(crate) fn script(&self) -> Option<Script> {
+    self.program.and_then(Program::script)
+  }
+
   pub(crate) fn size(&self, size: Size) -> (Size, NonZeroU32) {
     let size = Size::new(self.width.unwrap_or(size.x), self.height.unwrap_or(size.y));
     let resolution = self.resolution.unwrap_or(size.x.max(size.y));

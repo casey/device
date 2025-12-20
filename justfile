@@ -72,7 +72,6 @@ blaster:
     --fit \
     --program blaster \
     --status \
-    --verbose \
     run
 
 curtains:

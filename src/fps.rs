@@ -2,13 +2,13 @@ use super::*;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Fps {
-  duration: Duration,
+  dt: Duration,
   fps: NonZeroU32,
 }
 
 impl Fps {
-  pub(crate) fn duration(self) -> Duration {
-    self.duration
+  pub(crate) fn dt(self) -> Duration {
+    self.dt
   }
 
   pub(crate) fn fps(self) -> NonZeroU32 {
@@ -45,7 +45,7 @@ impl FromStr for Fps {
 impl From<NonZeroU32> for Fps {
   fn from(fps: NonZeroU32) -> Self {
     Self {
-      duration: Duration::try_from_secs_f64(1.0 / fps.get() as f64).unwrap(),
+      dt: Duration::try_from_secs_f64(1.0 / fps.get() as f64).unwrap(),
       fps,
     }
   }

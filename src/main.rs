@@ -49,6 +49,7 @@ use {
     resources::Resources,
     scene::Scene,
     score::Score,
+    script::Script,
     shared::Shared,
     sound::Sound,
     sound_format::SoundFormat,
@@ -62,6 +63,7 @@ use {
     templates::{CompositeWgsl, FilterWgsl, VertexWgsl},
     tempo::Tempo,
     text::Text,
+    tick::Tick,
     tiling::Tiling,
     to_affine::ToAffine,
     track::Track,
@@ -186,6 +188,7 @@ mod image_format;
 mod input;
 mod into_stereo;
 mod into_utf8_path;
+mod maria;
 mod message;
 mod mirror;
 mod mode;
@@ -205,6 +208,7 @@ mod resampler_ext;
 mod resources;
 mod scene;
 mod score;
+mod script;
 mod shared;
 mod sound;
 mod sound_format;
@@ -218,6 +222,7 @@ mod target;
 mod templates;
 mod tempo;
 mod text;
+mod tick;
 mod tiling;
 mod to_affine;
 mod track;

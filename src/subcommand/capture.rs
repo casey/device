@@ -82,7 +82,7 @@ impl Capture {
 
     let mut samples = vec![0.0; spf];
 
-    let mut recorder = Recorder::new(fps, &options, renderer.size(), sound_format)?;
+    let mut recorder = Recorder::new(fps, &options, false, renderer.size(), sound_format)?;
 
     let mut done = false;
     for frame in 0.. {
@@ -113,7 +113,13 @@ impl Capture {
 
       recorder.frame(frame, image, sound)?;
 
-      state.tick(fps.duration());
+      let tick = Tick {
+        dt: fps.dt(),
+        beat: None,
+        advance: false,
+      };
+
+      state.tick(tick);
     }
 
     progress.finish();

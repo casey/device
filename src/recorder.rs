@@ -168,6 +168,7 @@ impl Recorder {
   pub(crate) fn new(
     fps: Fps,
     options: &Options,
+    realtime: bool,
     size: Size,
     sound_format: SoundFormat,
   ) -> Result<Self> {
@@ -178,7 +179,7 @@ impl Recorder {
     let encoder_options: &[[&str; 2]] = if encoders.contains("h264_videotoolbox") {
       &[
         ["-c:v", "h264_videotoolbox"],
-        ["-q:v", "90"],
+        ["-q:v", if realtime { "100" } else { "90" }],
         ["-realtime", "true"],
       ]
     } else {
@@ -201,7 +202,7 @@ impl Recorder {
       .args(["-color_range", "pc"])
       .args(["-color_trc", "bt709"])
       .args(["-colorspace", "bt709"])
-      .args(["-level:v", "5.1"])
+      .args(["-level:v", if realtime { "5.2" } else { "5.1" }])
       .args(["-pix_fmt", "yuv420p"])
       .arg(VIDEO)
       .current_dir(&tempdir_path)

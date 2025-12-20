@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) enum Command {
   App(fn(&mut App)),
   AppEventLoop(fn(&mut App, &ActiveEventLoop)),

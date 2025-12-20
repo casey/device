@@ -239,22 +239,23 @@ impl State {
     self
   }
 
-  pub(crate) fn tick(&mut self, dt: Duration) {
-    {
-      let dt = dt.as_secs_f32();
-      let ds = self.velocity.z * dt;
-      self.transient.translation -= self.velocity.xy() * dt;
-      self.transient.scaling -= Vec2f::new(ds, ds);
-      self.transient.rotation -= self.velocity.w * dt;
-    }
+  pub(crate) fn tick(&mut self, tick: Tick) {
+    let dt = tick.dt.as_secs_f32();
+    let ds = self.velocity.z * dt;
+    self.transient.translation -= self.velocity.xy() * dt;
+    self.transient.scaling -= Vec2f::new(ds, ds);
+    self.transient.rotation -= self.velocity.w * dt;
+
+    self.beat = tick.beat;
 
     let mut callback = self.callback.take();
     if let Some(callback) = &mut callback {
-      callback(self, dt);
+      callback(self, tick.dt);
     }
     self.callback = callback;
+
     for filter in &mut self.filters {
-      filter.tick(dt);
+      filter.tick(tick);
     }
   }
 

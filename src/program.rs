@@ -57,7 +57,14 @@ impl Program {
       Self::Expo => Scene::Starburst,
       Self::Transit => Scene::Kaleidoscope,
       Self::Radio => Scene::BlackHole,
-      Self::Blaster => Scene::Test,
+      Self::Blaster => Scene::X,
+    }
+  }
+
+  pub(crate) fn script(self) -> Option<Script> {
+    match self {
+      Self::Blaster => Some(maria::SCRIPT.into()),
+      _ => None,
     }
   }
 }
