@@ -347,7 +347,12 @@ impl App {
       &self.state,
     );
 
-    let now = Instant::now();
+    let now = if let Some(fps) = self.record {
+      self.last + fps.dt()
+    } else {
+      Instant::now()
+    };
+
     let dt = now - self.last;
     self.last = now;
 
