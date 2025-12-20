@@ -202,7 +202,7 @@ impl Recorder {
       .args(["-color_range", "pc"])
       .args(["-color_trc", "bt709"])
       .args(["-colorspace", "bt709"])
-      // .args(["-level:v", "5.1"])
+      .args(["-level:v", if realtime { "5.2" } else { "5.1" }])
       .args(["-pix_fmt", "yuv420p"])
       .arg(VIDEO)
       .current_dir(&tempdir_path)
