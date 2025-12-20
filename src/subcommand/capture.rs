@@ -44,6 +44,21 @@ impl Capture {
 
     let mut state = options.state();
 
+    let script = options.script();
+
+    if let Some(script) = &script {
+      for (name, command) in script.commands() {
+        match command {
+          Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => {
+            return Err(error::CaptureScriptAppCommand { command: name }.build());
+          }
+          Command::History(_) | Command::HistoryState(_) | Command::State(_) => {}
+        }
+      }
+    }
+
+    let mut history = History::default();
+
     let resolution = options.resolution.unwrap_or(DEFAULT_RESOLUTION);
 
     let size = Size::new(
@@ -96,6 +111,8 @@ impl Capture {
 
       tap.write(&mut samples);
 
+      let last = tap.beat();
+
       let sound = tap.drain();
       analyzer.update(&sound, done, &state);
       renderer.render(&analyzer, &state, Instant::now())?;
@@ -113,11 +130,30 @@ impl Capture {
 
       recorder.frame(frame, image, sound)?;
 
+      history.tick(&mut state);
+
+      let beat = tap.beat();
+
       let tick = Tick {
         dt: fps.dt(),
-        beat: None,
-        advance: false,
+        beat,
+        advance: beat != last,
       };
+
+      if let Some(script) = &script {
+        for (name, command) in script.tick(tick) {
+          log::info!("dispatching script command {name}");
+          match command {
+            Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => unreachable!(),
+            Command::History(command) => command(&mut history),
+            Command::HistoryState(command) => command(&mut history, &mut state),
+            Command::State(command) => {
+              history.states.push(state.clone());
+              command(&mut state);
+            }
+          }
+        }
+      }
 
       state.tick(tick);
     }

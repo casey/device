@@ -104,24 +104,23 @@ capture-expo: (capture "expo")
 capture-transit: (capture "transit")
 capture-radio: (capture "radio")
 
+capture-blaster:
+  cargo run \
+    --release \
+    -- \
+    --width 3840 \
+    --height 2160 \
+    --fit \
+    --fps 60 \
+    --program blaster \
+    --verbose \
+    capture
+
 record-curtains:
   cargo run --release -- \
     --fps 60 \
     --resolution 2048 \
     --song 'curtains closing' \
-    --verbose \
-    run \
-    --record
-
-record-blaster:
-  cargo run \
-    --release \
-    -- \
-    --fit \
-    --fps 60 \
-    --width 3840 \
-    --height 2160 \
-    --program blaster \
     --verbose \
     run \
     --record

@@ -57,7 +57,7 @@ impl Program {
       Self::Expo => Scene::Starburst,
       Self::Transit => Scene::Kaleidoscope,
       Self::Radio => Scene::BlackHole,
-      Self::Blaster => Scene::X,
+      Self::Blaster => Scene::None,
     }
   }
 

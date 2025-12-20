@@ -7,7 +7,7 @@ const SHIFT: ModifiersState = ModifiersState::SHIFT;
 const SUPER: ModifiersState = ModifiersState::SUPER;
 
 #[rustfmt::skip]
-const BUTTON_BINDINGS: &[(Controller, u8, Press, (&str, Command))] = {
+const BUTTON_BINDINGS: &[(Controller, u8, Press, CommandEntry)] = {
   use {Controller::*, generated::*, Press::Press};
   &[
     (Spectra,  0, Press, PUSH_TOP),
@@ -31,7 +31,7 @@ const BUTTON_BINDINGS: &[(Controller, u8, Press, (&str, Command))] = {
 };
 
 #[rustfmt::skip]
-const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, (&str, Command))] = {
+const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, CommandEntry)] = {
   use {generated::*, ModeKind::*};
 
 
@@ -148,7 +148,7 @@ const ENCODER_BINDINGS: &[(Controller, u8, (&str, fn(&mut State, u7) -> f32))] =
 };
 
 #[rustfmt::skip]
-const NAMED_BINDINGS: &[(ModeKind, NamedKey, ModifiersState, (&str, Command))] = {
+const NAMED_BINDINGS: &[(ModeKind, NamedKey, ModifiersState, CommandEntry)] = {
   use {
     ModeKind::{Normal, Play, Command},
     NamedKey::*,
@@ -168,10 +168,10 @@ const NAMED_BINDINGS: &[(ModeKind, NamedKey, ModifiersState, (&str, Command))] =
 };
 
 pub(crate) struct Bindings {
-  button: BTreeMap<(Controller, u8, Press), (&'static str, Command)>,
-  character: BTreeMap<(ModeKind, String, ModifiersState), (&'static str, Command)>,
+  button: BTreeMap<(Controller, u8, Press), CommandEntry>,
+  character: BTreeMap<(ModeKind, String, ModifiersState), CommandEntry>,
   encoder: BTreeMap<(Controller, u8), (&'static str, fn(&mut State, u7) -> f32)>,
-  named: BTreeMap<(ModeKind, NamedKey, ModifiersState), (&'static str, Command)>,
+  named: BTreeMap<(ModeKind, NamedKey, ModifiersState), CommandEntry>,
 }
 
 impl Bindings {

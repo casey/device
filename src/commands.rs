@@ -431,20 +431,20 @@ pub(crate) fn triangle(state: &mut State) {
   });
 }
 
-pub(crate) fn undo(app: &mut App) {
-  if let Some(state) = app.history.pop() {
-    app.state = state;
+pub(crate) fn undo(history: &mut History, state: &mut State) {
+  if let Some(last) = history.states.pop() {
+    *state = last;
   }
 }
 
-pub(crate) fn unwind(app: &mut App) {
-  app.unwind = true;
+pub(crate) fn unwind(history: &mut History) {
+  history.unwind = true;
 }
 
-pub(crate) fn waffle(app: &mut App) {
-  if let Some(mut state) = app.history.pop() {
-    mem::swap(&mut state, &mut app.state);
-    app.history.push(state);
+pub(crate) fn waffle(history: &mut History, state: &mut State) {
+  if let Some(mut last) = history.states.pop() {
+    mem::swap(&mut last, state);
+    history.states.push(last);
   }
 }
 

@@ -26,6 +26,7 @@ use {
     fps::Fps,
     frame::Frame,
     functions::{default, display, tempdir, thread_spawn},
+    history::History,
     hub::Hub,
     image::Image,
     image_format::ImageFormat,
@@ -182,6 +183,7 @@ mod fps;
 mod frame;
 mod functions;
 mod generated;
+mod history;
 mod hub;
 mod image;
 mod image_format;
@@ -244,6 +246,7 @@ const TAU: f32 = f32::consts::TAU;
 const TIME: u64 = 4;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
+type CommandEntry = (&'static str, Command);
 
 type Mat1x2f = nalgebra::Matrix1x2<f32>;
 type Mat2x3f = nalgebra::Matrix2x3<f32>;

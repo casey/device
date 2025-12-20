@@ -88,12 +88,14 @@ fn main() {
     let inputs = inputs.iter().map(String::as_str).collect::<Vec<&str>>();
 
     let variant = match (inputs.as_slice(), fallible) {
+      (["app", "event_loop"], false) => "AppEventLoop",
       (["app"], false) => "App",
       (["app"], true) => "AppFallible",
-      (["app", "event_loop"], false) => "AppEventLoop",
+      (["history", "state"], false) => "HistoryState",
+      (["history"], false) => "History",
       (["state"], false) => "State",
       _ => panic!(
-        "unsupported combination of inputs and fallibility: ({}, {fallible}",
+        "unsupported combination of inputs and fallibility: ({}, {fallible})",
         inputs.join(" ")
       ),
     };
@@ -109,7 +111,7 @@ fn main() {
 
   for (name, variant) in &commands {
     lines.push(format!(
-      "pub(crate) const {}: (&str, Command) = (\"{}\", {variant}({name}));",
+      "pub(crate) const {}: CommandEntry = (\"{}\", {variant}({name}));",
       name.to_uppercase(),
       name.replace('_', "-"),
     ));
@@ -117,7 +119,7 @@ fn main() {
 
   lines.push(String::new());
 
-  lines.push("pub(crate) const COMMANDS: &[(&str, Command)] = &[".into());
+  lines.push("pub(crate) const COMMANDS: &[CommandEntry] = &[".into());
 
   for name in commands.keys() {
     lines.push(format!("  {},", name.to_uppercase()));

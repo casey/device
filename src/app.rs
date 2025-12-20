@@ -11,7 +11,7 @@ pub(crate) struct App {
   pub(crate) deadline: Instant,
   pub(crate) errors: Vec<Error>,
   pub(crate) fullscreen: bool,
-  pub(crate) history: Vec<State>,
+  pub(crate) history: History,
   pub(crate) hub: Hub,
   pub(crate) input: Option<Input>,
   pub(crate) last: Instant,
@@ -27,7 +27,6 @@ pub(crate) struct App {
   pub(crate) spf: Option<usize>,
   pub(crate) state: State,
   pub(crate) tap: Tap,
-  pub(crate) unwind: bool,
   pub(crate) window: Option<Arc<Window>>,
 }
 
@@ -43,8 +42,14 @@ impl App {
         }
       }
       Command::State(command) => {
-        self.history.push(self.state.clone());
+        self.history.states.push(self.state.clone());
         command(&mut self.state);
+      }
+      Command::HistoryState(command) => {
+        command(&mut self.history, &mut self.state);
+      }
+      Command::History(command) => {
+        command(&mut self.history);
       }
     }
   }
@@ -241,7 +246,7 @@ impl App {
       errors: Vec::new(),
       script: options.script(),
       fullscreen,
-      history: Vec::new(),
+      history: History::default(),
       hub: Hub::new()?,
       input,
       last: now,
@@ -256,7 +261,6 @@ impl App {
       state,
       spf,
       tap,
-      unwind: false,
       window: None,
     })
   }
@@ -347,13 +351,7 @@ impl App {
     let dt = now - self.last;
     self.last = now;
 
-    if self.unwind {
-      if let Some(last) = self.history.pop() {
-        self.state = last;
-      } else {
-        self.unwind = false;
-      }
-    }
+    self.history.tick(&mut self.state);
 
     let beat = self.tap.beat();
 
