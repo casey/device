@@ -21,6 +21,10 @@ pub(crate) struct Script {
 }
 
 impl Script {
+  pub(crate) fn commands(&self) -> impl Iterator<Item = CommandEntry> {
+    self.commands.values().flatten().copied()
+  }
+
   pub(crate) fn tick(&self, tick: Tick) -> &[CommandEntry] {
     if !tick.advance {
       return default();
@@ -35,10 +39,6 @@ impl Script {
       .get(&beat)
       .map(Vec::as_slice)
       .unwrap_or_default()
-  }
-
-  pub(crate) fn commands(&self) -> impl Iterator<Item = CommandEntry> {
-    self.commands.values().flatten().copied()
   }
 }
 
