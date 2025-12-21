@@ -1306,7 +1306,7 @@ impl Renderer {
                 x: bounds.x0 + 10.0,
                 y: bounds.y1
                   - 10.0
-                  - f64::from(glyph_run.baseline() * 2.0)
+                  - f64::from(glyph_run.baseline()) * 2.0
                   - f64::from(run.metrics().descent),
               }))
               .draw(
