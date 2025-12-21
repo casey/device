@@ -154,7 +154,6 @@ impl Renderer {
     source_sampler: &Sampler,
   ) -> BindGroup {
     let mut binding = Counter::default();
-
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.composite_pipeline.bind_group_layout,
       entries: &[
@@ -196,7 +195,6 @@ impl Renderer {
     uniform_buffer_size: u32,
   ) -> BindGroupLayout {
     let mut binding = Counter::default();
-
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
         BindGroupLayoutEntry {
@@ -359,7 +357,6 @@ impl Renderer {
     samples: &TextureView,
   ) -> BindGroup {
     let mut binding = Counter::default();
-
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.filter_pipeline.bind_group_layout,
       entries: &[
@@ -402,7 +399,6 @@ impl Renderer {
 
   fn filter_bind_group_layout(device: &wgpu::Device, uniform_buffer_size: u32) -> BindGroupLayout {
     let mut binding = Counter::default();
-
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
         BindGroupLayoutEntry {
@@ -464,7 +460,6 @@ impl Renderer {
 
   fn field_texture_bind_group(&self, filter: &TextureView) -> BindGroup {
     let mut binding = Counter::default();
-
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.field_texture_bind_group_layout,
       entries: &[BindGroupEntry {
@@ -477,7 +472,6 @@ impl Renderer {
 
   fn field_texture_bind_group_layout(device: &wgpu::Device) -> BindGroupLayout {
     let mut binding = Counter::default();
-
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[BindGroupLayoutEntry {
         binding: binding.next(),
