@@ -64,7 +64,6 @@ use {
     target::Target,
     templates::{CompositeWgsl, FilterWgsl, VertexWgsl},
     tempo::Tempo,
-    text::Text,
     tick::Tick,
     tiling::Tiling,
     to_affine::ToAffine,
@@ -247,7 +246,6 @@ mod tap;
 mod target;
 mod templates;
 mod tempo;
-mod text;
 mod tick;
 mod tiling;
 mod to_affine;

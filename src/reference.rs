@@ -569,6 +569,48 @@ fn texture_right() {
 
 #[test]
 #[ignore]
+fn texture_left() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 0.5.into(),
+    weight: FontWeight::NORMAL,
+    position: Vec2f::new(-0.5, 0.0),
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_top() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 0.5.into(),
+    weight: FontWeight::NORMAL,
+    position: Vec2f::new(0.0, -0.5),
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_bottom() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 0.5.into(),
+    weight: FontWeight::NORMAL,
+    position: Vec2f::new(0.0, 0.5),
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
 fn tile() {
   let mut state = State::default();
   state

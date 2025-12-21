@@ -85,18 +85,14 @@ impl Scene {
         state.invert().frequencies().push();
       }
       Self::Hello => {
-        // .text(Some(Text {
-        //   size: 0.075,
-        //   string: "hello world".into(),
-        //   x: 0.10,
-        //   y: -0.10,
-        // }))
-        //
-        // size is relative to what would have been the font size
-        // x and y is relative to where it would have been positioned
         state
           .invert()
-          .text(Vec2f::new(0.8, 0.5), 0.35, "hello world", FontWeight::LIGHT)
+          .text(
+            Vec2f::new(-0.375, 0.48),
+            0.35,
+            "hello world",
+            FontWeight::LIGHT,
+          )
           .push()
           .frequencies()
           .push()

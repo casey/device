@@ -1129,11 +1129,15 @@ impl Renderer {
       },
     );
 
-    let offset = Vec2 {
-      x: self.resolution.get() as f64 * 0.5 * f64::from(position.x),
-      y: (self.resolution.get() as f64 - layout.height() as f64)
-        * 0.5
-        * (1.0 + f64::from(position.y)),
+    let offset = {
+      let resolution = self.resolution.get() as f64;
+
+      let center = (resolution - layout.height() as f64) * 0.5;
+
+      Vec2 {
+        x: resolution * 0.5 * f64::from(position.x),
+        y: center + resolution * 0.5 * f64::from(position.y),
+      }
     };
 
     for line in layout.lines() {
@@ -1208,11 +1212,22 @@ impl Renderer {
       vello::{AaConfig, RenderParams},
     };
 
-    self.vello_scene.reset();
+    if !state.status {
+      let mut encoder = self
+        .device
+        .create_command_encoder(&CommandEncoderDescriptor::default());
 
-    let text = if let Some(text) = state.text.clone() {
-      text
-    } else if state.status {
+      encoder.clear_texture(
+        self.resources().overlay_view.texture(),
+        &Self::IMAGE_SUBRESOURCE_RANGE_FULL,
+      );
+
+      self.queue.submit([encoder.finish()]);
+
+      return Ok(());
+    }
+
+    let text = {
       let mut items = Vec::new();
 
       if let Some(beat) = state.beat {
@@ -1229,25 +1244,7 @@ impl Renderer {
         items.push(filter.icon().into());
       }
 
-      Text {
-        size: 0.033,
-        string: items.join(" "),
-        x: 0.0,
-        y: 0.0,
-      }
-    } else {
-      let mut encoder = self
-        .device
-        .create_command_encoder(&CommandEncoderDescriptor::default());
-
-      encoder.clear_texture(
-        self.resources().overlay_view.texture(),
-        &Self::IMAGE_SUBRESOURCE_RANGE_FULL,
-      );
-
-      self.queue.submit([encoder.finish()]);
-
-      return Ok(());
+      items.join(" ")
     };
 
     let bounds = if state.fit {
@@ -1282,20 +1279,19 @@ impl Renderer {
       }
     };
 
+    self.vello_scene.reset();
+
     #[allow(clippy::cast_possible_truncation)]
-    let font_size = bounds.height() as f32 * text.size;
+    let font_size = bounds.height() as f32 * 0.033;
 
-    dbg!(font_size);
-
-    let mut builder =
-      self
-        .layout_context
-        .ranged_builder(&mut self.font_context, &text.string, 1.0, true);
+    let mut builder = self
+      .layout_context
+      .ranged_builder(&mut self.font_context, &text, 1.0, true);
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
     builder.push_default(StyleProperty::FontWeight(FontWeight::LIGHT));
 
-    let mut layout = builder.build(&text.string);
+    let mut layout = builder.build(&text);
     layout.break_all_lines(None);
     layout.align(None, Alignment::Start, AlignmentOptions::default());
 
@@ -1319,8 +1315,8 @@ impl Renderer {
               .hint(true)
               .normalized_coords(run.normalized_coords())
               .transform(Affine::translate(Vec2 {
-                x: text.x * bounds.width() + bounds.x0 + 10.0,
-                y: text.y * bounds.height() + bounds.y1
+                x: bounds.x0 + 10.0,
+                y: bounds.y1
                   - 10.0
                   - f64::from(glyph_run.baseline())
                   - f64::from(run.metrics().descent),
