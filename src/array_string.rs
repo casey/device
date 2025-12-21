@@ -26,11 +26,19 @@ impl<const CAPACITY: usize> From<&str> for ArrayString<CAPACITY> {
     }
   }
 }
+
+impl<const CAPACITY: usize> From<String> for ArrayString<CAPACITY> {
+  fn from(s: String) -> Self {
+    s.as_str().into()
+  }
+}
+
 impl<const CAPACITY: usize> PartialEq<str> for ArrayString<CAPACITY> {
   fn eq(&self, other: &str) -> bool {
     self.as_str().eq(other)
   }
 }
+
 impl<const CAPACITY: usize> Debug for ArrayString<CAPACITY> {
   #[inline]
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
