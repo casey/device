@@ -150,12 +150,6 @@ use {
   },
 };
 
-macro_rules! label {
-  () => {
-    Some(concat!(file!(), ":", line!(), ":", column!()))
-  };
-}
-
 mod alignment;
 mod allocator;
 mod analyzer;

@@ -1,5 +1,11 @@
 use super::*;
 
+macro_rules! label {
+  () => {
+    Some(concat!(file!(), ":", line!(), ":", column!()))
+  };
+}
+
 pub(crate) struct Renderer {
   capture_thread: CaptureThread,
   clamp_to_border_sampler: Sampler,
