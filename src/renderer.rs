@@ -1096,9 +1096,10 @@ impl Renderer {
     self.vello_scene.reset();
 
     let mut layout = |font_size| {
-      let mut builder = self
-        .layout_context
-        .ranged_builder(&mut self.font_context, text, 1.0, true);
+      let mut builder =
+        self
+          .layout_context
+          .ranged_builder(&mut self.font_context, &text, 1.0, true);
       builder.push_default(StyleProperty::FontSize(font_size));
       builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
       builder.push_default(StyleProperty::FontWeight(weight));

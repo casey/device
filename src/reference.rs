@@ -553,7 +553,7 @@ fn status_capture() {
 fn texture() {
   let mut state = State::default();
   state.filter.field = Field::Texture(TextureField {
-    text: "A",
+    text: "A".into(),
     scale: 1.0,
     weight: FontWeight::NORMAL,
     position: Vec2f::zeros(),
@@ -569,7 +569,7 @@ fn texture_bottom() {
   state.filter.field = Field::Texture(TextureField {
     position: Vec2f::new(0.0, 0.5),
     scale: 0.5,
-    text: "A",
+    text: "A".into(),
     weight: FontWeight::NORMAL,
   });
   state.invert().push();
@@ -583,7 +583,7 @@ fn texture_left() {
   state.filter.field = Field::Texture(TextureField {
     position: Vec2f::new(-0.5, 0.0),
     scale: 0.5,
-    text: "A",
+    text: "A".into(),
     weight: FontWeight::NORMAL,
   });
   state.invert().push();
@@ -597,7 +597,7 @@ fn texture_right() {
   state.filter.field = Field::Texture(TextureField {
     position: Vec2f::new(0.5, 0.0),
     scale: 0.5,
-    text: "A",
+    text: "A".into(),
     weight: FontWeight::NORMAL,
   });
   state.invert().push();
@@ -609,7 +609,7 @@ fn texture_right() {
 fn texture_small() {
   let mut state = State::default();
   state.filter.field = Field::Texture(TextureField {
-    text: "A",
+    text: "A".into(),
     scale: 0.5,
     weight: FontWeight::NORMAL,
     position: Vec2f::zeros(),
@@ -625,7 +625,7 @@ fn texture_top() {
   state.filter.field = Field::Texture(TextureField {
     position: Vec2f::new(0.0, -0.5),
     scale: 0.5,
-    text: "A",
+    text: "A".into(),
     weight: FontWeight::NORMAL,
   });
   state.invert().push();

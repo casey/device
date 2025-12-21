@@ -5,6 +5,7 @@ use {
     analyzer::Analyzer,
     app::App,
     arguments::Arguments,
+    array_string::ArrayString,
     axis::Axis,
     bindings::Bindings,
     bool_ext::BoolExt,
@@ -104,12 +105,12 @@ use {
     collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, VecDeque},
     env, f32,
     ffi::OsString,
-    fmt::{self, Display, Formatter},
+    fmt::{self, Debug, Display, Formatter},
     fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
-    ops::Bound,
+    ops::{Bound, Deref},
     process::{self, ExitStatus, Stdio},
     str::FromStr,
     string::FromUtf8Error,
@@ -156,6 +157,7 @@ mod allocator;
 mod analyzer;
 mod app;
 mod arguments;
+mod array_string;
 mod axis;
 mod bindings;
 mod bool_ext;
@@ -244,10 +246,11 @@ const TIME: u64 = 4;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 type CommandEntry = (&'static str, Command);
+type SmallString = ArrayString<15>;
 type TextureFieldKey = (
   Vector2<OrderedFloat<f32>>,
   OrderedFloat<f32>,
-  &'static str,
+  ArrayString<15>,
   OrderedFloat<f32>,
 );
 

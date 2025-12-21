@@ -4,7 +4,7 @@ use super::*;
 pub(crate) struct TextureField {
   pub(crate) position: Vec2f,
   pub(crate) scale: f32,
-  pub(crate) text: &'static str,
+  pub(crate) text: SmallString,
   pub(crate) weight: FontWeight,
 }
 
@@ -13,7 +13,7 @@ impl Default for TextureField {
     Self {
       position: Vec2f::zeros(),
       scale: 1.0,
-      text: "",
+      text: "".into(),
       weight: FontWeight::NORMAL,
     }
   }
