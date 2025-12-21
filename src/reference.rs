@@ -529,7 +529,24 @@ fn square() {
 #[ignore]
 fn texture() {
   let mut state = State::default();
-  state.filter.field = Field::Texture("A");
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 1.0,
+    weight: FontWeight::NORMAL,
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_small() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 0.5.into(),
+    weight: FontWeight::NORMAL,
+  });
   state.invert().push();
   Test::new(name!()).state(state).run();
 }

@@ -234,8 +234,12 @@ impl State {
     self
   }
 
-  pub(crate) fn text(&mut self, text: Option<Text>) -> &mut Self {
-    self.text = text;
+  pub(crate) fn text(&mut self, text: &'static str, scale: f32, weight: FontWeight) -> &mut Self {
+    self.filter.field = Field::Texture(TextureField {
+      text,
+      scale,
+      weight,
+    });
     self
   }
 

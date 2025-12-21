@@ -1089,9 +1089,15 @@ impl Renderer {
       return Ok(());
     }
 
-    let Field::Texture(text) = filter.field else {
+    let Field::Texture(texture_field) = filter.field else {
       return Ok(());
     };
+
+    let TextureField {
+      text,
+      scale,
+      weight,
+    } = texture_field;
 
     self.vello_scene.reset();
 
@@ -1101,6 +1107,7 @@ impl Renderer {
         .ranged_builder(&mut self.font_context, text, 1.0, true);
       builder.push_default(StyleProperty::FontSize(font_size));
       builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
+      builder.push_default(StyleProperty::FontWeight(weight));
       let mut layout = builder.build(text);
       layout.break_all_lines(None);
       layout
@@ -1108,7 +1115,7 @@ impl Renderer {
 
     let font_size = {
       let layout = layout(1.0);
-      self.resolution.get() as f32 / layout.width().max(layout.height())
+      self.resolution.get() as f32 / layout.width().max(layout.height()) * scale
     };
 
     let mut layout = layout(font_size);
@@ -1271,6 +1278,8 @@ impl Renderer {
 
     #[allow(clippy::cast_possible_truncation)]
     let font_size = bounds.height() as f32 * text.size;
+
+    dbg!(font_size);
 
     let mut builder =
       self

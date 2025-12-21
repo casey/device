@@ -89,7 +89,8 @@ use {
   nalgebra::{
     Rotation2, Translation2, Translation3, Unit, UnitQuaternion, Vector2, matrix, vector,
   },
-  parley::{FontContext, FontFamily, FontStack, GenericFamily, LayoutContext},
+  ordered_float::OrderedFloat,
+  parley::{FontContext, FontFamily, FontStack, FontWeight, GenericFamily, LayoutContext},
   rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
   rustfft::{FftPlanner, num_complex::Complex},
@@ -149,6 +150,22 @@ use {
     window::{Fullscreen, Window, WindowAttributes, WindowId},
   },
 };
+
+#[derive(Clone, Copy, Debug, Default)]
+struct TextureField {
+  scale: f32,
+  text: &'static str,
+  weight: FontWeight,
+}
+
+impl TextureField {
+  fn key(self) -> TextureFieldKey {
+    TextureFieldKey(self.scale.into(), self.text, self.weight.value().into())
+  }
+}
+
+#[derive(Eq, Hash, PartialEq)]
+struct TextureFieldKey(OrderedFloat<f32>, &'static str, OrderedFloat<f32>);
 
 mod alignment;
 mod allocator;
