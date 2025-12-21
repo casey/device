@@ -1,11 +1,22 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) struct TextureField {
   pub(crate) position: Vec2f,
   pub(crate) scale: f32,
   pub(crate) text: &'static str,
   pub(crate) weight: FontWeight,
+}
+
+impl Default for TextureField {
+  fn default() -> Self {
+    Self {
+      position: Vec2f::zeros(),
+      scale: 1.0,
+      text: "",
+      weight: FontWeight::NORMAL,
+    }
+  }
 }
 
 impl TextureField {
