@@ -1,14 +1,13 @@
 use super::*;
 
 #[derive(Clone, Debug)]
-#[allow(clippy::arbitrary_source_item_ordering)]
 pub(crate) struct Transformation3 {
-  pub(crate) space: Space,
-  pub(crate) scaling: Vec3f,
-  pub(crate) rotation: UnitQuaternion<f32>,
-  pub(crate) translation: Vec3f,
   pub(crate) period: Option<f32>,
+  pub(crate) rotation: UnitQuaternion<f32>,
+  pub(crate) scaling: Vec3f,
   pub(crate) sin: bool,
+  pub(crate) space: Space,
+  pub(crate) translation: Vec3f,
 }
 
 impl Transformation3 {
@@ -33,12 +32,12 @@ impl Transformation3 {
 impl Default for Transformation3 {
   fn default() -> Self {
     Self {
+      period: None,
       rotation: UnitQuaternion::identity(),
       scaling: Self::SCALING_IDENTITY,
+      sin: false,
       space: Space::Rgb,
       translation: Vec3f::zeros(),
-      period: None,
-      sin: false,
     }
   }
 }
