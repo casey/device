@@ -101,7 +101,7 @@ impl Test {
     renderer.resize(Size::new(width, height), resolution.try_into().unwrap());
 
     renderer
-      .render(&Analyzer::new(), &self.state, Instant::now())
+      .render(&Analyzer::new(), &self.state, None)
       .unwrap();
 
     let (tx, rx) = mpsc::channel();
@@ -267,7 +267,7 @@ fn cross() {
 
 #[test]
 #[ignore]
-fn default() {
+fn default_state() {
   Test::new(name!()).state(State::default()).run();
 }
 
@@ -527,9 +527,107 @@ fn square() {
 
 #[test]
 #[ignore]
+fn status() {
+  Test::new(name!())
+    .state(State {
+      status: true,
+      ..default()
+    })
+    .run();
+}
+
+#[test]
+#[ignore]
+fn status_capture() {
+  Test::new(name!())
+    .state(State {
+      capture_status: true,
+      status: true,
+      ..default()
+    })
+    .run();
+}
+
+#[test]
+#[ignore]
 fn texture() {
   let mut state = State::default();
-  state.filter.field = Field::Texture("A");
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 1.0,
+    weight: FontWeight::NORMAL,
+    position: Vec2f::zeros(),
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_bottom() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    position: Vec2f::new(0.0, 0.5),
+    scale: 0.5,
+    text: "A",
+    weight: FontWeight::NORMAL,
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_left() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    position: Vec2f::new(-0.5, 0.0),
+    scale: 0.5,
+    text: "A",
+    weight: FontWeight::NORMAL,
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_right() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    position: Vec2f::new(0.5, 0.0),
+    scale: 0.5,
+    text: "A",
+    weight: FontWeight::NORMAL,
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_small() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 0.5,
+    weight: FontWeight::NORMAL,
+    position: Vec2f::zeros(),
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_top() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    position: Vec2f::new(0.0, -0.5),
+    scale: 0.5,
+    text: "A",
+    weight: FontWeight::NORMAL,
+  });
   state.invert().push();
   Test::new(name!()).state(state).run();
 }

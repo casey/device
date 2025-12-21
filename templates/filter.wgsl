@@ -111,10 +111,13 @@ fn field_square(p: vec2f) -> bool {
   return max(abs(p.x), abs(p.y)) < 0.5 * coefficient();
 }
 
-fn field_texture(p: vec2f) -> bool {
+fn field_texture_sample(p: vec2f) -> f32 {
   let uv = p * 0.5 + 0.5;
-  let s = textureSample(field_texture_binding, non_filtering_sampler, uv);
-  return s.a > 0.0;
+  return textureSample(field_texture_binding, non_filtering_sampler, uv).a;
+}
+
+fn field_texture(p: vec2f) -> bool {
+  return field_texture_sample(p) > 0.0;
 }
 
 fn field_top(p: vec2f) -> bool {
@@ -217,7 +220,11 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   var alpha = 0.0;
 
   if on {
-    alpha = uniforms.alpha;
+    if uniforms.field == FIELD_TEXTURE {
+      alpha = field_texture_sample(transformed);
+    } else {
+      alpha = uniforms.alpha;
+    }
   }
 
   // convert back to rgb

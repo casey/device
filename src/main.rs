@@ -64,7 +64,7 @@ use {
     target::Target,
     templates::{CompositeWgsl, FilterWgsl, VertexWgsl},
     tempo::Tempo,
-    text::Text,
+    texture_field::TextureField,
     tick::Tick,
     tiling::Tiling,
     to_affine::ToAffine,
@@ -89,7 +89,8 @@ use {
   nalgebra::{
     Rotation2, Translation2, Translation3, Unit, UnitQuaternion, Vector2, matrix, vector,
   },
-  parley::{FontContext, FontFamily, FontStack, GenericFamily, LayoutContext},
+  ordered_float::OrderedFloat,
+  parley::{FontContext, FontFamily, FontStack, FontWeight, GenericFamily, LayoutContext},
   rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
   rustfft::{FftPlanner, num_complex::Complex},
@@ -219,7 +220,7 @@ mod tap;
 mod target;
 mod templates;
 mod tempo;
-mod text;
+mod texture_field;
 mod tick;
 mod tiling;
 mod to_affine;
@@ -243,6 +244,12 @@ const TIME: u64 = 4;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 type CommandEntry = (&'static str, Command);
+type TextureFieldKey = (
+  Vector2<OrderedFloat<f32>>,
+  OrderedFloat<f32>,
+  &'static str,
+  OrderedFloat<f32>,
+);
 
 type Mat1x2f = nalgebra::Matrix1x2<f32>;
 type Mat2x3f = nalgebra::Matrix2x3<f32>;

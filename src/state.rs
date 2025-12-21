@@ -5,6 +5,7 @@ pub(crate) struct State {
   pub(crate) alpha: f32,
   pub(crate) beat: Option<u64>,
   pub(crate) callback: Option<Box<dyn Callback>>,
+  pub(crate) capture_status: bool,
   pub(crate) complexity: f32,
   pub(crate) count: u64,
   pub(crate) db: f32,
@@ -16,7 +17,6 @@ pub(crate) struct State {
   pub(crate) rng: SmallRng,
   pub(crate) spread: bool,
   pub(crate) status: bool,
-  pub(crate) text: Option<Text>,
   pub(crate) tile: bool,
   pub(crate) transient: Transformation2,
   pub(crate) velocity: Vec4f,
@@ -29,6 +29,7 @@ impl Default for State {
       alpha: 0.5,
       beat: None,
       callback: None,
+      capture_status: false,
       complexity: 0.0,
       count: 0,
       db: 0.0,
@@ -40,7 +41,6 @@ impl Default for State {
       rng: SmallRng::from_rng(&mut rand::rng()),
       spread: false,
       status: false,
-      text: None,
       tile: false,
       transient: Transformation2::default(),
       velocity: Vec4f::zeros(),
@@ -234,8 +234,19 @@ impl State {
     self
   }
 
-  pub(crate) fn text(&mut self, text: Option<Text>) -> &mut Self {
-    self.text = text;
+  pub(crate) fn text(
+    &mut self,
+    position: Vec2f,
+    scale: f32,
+    text: &'static str,
+    weight: FontWeight,
+  ) -> &mut Self {
+    self.filter.field = Field::Texture(TextureField {
+      position,
+      scale,
+      text,
+      weight,
+    });
     self
   }
 

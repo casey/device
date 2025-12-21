@@ -86,16 +86,17 @@ impl Scene {
       }
       Self::Hello => {
         state
-          .text(Some(Text {
-            size: 0.075,
-            string: "hello world".into(),
-            x: 0.10,
-            y: -0.10,
-          }))
-          .db(-40.0)
           .invert()
+          .text(
+            Vec2f::new(-0.375, 0.48),
+            0.35,
+            "hello world",
+            FontWeight::LIGHT,
+          )
+          .push()
           .frequencies()
-          .push();
+          .push()
+          .db(-40.0);
       }
       Self::Highwaystar => {
         state

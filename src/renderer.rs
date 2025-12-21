@@ -18,7 +18,6 @@ pub(crate) struct Renderer {
   font_context: FontContext,
   format: ImageFormat,
   frame: u64,
-  frame_times: VecDeque<Instant>,
   frequencies: TextureView,
   layout_context: LayoutContext,
   limits: Limits,
@@ -746,7 +745,6 @@ impl Renderer {
       font_context: FontContext::new(),
       format,
       frame: 0,
-      frame_times: VecDeque::with_capacity(100),
       frequencies,
       layout_context: LayoutContext::new(),
       limits,
@@ -816,7 +814,7 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {
+  pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, fps: Option<f32>) -> Result {
     let mut errors = Vec::new();
 
     loop {
@@ -837,19 +835,6 @@ impl Renderer {
         .build(),
       );
     }
-
-    if self.frame_times.len() == self.frame_times.capacity() {
-      self.frame_times.pop_front();
-    }
-
-    self.frame_times.push_back(now);
-
-    let fps = if self.frame_times.len() >= 2 {
-      let elapsed = *self.frame_times.back().unwrap() - *self.frame_times.front().unwrap();
-      Some(1000.0 / (elapsed.as_millis() as f32 / self.frame_times.len() as f32))
-    } else {
-      None
-    };
 
     self.render_overlay(state, fps)?;
 
@@ -1040,7 +1025,7 @@ impl Renderer {
     self.draw_composite(
       &self.resources().overlay_bind_group,
       &mut encoder,
-      if state.status { 1 } else { 2 },
+      if state.capture_status { 2 } else { 1 },
       &self.resources().targets[0].texture_view,
     );
 
@@ -1089,9 +1074,16 @@ impl Renderer {
       return Ok(());
     }
 
-    let Field::Texture(text) = filter.field else {
+    let Field::Texture(texture_field) = filter.field else {
       return Ok(());
     };
+
+    let TextureField {
+      text,
+      scale,
+      weight,
+      position,
+    } = texture_field;
 
     self.vello_scene.reset();
 
@@ -1101,6 +1093,7 @@ impl Renderer {
         .ranged_builder(&mut self.font_context, text, 1.0, true);
       builder.push_default(StyleProperty::FontSize(font_size));
       builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
+      builder.push_default(StyleProperty::FontWeight(weight));
       let mut layout = builder.build(text);
       layout.break_all_lines(None);
       layout
@@ -1108,7 +1101,7 @@ impl Renderer {
 
     let font_size = {
       let layout = layout(1.0);
-      self.resolution.get() as f32 / layout.width().max(layout.height())
+      self.resolution.get() as f32 / layout.width().max(layout.height()) * scale
     };
 
     let mut layout = layout(font_size);
@@ -1121,7 +1114,16 @@ impl Renderer {
       },
     );
 
-    let y = (self.resolution.get() as f64 - layout.height() as f64) * 0.5;
+    let offset = {
+      let resolution = self.resolution.get() as f64;
+
+      let center = (resolution - layout.height() as f64) * 0.5;
+
+      Vec2 {
+        x: resolution * 0.5 * f64::from(position.x),
+        y: center + resolution * 0.5 * f64::from(position.y),
+      }
+    };
 
     for line in layout.lines() {
       for item in line.items() {
@@ -1141,7 +1143,7 @@ impl Renderer {
               )
               .hint(true)
               .normalized_coords(run.normalized_coords())
-              .transform(Affine::translate(Vec2 { x: 0.0, y }))
+              .transform(Affine::translate(offset))
               .draw(
                 Fill::NonZero,
                 glyph_run.positioned_glyphs().map(|glyph| vello::Glyph {
@@ -1195,11 +1197,22 @@ impl Renderer {
       vello::{AaConfig, RenderParams},
     };
 
-    self.vello_scene.reset();
+    if !state.status {
+      let mut encoder = self
+        .device
+        .create_command_encoder(&CommandEncoderDescriptor::default());
 
-    let text = if let Some(text) = state.text.clone() {
-      text
-    } else if state.status {
+      encoder.clear_texture(
+        self.resources().overlay_view.texture(),
+        &Self::IMAGE_SUBRESOURCE_RANGE_FULL,
+      );
+
+      self.queue.submit([encoder.finish()]);
+
+      return Ok(());
+    }
+
+    let text = {
       let mut items = Vec::new();
 
       if let Some(beat) = state.beat {
@@ -1216,25 +1229,7 @@ impl Renderer {
         items.push(filter.icon().into());
       }
 
-      Text {
-        size: 0.033,
-        string: items.join(" "),
-        x: 0.0,
-        y: 0.0,
-      }
-    } else {
-      let mut encoder = self
-        .device
-        .create_command_encoder(&CommandEncoderDescriptor::default());
-
-      encoder.clear_texture(
-        self.resources().overlay_view.texture(),
-        &Self::IMAGE_SUBRESOURCE_RANGE_FULL,
-      );
-
-      self.queue.submit([encoder.finish()]);
-
-      return Ok(());
+      items.join(" ")
     };
 
     let bounds = if state.fit {
@@ -1269,18 +1264,19 @@ impl Renderer {
       }
     };
 
-    #[allow(clippy::cast_possible_truncation)]
-    let font_size = bounds.height() as f32 * text.size;
+    self.vello_scene.reset();
 
-    let mut builder =
-      self
-        .layout_context
-        .ranged_builder(&mut self.font_context, &text.string, 1.0, true);
+    #[allow(clippy::cast_possible_truncation)]
+    let font_size = bounds.height() as f32 * 0.033;
+
+    let mut builder = self
+      .layout_context
+      .ranged_builder(&mut self.font_context, &text, 1.0, true);
     builder.push_default(StyleProperty::FontSize(font_size));
     builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
     builder.push_default(StyleProperty::FontWeight(FontWeight::LIGHT));
 
-    let mut layout = builder.build(&text.string);
+    let mut layout = builder.build(&text);
     layout.break_all_lines(None);
     layout.align(None, Alignment::Start, AlignmentOptions::default());
 
@@ -1304,8 +1300,8 @@ impl Renderer {
               .hint(true)
               .normalized_coords(run.normalized_coords())
               .transform(Affine::translate(Vec2 {
-                x: text.x * bounds.width() + bounds.x0 + 10.0,
-                y: text.y * bounds.height() + bounds.y1
+                x: bounds.x0 + 10.0,
+                y: bounds.y1
                   - 10.0
                   - f64::from(glyph_run.baseline())
                   - f64::from(run.metrics().descent),
