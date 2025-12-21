@@ -267,7 +267,7 @@ fn cross() {
 
 #[test]
 #[ignore]
-fn default() {
+fn default_state() {
   Test::new(name!()).state(State::default()).run();
 }
 
@@ -527,6 +527,29 @@ fn square() {
 
 #[test]
 #[ignore]
+fn status() {
+  Test::new(name!())
+    .state(State {
+      status: true,
+      ..default()
+    })
+    .run();
+}
+
+#[test]
+#[ignore]
+fn status_capture() {
+  Test::new(name!())
+    .state(State {
+      capture_status: true,
+      status: true,
+      ..default()
+    })
+    .run();
+}
+
+#[test]
+#[ignore]
 fn texture() {
   let mut state = State::default();
   state.filter.field = Field::Texture(TextureField {
@@ -541,27 +564,13 @@ fn texture() {
 
 #[test]
 #[ignore]
-fn texture_small() {
+fn texture_bottom() {
   let mut state = State::default();
   state.filter.field = Field::Texture(TextureField {
+    position: Vec2f::new(0.0, 0.5),
+    scale: 0.5,
     text: "A",
-    scale: 0.5.into(),
     weight: FontWeight::NORMAL,
-    position: Vec2f::zeros(),
-  });
-  state.invert().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn texture_right() {
-  let mut state = State::default();
-  state.filter.field = Field::Texture(TextureField {
-    text: "A",
-    scale: 0.5.into(),
-    weight: FontWeight::NORMAL,
-    position: Vec2f::new(0.5, 0.0),
   });
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -572,10 +581,38 @@ fn texture_right() {
 fn texture_left() {
   let mut state = State::default();
   state.filter.field = Field::Texture(TextureField {
-    text: "A",
-    scale: 0.5.into(),
-    weight: FontWeight::NORMAL,
     position: Vec2f::new(-0.5, 0.0),
+    scale: 0.5,
+    text: "A",
+    weight: FontWeight::NORMAL,
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_right() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    position: Vec2f::new(0.5, 0.0),
+    scale: 0.5,
+    text: "A",
+    weight: FontWeight::NORMAL,
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_small() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 0.5,
+    weight: FontWeight::NORMAL,
+    position: Vec2f::zeros(),
   });
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -586,24 +623,10 @@ fn texture_left() {
 fn texture_top() {
   let mut state = State::default();
   state.filter.field = Field::Texture(TextureField {
-    text: "A",
-    scale: 0.5.into(),
-    weight: FontWeight::NORMAL,
     position: Vec2f::new(0.0, -0.5),
-  });
-  state.invert().push();
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn texture_bottom() {
-  let mut state = State::default();
-  state.filter.field = Field::Texture(TextureField {
+    scale: 0.5,
     text: "A",
-    scale: 0.5.into(),
     weight: FontWeight::NORMAL,
-    position: Vec2f::new(0.0, 0.5),
   });
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -742,21 +765,4 @@ fn x_wide_fit() {
   state.invert().x().push();
   state.fit = true;
   Test::new(name!()).width(256).height(128).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn status() {
-  let mut state = State::default();
-  state.status = true;
-  Test::new(name!()).state(state).run();
-}
-
-#[test]
-#[ignore]
-fn status_capture() {
-  let mut state = State::default();
-  state.status = true;
-  state.capture_status = true;
-  Test::new(name!()).state(state).run();
 }

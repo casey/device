@@ -64,6 +64,7 @@ use {
     target::Target,
     templates::{CompositeWgsl, FilterWgsl, VertexWgsl},
     tempo::Tempo,
+    texture_field::TextureField,
     tick::Tick,
     tiling::Tiling,
     to_affine::ToAffine,
@@ -150,33 +151,6 @@ use {
   },
 };
 
-#[derive(Clone, Copy, Debug, Default)]
-struct TextureField {
-  position: Vec2f,
-  scale: f32,
-  text: &'static str,
-  weight: FontWeight,
-}
-
-impl TextureField {
-  fn key(self) -> TextureFieldKey {
-    TextureFieldKey(
-      Vector2::new(self.position.x.into(), self.position.y.into()),
-      self.scale.into(),
-      self.text,
-      self.weight.value().into(),
-    )
-  }
-}
-
-#[derive(Eq, Hash, PartialEq)]
-struct TextureFieldKey(
-  Vector2<OrderedFloat<f32>>,
-  OrderedFloat<f32>,
-  &'static str,
-  OrderedFloat<f32>,
-);
-
 mod alignment;
 mod allocator;
 mod analyzer;
@@ -246,6 +220,7 @@ mod tap;
 mod target;
 mod templates;
 mod tempo;
+mod texture_field;
 mod tick;
 mod tiling;
 mod to_affine;
@@ -269,6 +244,12 @@ const TIME: u64 = 4;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 type CommandEntry = (&'static str, Command);
+type TextureFieldKey = (
+  Vector2<OrderedFloat<f32>>,
+  OrderedFloat<f32>,
+  &'static str,
+  OrderedFloat<f32>,
+);
 
 type Mat1x2f = nalgebra::Matrix1x2<f32>;
 type Mat2x3f = nalgebra::Matrix2x3<f32>;
