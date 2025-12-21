@@ -244,7 +244,7 @@ impl State {
     self.filter.field = Field::Texture(TextureField {
       position,
       scale,
-      text,
+      text: text.into(),
       weight,
     });
     self
