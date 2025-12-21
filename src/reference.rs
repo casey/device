@@ -527,6 +527,15 @@ fn square() {
 
 #[test]
 #[ignore]
+fn texture() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture("A");
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
 fn tile() {
   let mut state = State::default();
   state

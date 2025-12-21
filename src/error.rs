@@ -89,15 +89,15 @@ pub(crate) enum Error {
     path: Utf8PathBuf,
     source: serde_yaml::Error,
   },
-  #[snafu(display("failed to create overlay renderer"))]
-  CreateOverlayRenderer {
-    backtrace: Option<Backtrace>,
-    source: vello::Error,
-  },
   #[snafu(display("failed to create surface"))]
   CreateSurface {
     backtrace: Option<Backtrace>,
     source: wgpu::CreateSurfaceError,
+  },
+  #[snafu(display("failed to create vello renderer"))]
+  CreateVelloRenderer {
+    backtrace: Option<Backtrace>,
+    source: vello::Error,
   },
   #[snafu(display("failed to create window"))]
   CreateWindow {
@@ -227,15 +227,15 @@ pub(crate) enum Error {
     error: wgpu::Error,
     additional: Vec<wgpu::Error>,
   },
-  #[snafu(display("failed to render overlay"))]
-  RenderOverlay {
-    backtrace: Option<Backtrace>,
-    source: vello::Error,
-  },
   #[snafu(display("failed to poll renderer"))]
   RenderPoll {
     backtrace: Option<Backtrace>,
     source: wgpu::PollError,
+  },
+  #[snafu(display("failed to render vello scene"))]
+  RenderVello {
+    backtrace: Option<Backtrace>,
+    source: vello::Error,
   },
   #[snafu(display("failed to get adapter"))]
   RequestAdapter {
