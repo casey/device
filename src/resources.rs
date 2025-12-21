@@ -1,7 +1,7 @@
 use super::*;
 
 pub(crate) struct Resources {
-  pub(crate) default_field_texture: BindGroup,
+  pub(crate) dummy_field_texture: BindGroup,
   pub(crate) field_textures: HashMap<&'static str, BindGroup>,
   pub(crate) overlay_bind_group: BindGroup,
   pub(crate) overlay_view: TextureView,

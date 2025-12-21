@@ -1016,7 +1016,7 @@ impl Renderer {
         if let Some(key) = state.filters.get(filter).and_then(Filter::texture_key) {
           self.resources().field_textures.get(&key).unwrap()
         } else {
-          &self.resources().default_field_texture
+          &self.resources().dummy_field_texture
         };
 
       self.draw_filter(
@@ -1409,7 +1409,7 @@ impl Renderer {
     let field_texture_view = self.create_vello_texture(1.try_into().unwrap());
 
     self.resources = Some(Resources {
-      default_field_texture: self.field_texture_bind_group(&field_texture_view),
+      dummy_field_texture: self.field_texture_bind_group(&field_texture_view),
       field_textures: HashMap::new(),
       overlay_bind_group,
       overlay_view,
