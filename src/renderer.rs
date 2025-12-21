@@ -1154,14 +1154,14 @@ impl Renderer {
           }
           PositionedLayoutItem::InlineBox(_) => {
             return Err(Error::internal(
-              "unexpected inline box while rendering filter texture",
+              "unexpected inline box while rendering field texture",
             ));
           }
         }
       }
     }
 
-    log::info!("allocating new filter texture");
+    log::info!("allocating new field texture");
 
     let view = self.create_vello_texture(self.resolution);
 
