@@ -261,7 +261,7 @@ impl State {
 
     let mut callback = self.callback.take();
     if let Some(callback) = &mut callback {
-      callback(self, tick.dt);
+      callback.call(self, tick.dt);
     }
     self.callback = callback;
 
