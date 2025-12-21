@@ -378,14 +378,6 @@ pub(crate) fn swap(state: &mut State) {
   }
 }
 
-pub(crate) fn text(state: &mut State) {
-  state.filters.push(Filter {
-    field: Field::Texture("A"),
-    color: color::invert(),
-    ..default()
-  });
-}
-
 pub(crate) fn toggle_fit(state: &mut State) {
   state.fit.toggle();
 }
