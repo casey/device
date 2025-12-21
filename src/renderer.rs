@@ -243,6 +243,14 @@ impl Renderer {
     })
   }
 
+  fn convert_glyph(glyph: parley::Glyph) -> vello::Glyph {
+    vello::Glyph {
+      id: glyph.id,
+      x: glyph.x,
+      y: glyph.y,
+    }
+  }
+
   fn create_render_pipeline(
     device: &wgpu::Device,
     pipeline_layout: &PipelineLayout,
@@ -1146,11 +1154,7 @@ impl Renderer {
               .transform(Affine::translate(offset))
               .draw(
                 Fill::NonZero,
-                glyph_run.positioned_glyphs().map(|glyph| vello::Glyph {
-                  id: glyph.id,
-                  x: glyph.x,
-                  y: glyph.y,
-                }),
+                glyph_run.positioned_glyphs().map(Self::convert_glyph),
               );
           }
           PositionedLayoutItem::InlineBox(_) => {
@@ -1285,7 +1289,6 @@ impl Renderer {
         match item {
           PositionedLayoutItem::GlyphRun(glyph_run) => {
             let run = glyph_run.run();
-            let mut offset = glyph_run.offset();
             self
               .vello_scene
               .draw_glyphs(run.font())
@@ -1303,20 +1306,12 @@ impl Renderer {
                 x: bounds.x0 + 10.0,
                 y: bounds.y1
                   - 10.0
-                  - f64::from(glyph_run.baseline())
+                  - f64::from(glyph_run.baseline() * 2.0)
                   - f64::from(run.metrics().descent),
               }))
               .draw(
                 Fill::NonZero,
-                glyph_run.glyphs().map(|glyph| {
-                  let x = offset + glyph.x;
-                  offset += glyph.advance;
-                  vello::Glyph {
-                    id: glyph.id,
-                    x,
-                    y: glyph.y,
-                  }
-                }),
+                glyph_run.positioned_glyphs().map(Self::convert_glyph),
               );
           }
           PositionedLayoutItem::InlineBox(_) => {
