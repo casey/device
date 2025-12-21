@@ -117,7 +117,7 @@ impl Capture {
 
       let sound = tap.drain();
       analyzer.update(&sound, done, &state);
-      renderer.render(&analyzer, &state, Instant::now())?;
+      renderer.render(&analyzer, &state, None)?;
 
       let tx = tx.clone();
       renderer.capture(move |image| {

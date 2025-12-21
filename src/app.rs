@@ -10,6 +10,7 @@ pub(crate) struct App {
   pub(crate) cursors: HashSet<DeviceId>,
   pub(crate) deadline: Instant,
   pub(crate) errors: Vec<Error>,
+  pub(crate) frame_times: VecDeque<Instant>,
   pub(crate) fullscreen: bool,
   pub(crate) history: History,
   pub(crate) hub: Hub,
@@ -247,6 +248,7 @@ impl App {
       cursors: HashSet::new(),
       deadline: now,
       errors: Vec::new(),
+      frame_times: VecDeque::with_capacity(100),
       fullscreen,
       history: History::default(),
       hub: Hub::new()?,
@@ -362,6 +364,19 @@ impl App {
       Instant::now()
     };
 
+    if self.frame_times.len() == self.frame_times.capacity() {
+      self.frame_times.pop_front();
+    }
+
+    self.frame_times.push_back(now);
+
+    let fps = if self.frame_times.len() >= 2 {
+      let elapsed = *self.frame_times.back().unwrap() - *self.frame_times.front().unwrap();
+      Some(1000.0 / (elapsed.as_millis() as f32 / self.frame_times.len() as f32))
+    } else {
+      None
+    };
+
     let dt = now - self.last;
     self.last = now;
 
@@ -391,7 +406,7 @@ impl App {
 
     let frame = renderer.frame();
 
-    renderer.render(&self.analyzer, &self.state, now)?;
+    renderer.render(&self.analyzer, &self.state, fps)?;
 
     if let Some(recorder) = &self.recorder_thread {
       let tx = recorder.tx().clone();

@@ -101,7 +101,7 @@ impl Test {
     renderer.resize(Size::new(width, height), resolution.try_into().unwrap());
 
     renderer
-      .render(&Analyzer::new(), &self.state, Instant::now())
+      .render(&Analyzer::new(), &self.state, None)
       .unwrap();
 
     let (tx, rx) = mpsc::channel();
@@ -742,4 +742,21 @@ fn x_wide_fit() {
   state.invert().x().push();
   state.fit = true;
   Test::new(name!()).width(256).height(128).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn status() {
+  let mut state = State::default();
+  state.status = true;
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn status_capture() {
+  let mut state = State::default();
+  state.status = true;
+  state.capture_status = true;
+  Test::new(name!()).state(state).run();
 }

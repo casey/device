@@ -18,7 +18,6 @@ pub(crate) struct Renderer {
   font_context: FontContext,
   format: ImageFormat,
   frame: u64,
-  frame_times: VecDeque<Instant>,
   frequencies: TextureView,
   layout_context: LayoutContext,
   limits: Limits,
@@ -746,7 +745,6 @@ impl Renderer {
       font_context: FontContext::new(),
       format,
       frame: 0,
-      frame_times: VecDeque::with_capacity(100),
       frequencies,
       layout_context: LayoutContext::new(),
       limits,
@@ -816,7 +814,7 @@ impl Renderer {
     Ok(())
   }
 
-  pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, now: Instant) -> Result {
+  pub(crate) fn render(&mut self, analyzer: &Analyzer, state: &State, fps: Option<f32>) -> Result {
     let mut errors = Vec::new();
 
     loop {
@@ -837,19 +835,6 @@ impl Renderer {
         .build(),
       );
     }
-
-    if self.frame_times.len() == self.frame_times.capacity() {
-      self.frame_times.pop_front();
-    }
-
-    self.frame_times.push_back(now);
-
-    let fps = if self.frame_times.len() >= 2 {
-      let elapsed = *self.frame_times.back().unwrap() - *self.frame_times.front().unwrap();
-      Some(1000.0 / (elapsed.as_millis() as f32 / self.frame_times.len() as f32))
-    } else {
-      None
-    };
 
     self.render_overlay(state, fps)?;
 
@@ -1040,7 +1025,7 @@ impl Renderer {
     self.draw_composite(
       &self.resources().overlay_bind_group,
       &mut encoder,
-      if state.status { 1 } else { 2 },
+      if state.capture_status { 2 } else { 1 },
       &self.resources().targets[0].texture_view,
     );
 
