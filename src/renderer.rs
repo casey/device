@@ -1089,11 +1089,9 @@ impl Renderer {
       return Ok(());
     }
 
-    let Field::Texture(character) = filter.field else {
+    let Field::Texture(text) = filter.field else {
       return Ok(());
     };
-
-    let text = character.to_string();
 
     self.vello_scene.reset();
 

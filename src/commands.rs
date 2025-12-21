@@ -380,7 +380,7 @@ pub(crate) fn swap(state: &mut State) {
 
 pub(crate) fn text(state: &mut State) {
   state.filters.push(Filter {
-    field: Field::Texture('A'),
+    field: Field::Texture("A"),
     color: color::invert(),
     ..default()
   });

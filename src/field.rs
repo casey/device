@@ -13,7 +13,7 @@ pub(crate) enum Field {
   Right,
   Samples,
   Square,
-  Texture(char),
+  Texture(&'static str),
   Top,
   Triangle,
   X,

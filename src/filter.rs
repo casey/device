@@ -75,9 +75,9 @@ impl Filter {
       .to_affine()
   }
 
-  pub(crate) fn texture_key(&self) -> Option<char> {
-    if let Field::Texture(character) = self.field {
-      Some(character)
+  pub(crate) fn texture_key(&self) -> Option<&'static str> {
+    if let Field::Texture(text) = self.field {
+      Some(text)
     } else {
       None
     }

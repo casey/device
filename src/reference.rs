@@ -529,7 +529,7 @@ fn square() {
 #[ignore]
 fn texture() {
   let mut state = State::default();
-  state.filter.field = Field::Texture('A');
+  state.filter.field = Field::Texture("A");
   state.invert().push();
   Test::new(name!()).state(state).run();
 }
