@@ -12,8 +12,8 @@ pub(crate) struct Renderer {
   composite_pipeline: Pipeline,
   device: wgpu::Device,
   error_channel: mpsc::Receiver<wgpu::Error>,
-  filter_pipeline: Pipeline,
   field_texture_bind_group_layout: BindGroupLayout,
+  filter_pipeline: Pipeline,
   filtering_sampler: Sampler,
   font_context: FontContext,
   format: ImageFormat,
@@ -350,6 +350,35 @@ impl Renderer {
     pass.draw(0..3, 0..1);
   }
 
+  fn field_texture_bind_group(&self, filter: &TextureView) -> BindGroup {
+    let mut binding = Counter::default();
+    self.device.create_bind_group(&BindGroupDescriptor {
+      layout: &self.field_texture_bind_group_layout,
+      entries: &[BindGroupEntry {
+        binding: binding.next(),
+        resource: BindingResource::TextureView(filter),
+      }],
+      label: label!(),
+    })
+  }
+
+  fn field_texture_bind_group_layout(device: &wgpu::Device) -> BindGroupLayout {
+    let mut binding = Counter::default();
+    device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+      entries: &[BindGroupLayoutEntry {
+        binding: binding.next(),
+        count: None,
+        ty: BindingType::Texture {
+          multisampled: false,
+          sample_type: TextureSampleType::Float { filterable: true },
+          view_dimension: TextureViewDimension::D2,
+        },
+        visibility: ShaderStages::FRAGMENT,
+      }],
+      label: label!(),
+    })
+  }
+
   fn filter_bind_group(
     &self,
     frequencies: &TextureView,
@@ -454,35 +483,6 @@ impl Renderer {
           visibility: ShaderStages::FRAGMENT,
         },
       ],
-      label: label!(),
-    })
-  }
-
-  fn field_texture_bind_group(&self, filter: &TextureView) -> BindGroup {
-    let mut binding = Counter::default();
-    self.device.create_bind_group(&BindGroupDescriptor {
-      layout: &self.field_texture_bind_group_layout,
-      entries: &[BindGroupEntry {
-        binding: binding.next(),
-        resource: BindingResource::TextureView(filter),
-      }],
-      label: label!(),
-    })
-  }
-
-  fn field_texture_bind_group_layout(device: &wgpu::Device) -> BindGroupLayout {
-    let mut binding = Counter::default();
-    device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-      entries: &[BindGroupLayoutEntry {
-        binding: binding.next(),
-        count: None,
-        ty: BindingType::Texture {
-          multisampled: false,
-          sample_type: TextureSampleType::Float { filterable: true },
-          view_dimension: TextureViewDimension::D2,
-        },
-        visibility: ShaderStages::FRAGMENT,
-      }],
       label: label!(),
     })
   }
@@ -1096,13 +1096,12 @@ impl Renderer {
     self.vello_scene.reset();
 
     let mut layout = |font_size| {
-      let mut builder =
-        self
-          .layout_context
-          .ranged_builder(&mut self.font_context, &text, 1.0, true);
+      let mut builder = self
+        .layout_context
+        .ranged_builder(&mut self.font_context, text, 1.0, true);
       builder.push_default(StyleProperty::FontSize(font_size));
       builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
-      let mut layout = builder.build(&text);
+      let mut layout = builder.build(text);
       layout.break_all_lines(None);
       layout
     };
