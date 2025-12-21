@@ -234,10 +234,17 @@ impl State {
     self
   }
 
-  pub(crate) fn text(&mut self, text: &'static str, scale: f32, weight: FontWeight) -> &mut Self {
+  pub(crate) fn text(
+    &mut self,
+    position: Vec2f,
+    scale: f32,
+    text: &'static str,
+    weight: FontWeight,
+  ) -> &mut Self {
     self.filter.field = Field::Texture(TextureField {
-      text,
+      position,
       scale,
+      text,
       weight,
     });
     self

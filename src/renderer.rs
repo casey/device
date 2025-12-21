@@ -1097,6 +1097,7 @@ impl Renderer {
       text,
       scale,
       weight,
+      position,
     } = texture_field;
 
     self.vello_scene.reset();
@@ -1128,7 +1129,12 @@ impl Renderer {
       },
     );
 
-    let y = (self.resolution.get() as f64 - layout.height() as f64) * 0.5;
+    let offset = Vec2 {
+      x: self.resolution.get() as f64 * 0.5 * f64::from(position.x),
+      y: (self.resolution.get() as f64 - layout.height() as f64)
+        * 0.5
+        * (1.0 + f64::from(position.y)),
+    };
 
     for line in layout.lines() {
       for item in line.items() {
@@ -1148,7 +1154,7 @@ impl Renderer {
               )
               .hint(true)
               .normalized_coords(run.normalized_coords())
-              .transform(Affine::translate(Vec2 { x: 0.0, y }))
+              .transform(Affine::translate(offset))
               .draw(
                 Fill::NonZero,
                 glyph_run.positioned_glyphs().map(|glyph| vello::Glyph {

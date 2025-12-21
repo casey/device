@@ -153,6 +153,7 @@ use {
 
 #[derive(Clone, Copy, Debug, Default)]
 struct TextureField {
+  position: Vec2f,
   scale: f32,
   text: &'static str,
   weight: FontWeight,
@@ -160,12 +161,22 @@ struct TextureField {
 
 impl TextureField {
   fn key(self) -> TextureFieldKey {
-    TextureFieldKey(self.scale.into(), self.text, self.weight.value().into())
+    TextureFieldKey(
+      Vector2::new(self.position.x.into(), self.position.y.into()),
+      self.scale.into(),
+      self.text,
+      self.weight.value().into(),
+    )
   }
 }
 
 #[derive(Eq, Hash, PartialEq)]
-struct TextureFieldKey(OrderedFloat<f32>, &'static str, OrderedFloat<f32>);
+struct TextureFieldKey(
+  Vector2<OrderedFloat<f32>>,
+  OrderedFloat<f32>,
+  &'static str,
+  OrderedFloat<f32>,
+);
 
 mod alignment;
 mod allocator;

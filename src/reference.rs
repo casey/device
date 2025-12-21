@@ -533,6 +533,7 @@ fn texture() {
     text: "A",
     scale: 1.0,
     weight: FontWeight::NORMAL,
+    position: Vec2f::zeros(),
   });
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -546,6 +547,21 @@ fn texture_small() {
     text: "A",
     scale: 0.5.into(),
     weight: FontWeight::NORMAL,
+    position: Vec2f::zeros(),
+  });
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn texture_right() {
+  let mut state = State::default();
+  state.filter.field = Field::Texture(TextureField {
+    text: "A",
+    scale: 0.5.into(),
+    weight: FontWeight::NORMAL,
+    position: Vec2f::new(0.5, 0.0),
   });
   state.invert().push();
   Test::new(name!()).state(state).run();
