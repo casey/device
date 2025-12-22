@@ -346,10 +346,8 @@ impl Preset {
   }
 
   pub(crate) fn random(rng: &mut SmallRng, i: usize) -> Self {
-    if i == 0 {
-      Self::SHAPE.choose(rng).copied().unwrap()
-    } else {
-      Self::SHAPE
+    static TAIL: LazyLock<Vec<Preset>> = LazyLock::new(|| {
+      Preset::SHAPE
         .iter()
         .chain(Preset::COLOR)
         .chain(Preset::COLOR_RESPONSIVE)
@@ -358,34 +356,34 @@ impl Preset {
         .chain(Preset::MOVEMENT_VELOCITY)
         .chain(Preset::TRANSFORM)
         .copied()
-        .collect::<Vec<Self>>()
-        .choose(rng)
-        .copied()
-        .unwrap()
+        .collect()
+    });
+    if i == 0 {
+      Self::SHAPE.choose(rng).copied().unwrap()
+    } else {
+      TAIL.choose(rng).copied().unwrap()
     }
   }
 
   pub(crate) fn random_black_and_white(rng: &mut SmallRng, i: usize) -> Self {
+    static TAIL: LazyLock<Vec<Preset>> = LazyLock::new(|| {
+      Preset::MOVEMENT_RESPONSIVE
+        .iter()
+        .chain(Preset::MOVEMENT_VELOCITY)
+        .chain(Preset::TRANSFORM)
+        .copied()
+        .collect()
+    });
     if i == 0 {
       Self::SHAPE.choose(rng).copied().unwrap()
     } else {
-      Self::MOVEMENT_RESPONSIVE
-        .iter()
-        .chain(Self::MOVEMENT_VELOCITY)
-        .chain(Self::TRANSFORM)
-        .copied()
-        .collect::<Vec<Self>>()
-        .choose(rng)
-        .copied()
-        .unwrap()
+      TAIL.choose(rng).copied().unwrap()
     }
   }
 
   pub(crate) fn random_simple(rng: &mut SmallRng, i: usize) -> Self {
-    if i == 0 {
-      Self::SHAPE.choose(rng).copied().unwrap()
-    } else {
-      Self::COLOR
+    static TAIL: LazyLock<Vec<Preset>> = LazyLock::new(|| {
+      Preset::COLOR
         .iter()
         .chain(Preset::COLOR_RESPONSIVE)
         .chain(Preset::COLOR_VELOCITY)
@@ -393,10 +391,12 @@ impl Preset {
         .chain(Preset::MOVEMENT_VELOCITY)
         .chain(Preset::TRANSFORM)
         .copied()
-        .collect::<Vec<Self>>()
-        .choose(rng)
-        .copied()
-        .unwrap()
+        .collect()
+    });
+    if i == 0 {
+      Self::SHAPE.choose(rng).copied().unwrap()
+    } else {
+      TAIL.choose(rng).copied().unwrap()
     }
   }
 }
