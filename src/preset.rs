@@ -349,19 +349,26 @@ impl Preset {
     if i == 0 {
       Self::SHAPE.choose(rng).copied().unwrap()
     } else {
-      // Self::SHAPE
-      //   .iter()
-      //   .chain(Preset::COLOR)
-      //   .chain(Preset::COLOR_RESPONSIVE)
-      //   .chain(Preset::COLOR_VELOCITY)
-      //   .chain(Preset::MOVEMENT_RESPONSIVE)
-      //   .chain(Preset::MOVEMENT_VELOCITY)
-      //   .chain(Preset::TRANSFORM)
-      //   .copied()
-      //   .collect::<Vec<Self>>()
-      //   .choose(rng)
-      //   .copied()
-      //   .unwrap()
+      Self::SHAPE
+        .iter()
+        .chain(Preset::COLOR)
+        .chain(Preset::COLOR_RESPONSIVE)
+        .chain(Preset::COLOR_VELOCITY)
+        .chain(Preset::MOVEMENT_RESPONSIVE)
+        .chain(Preset::MOVEMENT_VELOCITY)
+        .chain(Preset::TRANSFORM)
+        .copied()
+        .collect::<Vec<Self>>()
+        .choose(rng)
+        .copied()
+        .unwrap()
+    }
+  }
+
+  pub(crate) fn random_simple(rng: &mut SmallRng, i: usize) -> Self {
+    if i == 0 {
+      Self::SHAPE.choose(rng).copied().unwrap()
+    } else {
       Self::COLOR
         .iter()
         .chain(Preset::COLOR_RESPONSIVE)
@@ -381,15 +388,6 @@ impl Preset {
     if i == 0 {
       Self::SHAPE.choose(rng).copied().unwrap()
     } else {
-      // *Self::SHAPE
-      //   .iter()
-      //   .chain(Self::MOVEMENT_RESPONSIVE)
-      //   .chain(Self::MOVEMENT_VELOCITY)
-      //   .chain(Self::TRANSFORM)
-      //   .copied()
-      //   .collect::<Vec<Self>>()
-      //   .choose(rng)
-      //   .unwrap()
       Self::MOVEMENT_RESPONSIVE
         .iter()
         .chain(Self::MOVEMENT_VELOCITY)
