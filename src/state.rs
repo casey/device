@@ -73,7 +73,7 @@ impl State {
 
   pub(crate) fn callback(
     &mut self,
-    callback: impl FnMut(&mut State, Duration) + Clone + 'static,
+    callback: impl FnMut(&mut State, Tick) + Clone + 'static,
   ) -> &mut Self {
     self.callback = Some(Box::new(callback));
     self
@@ -261,7 +261,7 @@ impl State {
 
     let mut callback = self.callback.take();
     if let Some(callback) = &mut callback {
-      callback.call(self, tick.dt);
+      callback.call(self, tick);
     }
     self.callback = callback;
 

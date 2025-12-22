@@ -119,8 +119,8 @@ impl Scene {
           .db(-24.0)
           .times(8);
 
-        state.callback(move |state, elapsed| {
-          r += elapsed.as_secs_f32() / 32.6 * TAU / 4.0;
+        state.callback(move |state, tick| {
+          r += tick.dt.as_secs_f32() / 32.6 * TAU / 4.0;
 
           state
             .truncate(8)
