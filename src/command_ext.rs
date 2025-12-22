@@ -15,12 +15,9 @@ impl CommandExt for Command {
         if libc::setpgid(0, 0) != 0 {
           return Err(std::io::Error::last_os_error());
         }
-
         Ok(())
-      });
+      })
     }
-
-    self
   }
 
   fn stdout_utf8(&mut self) -> Result<String> {
