@@ -6,14 +6,6 @@ pub(crate) struct Position {
 }
 
 impl Position {
-  pub(crate) fn quarters(self) -> u64 {
-    self.quarter
-  }
-
-  pub(crate) fn quarter(self) -> u64 {
-    self.quarter % 16
-  }
-
   pub(crate) fn from_bar(bar: u64) -> Self {
     Self { quarter: bar * 16 }
   }

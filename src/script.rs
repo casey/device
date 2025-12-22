@@ -15,14 +15,39 @@ macro_rules! script {
 
 pub(crate) type Slice = &'static [(u64, &'static [CommandEntry])];
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct Script {
   pub(crate) commands: BTreeMap<Position, Vec<CommandEntry>>,
 }
 
 impl Script {
+  pub(crate) fn clear(&mut self, start: Bound<Position>, end: Bound<Position>) {
+    let keys = self
+      .commands
+      .range((start, end))
+      .map(|(position, _commands)| *position)
+      .collect::<Vec<Position>>();
+
+    for key in keys {
+      self.commands.remove(&key).unwrap();
+    }
+  }
+
   pub(crate) fn commands(&self) -> impl Iterator<Item = CommandEntry> {
     self.commands.values().flatten().copied()
+  }
+
+  pub(crate) fn on(&mut self, position: Position, entry: CommandEntry) {
+    self.commands.entry(position).or_default().push(entry);
+  }
+
+  pub(crate) fn only(&mut self, position: Position, entry: CommandEntry) {
+    self
+      .commands
+      .entry(position)
+      .and_modify(Vec::clear)
+      .or_default()
+      .push(entry);
   }
 
   pub(crate) fn tick(&self, tick: Tick) -> &[CommandEntry] {
