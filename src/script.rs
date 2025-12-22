@@ -1,20 +1,5 @@
 use super::*;
 
-#[macro_export]
-macro_rules! script {
-  {
-    $($beat:literal $($command:ident)+)*
-  } => {
-    &[
-      $(
-        ($beat, &[$($command,)*]),
-      )*
-    ]
-  }
-}
-
-pub(crate) type Slice = &'static [(u64, &'static [CommandEntry])];
-
 #[derive(Debug, Default)]
 pub(crate) struct Script {
   pub(crate) commands: BTreeMap<Position, Vec<CommandEntry>>,
@@ -64,25 +49,6 @@ impl Script {
       .get(&position)
       .map(Vec::as_slice)
       .unwrap_or_default()
-  }
-}
-
-impl From<Slice> for Script {
-  fn from(slice: Slice) -> Self {
-    let mut commands = BTreeMap::<Position, Vec<CommandEntry>>::new();
-
-    for (measure, line) in slice {
-      let beat = measure.checked_sub(1).unwrap() * TIME;
-
-      for (i, command) in line.iter().enumerate() {
-        commands
-          .entry(Position::from_beat(beat + i.into_u64()))
-          .or_default()
-          .push(*command);
-      }
-    }
-
-    Script { commands }
   }
 }
 
