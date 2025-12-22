@@ -29,15 +29,17 @@ pub(crate) struct Tap {
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
-  pub(crate) fn beat(&self) -> Option<u64> {
+  pub(crate) fn position(&self) -> Option<Position> {
     let tempo = self.tempo?;
 
     if self.time < tempo.offset {
-      return Some(0);
+      return None;
     }
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    Some(((self.time - tempo.offset) / 60.0 * tempo.bpm) as u64)
+    let index = ((self.time - tempo.offset) / 60.0 * tempo.bpm * 4.0) as u64;
+
+    Some(Position { index })
   }
 
   pub(crate) fn drain(&mut self) -> Sound {
