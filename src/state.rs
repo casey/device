@@ -3,7 +3,6 @@ use super::*;
 #[derive(Clone)]
 pub(crate) struct State {
   pub(crate) alpha: f32,
-  pub(crate) position: Option<Position>,
   pub(crate) callback: Option<Box<dyn Callback>>,
   pub(crate) capture_status: bool,
   pub(crate) complexity: f32,
@@ -14,6 +13,7 @@ pub(crate) struct State {
   pub(crate) filters: Vec<Filter>,
   pub(crate) fit: bool,
   pub(crate) interpolate: bool,
+  pub(crate) position: Option<Position>,
   pub(crate) rng: SmallRng,
   pub(crate) spread: bool,
   pub(crate) status: bool,

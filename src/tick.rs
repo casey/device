@@ -3,8 +3,8 @@ use super::*;
 #[derive(Clone, Copy)]
 pub(crate) struct Tick {
   pub(crate) dt: Duration,
-  pub(crate) position: Option<Position>,
   pub(crate) last: Option<Position>,
+  pub(crate) position: Option<Position>,
 }
 
 impl Tick {

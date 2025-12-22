@@ -29,19 +29,6 @@ pub(crate) struct Tap {
 impl Tap {
   pub(crate) const CHANNELS: u16 = 2;
 
-  pub(crate) fn position(&self) -> Option<Position> {
-    let tempo = self.tempo?;
-
-    if self.time < tempo.offset {
-      return None;
-    }
-
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    let quarter = ((self.time - tempo.offset) / 60.0 * tempo.bpm * 4.0) as u64;
-
-    Some(Position::from_quarter(quarter))
-  }
-
   pub(crate) fn drain(&mut self) -> Sound {
     self.drain_exact(None).unwrap()
   }
@@ -170,6 +157,19 @@ impl Tap {
 
   pub(crate) fn play(&self) {
     self.paused.store(false, atomic::Ordering::Relaxed);
+  }
+
+  pub(crate) fn position(&self) -> Option<Position> {
+    let tempo = self.tempo?;
+
+    if self.time < tempo.offset {
+      return None;
+    }
+
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    let quarter = ((self.time - tempo.offset) / 60.0 * tempo.bpm * 4.0) as u64;
+
+    Some(Position::from_quarter(quarter))
   }
 
   pub(crate) fn sequence<T>(&mut self, node: An<T>, duration: f64, fade_in: f64, fade_out: f64)
