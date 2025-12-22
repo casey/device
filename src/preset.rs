@@ -365,6 +365,22 @@ impl Preset {
     }
   }
 
+  pub(crate) fn random_black_and_white(rng: &mut SmallRng, i: usize) -> Self {
+    if i == 0 {
+      Self::SHAPE.choose(rng).copied().unwrap()
+    } else {
+      Self::MOVEMENT_RESPONSIVE
+        .iter()
+        .chain(Self::MOVEMENT_VELOCITY)
+        .chain(Self::TRANSFORM)
+        .copied()
+        .collect::<Vec<Self>>()
+        .choose(rng)
+        .copied()
+        .unwrap()
+    }
+  }
+
   pub(crate) fn random_simple(rng: &mut SmallRng, i: usize) -> Self {
     if i == 0 {
       Self::SHAPE.choose(rng).copied().unwrap()
@@ -376,22 +392,6 @@ impl Preset {
         .chain(Preset::MOVEMENT_RESPONSIVE)
         .chain(Preset::MOVEMENT_VELOCITY)
         .chain(Preset::TRANSFORM)
-        .copied()
-        .collect::<Vec<Self>>()
-        .choose(rng)
-        .copied()
-        .unwrap()
-    }
-  }
-
-  pub(crate) fn random_black_and_white(rng: &mut SmallRng, i: usize) -> Self {
-    if i == 0 {
-      Self::SHAPE.choose(rng).copied().unwrap()
-    } else {
-      Self::MOVEMENT_RESPONSIVE
-        .iter()
-        .chain(Self::MOVEMENT_VELOCITY)
-        .chain(Self::TRANSFORM)
         .copied()
         .collect::<Vec<Self>>()
         .choose(rng)

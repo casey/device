@@ -59,9 +59,9 @@ pub(crate) fn blaster(state: &mut State) {
     .extend(presets.into_iter().map(Preset::filter));
 }
 
-pub(crate) fn blaster_simple(state: &mut State) {
+pub(crate) fn blaster_black_and_white(state: &mut State) {
   let presets = (0..state.preset_limit())
-    .map(|i| Preset::random_simple(&mut state.rng, i))
+    .map(|i| Preset::random_black_and_white(&mut state.rng, i))
     .collect::<Vec<Preset>>();
 
   state.truncate(0);
@@ -71,9 +71,9 @@ pub(crate) fn blaster_simple(state: &mut State) {
     .extend(presets.into_iter().map(Preset::filter));
 }
 
-pub(crate) fn blaster_black_and_white(state: &mut State) {
+pub(crate) fn blaster_simple(state: &mut State) {
   let presets = (0..state.preset_limit())
-    .map(|i| Preset::random_black_and_white(&mut state.rng, i))
+    .map(|i| Preset::random_simple(&mut state.rng, i))
     .collect::<Vec<Preset>>();
 
   state.truncate(0);
