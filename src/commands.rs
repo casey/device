@@ -57,17 +57,6 @@ pub(crate) fn blaster(state: &mut State) {
   state
     .filters
     .extend(presets.into_iter().map(Preset::filter));
-
-  state.filters.push(Filter {
-    field: Field::Texture(TextureField {
-      text: state.count.to_string().into(),
-      ..default()
-    }),
-    color: color::invert(),
-    ..default()
-  });
-
-  state.count += 1;
 }
 
 pub(crate) fn count(state: &mut State) {

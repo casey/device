@@ -17,7 +17,7 @@ pub(crate) type Slice = &'static [(u64, &'static [CommandEntry])];
 
 #[derive(Debug)]
 pub(crate) struct Script {
-  commands: BTreeMap<Position, Vec<CommandEntry>>,
+  pub(crate) commands: BTreeMap<Position, Vec<CommandEntry>>,
 }
 
 impl Script {
@@ -58,5 +58,18 @@ impl From<Slice> for Script {
     }
 
     Script { commands }
+  }
+}
+
+impl Display for Script {
+  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    for (position, commands) in &self.commands {
+      write!(f, "{position}")?;
+      for command in commands {
+        write!(f, " {}", command.0)?;
+      }
+      writeln!(f)?;
+    }
+    Ok(())
   }
 }

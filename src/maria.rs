@@ -1,7 +1,7 @@
 use {super::*, generated::*};
 
 struct Cue {
-  command: CommandEntry,
+  event: &'static str,
   op: Op,
   positions: Vec<Position>,
 }
@@ -26,16 +26,21 @@ macro_rules! op {
 
 fn position(literal: f32) -> Position {
   let beat = (literal.trunc() as u64).checked_sub(1).unwrap();
-  let quarter = ((literal.fract() * 10.0).trunc() as u64)
-    .checked_sub(1)
-    .unwrap();
+  let quarter = if literal.trunc() == literal {
+    0
+  } else {
+    ((literal.fract() * 10.0).trunc() as u64)
+      .checked_sub(1)
+      .unwrap()
+  };
+
   Position::from_quarter(beat * 4 + quarter)
 }
 
 macro_rules! cues {
   {
     $(
-      $bar:literal $op:tt $command:ident $($position:literal)+;
+      $bar:literal $op:tt $event:ident $($position:literal)+;
     )+
   } => {
     {
@@ -48,7 +53,7 @@ macro_rules! cues {
 
         cues.entry(Position::from_bar(bar.checked_sub(1).unwrap())).or_default().push(
           Cue {
-            command: $command,
+            event: stringify!($event),
             op: op!($op),
             positions,
           }
@@ -60,68 +65,93 @@ macro_rules! cues {
   }
 }
 
-fn events() -> BTreeMap<Position, Vec<CommandEntry>> {
-  const KICK: CommandEntry = BLASTER;
-  const SNARE: CommandEntry = ZOOM_OUT;
-  const FADE: CommandEntry = UNDO;
+pub(crate) fn events() -> Script {
+  // todo:
+  // - break kicks are too boring each one should add a single layer
+  // - get the kick pickups and snare fills
 
   let cues = cues! {
-     1  +KICK  1 3;
-     39 +KICK  2 4;
-     53 +SNARE 2 4;
-     68 -SNARE 2 4;
-     71 -KICK  2 4;
-     79 +KICK  2 4;
-     83 +SNARE 2 4;
-    123 -SNARE 2 4;
-    123 -KICK  1 2 3 4;
-    123 +KICK  1.1 1.2 1.3 2.3 3.3 3.4 4.1 4.2 5.1 6.3 7.3 8.2;
-    131 +SNARE 2 4;
-    147 -SNARE 2 4;
-    151 -KICK  1.1 1.2 1.3 2.3 3.3 3.4 4.1 4.2 5.1 6.3 7.3 8.2;
-    151 +KICK  1 3;
-    159 -KICK  1 3;
-    159 =FADE  1;
+     1  +kick  1 3;
+     39 +kick  2 4;
+     53 +snare 2 4;
+     68 -snare 2 4;
+     71 -kick  2 4;
+     79 +kick  2 4;
+     83 +snare 2 4;
+    123 -snare 2 4;
+    123 -kick  1 2 3 4;
+    // 123 +kick  1.1 1.2 1.3 2.3 3.3 3.4 4.1 4.2 5.1 6.3 7.3 8.2;
+    131 +snare 2 4;
+    147 -snare 2 4;
+    // 151 -kick  1.1 1.2 1.3 2.3 3.3 3.4 4.1 4.2 5.1 6.3 7.3 8.2;
+    151 +kick  1 3;
+    159 -kick  1 3;
+    159 =fade  1;
   };
 
   let end = cues.last_key_value().unwrap().0;
 
-  let mut events = BTreeMap::<Position, Vec<CommandEntry>>::new();
+  let mut events = BTreeMap::<Position, BTreeSet<&'static str>>::new();
 
   let mut active = BTreeMap::<Position, BTreeSet<&'static str>>::new();
 
-  for i in 0..end.quarters() {
+  for i in 0..=end.quarters() {
     let current = Position::from_quarter(i);
 
-    let Some(cues) = cues.get(&current) else {
-      continue;
+    if let Some(cues) = cues.get(&current) {
+      for cue in cues {
+        match cue.op {
+          Op::Start => {
+            for position in &cue.positions {
+              active.entry(*position).or_default().insert(cue.event);
+            }
+          }
+          Op::Stop => {
+            for position in &cue.positions {
+              assert!(active.entry(*position).or_default().remove(cue.event));
+            }
+          }
+          Op::Once => {
+            for position in &cue.positions {
+              events
+                .entry(current + *position)
+                .or_default()
+                .insert(cue.event);
+            }
+          }
+        }
+      }
     };
 
-    for cue in cues {
-      match cue.op {
-        Op::Start => {
-          for position in &cue.positions {
-            active.entry(*position).or_default().insert(cue.command.0);
-          }
-        }
-        Op::Stop => {
-          for position in &cue.positions {
-            assert!(active.entry(*position).or_default().remove(cue.command.0));
-          }
-        }
-        Op::Once => {
-          for position in &cue.positions {
-            events
-              .entry(current + *position)
-              .or_default()
-              .push(cue.command);
-          }
+    if current.quarter() == 0 {
+      for (position, commands) in &active {
+        let entry = events.entry(current + *position).or_default();
+
+        for command in commands {
+          entry.insert(command);
         }
       }
     }
   }
 
-  events
+  let mut commands = BTreeMap::<Position, Vec<CommandEntry>>::new();
+
+  for (position, events) in events {
+    if events.is_empty() {
+      continue;
+    }
+
+    let mut entry = commands.entry(position).or_default();
+    match events.iter().copied().collect::<Vec<&str>>().as_slice() {
+      ["kick"] => entry.push(BLASTER),
+      ["snare"] => entry.push(ZOOM_OUT),
+      ["kick", "snare"] => entry.push(ZOOM_OUT),
+      ["fade"] => entry.push(UNWIND),
+      _ => panic!("{events:?}"),
+    }
+  }
+
+  Script { commands }
 }
 
 pub(crate) const SCRIPT: script::Slice = script! (
@@ -180,3 +210,14 @@ pub(crate) const SCRIPT: script::Slice = script! (
   155 BLASTER
   159 UNWIND
 );
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn foo() {
+    eprintln!("{}", events());
+    panic!();
+  }
+}
