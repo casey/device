@@ -131,8 +131,7 @@ fn field_triangle(p: vec2f) -> bool {
 }
 
 fn field_x(p: vec2f) -> bool {
-  let pixel = 2.0 / uniforms.resolution;
-  return abs(abs(p.x) - abs(p.y)) < sqrt(2) * 0.25 * coefficient() - 0.5 * pixel;
+  return abs(abs(p.x) - abs(p.y)) < sqrt(2) * 0.25 * coefficient();
 }
 
 fn grid(uv: vec2f) -> vec2f {
