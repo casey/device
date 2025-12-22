@@ -51,9 +51,7 @@ impl From<Slice> for Script {
 
       for (i, command) in line.iter().enumerate() {
         commands
-          .entry(Position {
-            index: (beat + i.into_u64()) * 4,
-          })
+          .entry(Position::from_beat(beat + i.into_u64()))
           .or_default()
           .push(*command);
       }

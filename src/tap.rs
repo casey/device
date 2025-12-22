@@ -37,9 +37,9 @@ impl Tap {
     }
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    let index = ((self.time - tempo.offset) / 60.0 * tempo.bpm * 4.0) as u64;
+    let quarter = ((self.time - tempo.offset) / 60.0 * tempo.bpm * 4.0) as u64;
 
-    Some(Position { index })
+    Some(Position::from_quarter(quarter))
   }
 
   pub(crate) fn drain(&mut self) -> Sound {
