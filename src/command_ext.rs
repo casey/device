@@ -9,7 +9,6 @@ pub(crate) trait CommandExt {
 impl CommandExt for Command {
   fn new_process_group(&mut self) -> &mut Self {
     use std::os::unix::process::CommandExt;
-
     unsafe {
       self.pre_exec(|| {
         if libc::setpgid(0, 0) != 0 {
