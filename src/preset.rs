@@ -1,6 +1,8 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, EnumIter, ValueEnum, IntoStaticStr, PartialEq)]
+#[derive(
+  Clone, Copy, Debug, EnumIter, ValueEnum, IntoStaticStr, PartialEq, Ord, PartialOrd, Eq,
+)]
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum Preset {
   Circle,
@@ -48,59 +50,60 @@ pub(crate) enum Preset {
 }
 
 impl Preset {
-  const BASE: &[Preset] = &[
-    Preset::Circle,
-    Preset::Cross,
-    Preset::Left,
-    Preset::Square,
-    Preset::Test,
-    Preset::Top,
-    Preset::Triangle,
-    Preset::X,
+  const COLOR: &[Self] = &[
+    Self::Invert,
+    Self::InvertBlue,
+    Self::InvertGreen,
+    Self::InvertRed,
+    Self::Rotate,
+    Self::RotateBlaster,
+    Self::RotateBlue,
+    Self::RotateGreen,
+    Self::RotateRed,
+    Self::Test,
+  ];
+
+  const COLOR_RESPONSIVE: &[Self] = &[Self::RotateResponsive, Self::RotateRedResponsive];
+
+  const COLOR_VELOCITY: &[Self] = &[
+    Self::RotateBlueVelocity,
+    Self::RotateGreenVelocity,
+    Self::RotateRedVelocity,
+    Self::TranslateBlueVelocity,
+    Self::TranslateGreenVelocity,
+    Self::TranslateRedVelocity,
   ];
 
   pub(crate) const LIMIT: usize = 16;
 
-  const REST: &[Self] = &[
-    Preset::Circle,
-    Preset::Cross,
-    Preset::FlipHorizontal,
-    Preset::FlipVertical,
-    Preset::Invert,
-    Preset::InvertBlue,
-    Preset::InvertGreen,
-    Preset::InvertRed,
-    Preset::Jump,
-    Preset::Left,
-    Preset::MirrorHorizontal,
-    Preset::MirrorVertical,
-    Preset::Rotate,
-    Preset::RotateBlaster,
-    Preset::RotateBlue,
-    Preset::RotateBlueVelocity,
-    Preset::RotateGreen,
-    Preset::RotateGreenVelocity,
-    Preset::RotateRed,
-    Preset::RotateRedResponsive,
-    Preset::RotateRedVelocity,
-    Preset::RotateResponsive,
-    Preset::RotateVelocity,
-    Preset::Scale,
-    Preset::ScaleVelocity,
-    Preset::Spin,
-    Preset::Square,
-    Preset::Test,
-    Preset::Top,
-    Preset::TranslateBlueVelocity,
-    Preset::TranslateGreenVelocity,
-    Preset::TranslateRedVelocity,
-    Preset::TranslateVelocity,
-    Preset::Triangle,
-    Preset::X,
-    Preset::ZoomInCenter,
-    Preset::ZoomInCorner,
-    Preset::ZoomOutCenter,
-    Preset::ZoomOutCorner,
+  const MOVEMENT_RESPONSIVE: &[Self] = &[Self::Spin, Self::Scale, Self::Jump];
+
+  const MOVEMENT_VELOCITY: &[Self] = &[
+    Self::RotateVelocity,
+    Self::ScaleVelocity,
+    Self::TranslateVelocity,
+  ];
+
+  const SHAPE: &[Self] = &[
+    Self::Circle,
+    Self::Cross,
+    Self::Left,
+    Self::Square,
+    Self::Top,
+    Self::Triangle,
+    Self::X,
+  ];
+
+  const TRANSFORM: &[Self] = &[
+    Self::FlipHorizontal,
+    Self::FlipVertical,
+    Self::MirrorHorizontal,
+    Self::MirrorVertical,
+    Self::ZoomInCenter,
+    Self::ZoomInCorner,
+    Self::ZoomOutCenter,
+    Self::ZoomOutCorner,
+    Self::Identity,
   ];
 
   pub(crate) fn filter(self) -> Filter {
@@ -344,9 +347,58 @@ impl Preset {
 
   pub(crate) fn random(rng: &mut SmallRng, i: usize) -> Self {
     if i == 0 {
-      *Self::BASE.choose(rng).unwrap()
+      Self::SHAPE.choose(rng).copied().unwrap()
     } else {
-      *Self::REST.choose(rng).unwrap()
+      // Self::SHAPE
+      //   .iter()
+      //   .chain(Preset::COLOR)
+      //   .chain(Preset::COLOR_RESPONSIVE)
+      //   .chain(Preset::COLOR_VELOCITY)
+      //   .chain(Preset::MOVEMENT_RESPONSIVE)
+      //   .chain(Preset::MOVEMENT_VELOCITY)
+      //   .chain(Preset::TRANSFORM)
+      //   .copied()
+      //   .collect::<Vec<Self>>()
+      //   .choose(rng)
+      //   .copied()
+      //   .unwrap()
+      Self::COLOR
+        .iter()
+        .chain(Preset::COLOR_RESPONSIVE)
+        .chain(Preset::COLOR_VELOCITY)
+        .chain(Preset::MOVEMENT_RESPONSIVE)
+        .chain(Preset::MOVEMENT_VELOCITY)
+        .chain(Preset::TRANSFORM)
+        .copied()
+        .collect::<Vec<Self>>()
+        .choose(rng)
+        .copied()
+        .unwrap()
+    }
+  }
+
+  pub(crate) fn random_black_and_white(rng: &mut SmallRng, i: usize) -> Self {
+    if i == 0 {
+      Self::SHAPE.choose(rng).copied().unwrap()
+    } else {
+      // *Self::SHAPE
+      //   .iter()
+      //   .chain(Self::MOVEMENT_RESPONSIVE)
+      //   .chain(Self::MOVEMENT_VELOCITY)
+      //   .chain(Self::TRANSFORM)
+      //   .copied()
+      //   .collect::<Vec<Self>>()
+      //   .choose(rng)
+      //   .unwrap()
+      Self::MOVEMENT_RESPONSIVE
+        .iter()
+        .chain(Self::MOVEMENT_VELOCITY)
+        .chain(Self::TRANSFORM)
+        .copied()
+        .collect::<Vec<Self>>()
+        .choose(rng)
+        .copied()
+        .unwrap()
     }
   }
 }
@@ -368,62 +420,21 @@ mod tests {
   use {super::*, pretty_assertions::assert_eq};
 
   #[test]
-  fn base() {
-    use Preset::*;
+  fn categories() {
+    const BORING: &[Preset] = &[Preset::Desaturate, Preset::Off];
 
-    let presets = Preset::iter()
-      .filter(|preset| {
-        !matches!(
-          preset,
-          Desaturate
-            | FlipHorizontal
-            | FlipVertical
-            | Identity
-            | Invert
-            | InvertBlue
-            | InvertGreen
-            | InvertRed
-            | Jump
-            | MirrorHorizontal
-            | MirrorVertical
-            | Off
-            | Rotate
-            | RotateBlaster
-            | RotateBlue
-            | RotateBlueVelocity
-            | RotateGreen
-            | RotateGreenVelocity
-            | RotateRed
-            | RotateRedResponsive
-            | RotateRedVelocity
-            | RotateResponsive
-            | RotateVelocity
-            | Scale
-            | ScaleVelocity
-            | Spin
-            | TranslateBlueVelocity
-            | TranslateGreenVelocity
-            | TranslateRedVelocity
-            | TranslateVelocity
-            | ZoomInCenter
-            | ZoomInCorner
-            | ZoomOutCenter
-            | ZoomOutCorner
-        )
-      })
+    let mut categorized = BORING
+      .iter()
+      .chain(Preset::SHAPE)
+      .chain(Preset::COLOR)
+      .chain(Preset::COLOR_RESPONSIVE)
+      .chain(Preset::COLOR_VELOCITY)
+      .chain(Preset::TRANSFORM)
+      .chain(Preset::MOVEMENT_RESPONSIVE)
+      .chain(Preset::MOVEMENT_VELOCITY)
+      .copied()
       .collect::<Vec<Preset>>();
-
-    assert_eq!(Preset::BASE, presets);
-  }
-
-  #[test]
-  fn rest() {
-    use Preset::*;
-
-    let presets = Preset::iter()
-      .filter(|preset| !matches!(preset, Desaturate | Identity | Off))
-      .collect::<Vec<Preset>>();
-
-    assert_eq!(Preset::REST, presets);
+    categorized.sort();
+    assert_eq!(categorized, Preset::iter().collect::<Vec<Preset>>());
   }
 }
