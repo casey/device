@@ -20,13 +20,31 @@ pub(crate) fn script() -> Script {
   let mut script = Script::default();
 
   // kick 1 3
-  for bar in bars(1..123).chain(bars(151..159)) {
+  for bar in bars(1..39) {
+    script.on(bar + beat(1), BLASTER_BLACK_AND_WHITE);
+    script.on(bar + beat(3), BLASTER_BLACK_AND_WHITE);
+  }
+
+  // kick 1 3 with 2 4
+  for bar in bars(39..67) {
+    script.on(bar + beat(1), BLASTER_SIMPLE);
+    script.on(bar + beat(3), BLASTER_SIMPLE);
+  }
+
+  // kick 1 3 with 2 4 after lead
+  for bar in bars(67..123) {
     script.on(bar + beat(1), BLASTER);
     script.on(bar + beat(3), BLASTER);
   }
 
   // kick 2 4
-  for bar in bars(39..71).chain(bars(79..123)) {
+  for bar in bars(39..67) {
+    script.on(bar + beat(2), BLASTER_SIMPLE);
+    script.on(bar + beat(4), BLASTER_SIMPLE);
+  }
+
+  // kick 2 4 after lead
+  for bar in bars(67..71).chain(bars(79..123)) {
     script.on(bar + beat(2), BLASTER);
     script.on(bar + beat(4), BLASTER);
   }
@@ -62,8 +80,14 @@ pub(crate) fn script() -> Script {
     script.on(bar + beat(8) + quarter(4), PUSH_TOP);
   }
 
+  // kick 1 3
+  for bar in bars(151..159) {
+    script.on(bar + beat(1), BLASTER_BLACK_AND_WHITE);
+    script.on(bar + beat(3), BLASTER_BLACK_AND_WHITE);
+  }
+
   // end
-  script.on(bar(159) + beat(1), UNWIND);
+  script.on(bar(159) + beat(1), CLEAR);
 
   script
 }
