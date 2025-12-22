@@ -111,7 +111,7 @@ use {
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
-    ops::{Bound, Deref},
+    ops::{Add, Bound, Deref, Range},
     process::{self, ExitStatus, Stdio},
     str::FromStr,
     string::FromUtf8Error,

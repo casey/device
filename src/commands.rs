@@ -87,6 +87,10 @@ pub(crate) fn circle(state: &mut State) {
   });
 }
 
+pub(crate) fn clear(state: &mut State) {
+  state.filters.clear();
+}
+
 pub(crate) fn clear_elapsed(state: &mut State) {
   state.transient = Transformation2::default();
   for filter in &mut state.filters {
@@ -125,6 +129,17 @@ pub(crate) fn coordinates(state: &mut State) {
   state.filters.push(Filter {
     coordinates: true,
     wrap: state.wrap,
+    ..default()
+  });
+}
+
+pub(crate) fn count(state: &mut State) {
+  state.filters.push(Filter {
+    field: Field::Texture(TextureField {
+      text: state.count.to_string().into(),
+      ..default()
+    }),
+    color: color::invert(),
     ..default()
   });
 }
@@ -292,20 +307,12 @@ pub(crate) fn push_bottom(state: &mut State) {
     0,
     Preset::random(&mut state.rng, state.filters.len()).filter(),
   );
-
-  while state.filters.len() > state.preset_limit() {
-    state.filters.pop();
-  }
 }
 
 pub(crate) fn push_top(state: &mut State) {
   state
     .filters
     .push(Preset::random(&mut state.rng, state.filters.len()).filter());
-
-  while state.filters.len() > state.preset_limit() {
-    state.filters.remove(0);
-  }
 }
 
 pub(crate) fn reload_shaders(app: &mut App) {

@@ -1,58 +1,65 @@
 use {super::*, generated::*};
 
-pub(crate) const SCRIPT: script::Slice = script! (
-  3 BLASTER
-  15 BLASTER
-  19 BLASTER
-  23 BLASTER
-  27 BLASTER
-  31 BLASTER
-  35 BLASTER
-  39 BLASTER
-  43 BLASTER
-  47 ZOOM_OUT
-  51 BLASTER
-  55 ZOOM_OUT
-  59 ZOOM_OUT
-  63 ZOOM_OUT
-  67 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  68 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  69 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  70 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  71 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  72 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  73 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  74 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  75 BLASTER
-  79 BLASTER
-  83 BLASTER
-  87 BLASTER
-  91 BLASTER
-  95 BLASTER
-  107 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  108 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  109 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  110 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  111 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  112 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  113 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  114 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  115 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  116 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  117 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  118 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  119 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  120 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  121 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  122 BLASTER ZOOM_OUT ZOOM_OUT ZOOM_OUT
-  123 BLASTER
-  127 BLASTER
-  131 BLASTER
-  135 BLASTER
-  139 BLASTER
-  143 BLASTER
-  147 BLASTER
-  151 BLASTER
-  155 BLASTER
-  159 UNWIND
-);
+fn bar(bar: u64) -> Position {
+  Position::from_bar(bar.checked_sub(1).unwrap())
+}
+
+fn bars(range: Range<u64>) -> impl Iterator<Item = Position> {
+  range.map(|bar| Position::from_bar(bar.checked_sub(1).unwrap()))
+}
+
+fn beat(beat: u64) -> Position {
+  Position::from_beat(beat.checked_sub(1).unwrap())
+}
+
+fn quarter(quarter: u64) -> Position {
+  Position::from_quarter(quarter.checked_sub(1).unwrap())
+}
+
+pub(crate) fn script() -> Script {
+  let mut script = Script::default();
+
+  // kick 1 3
+  for bar in bars(1..123).chain(bars(151..159)) {
+    script.on(bar + beat(1), BLASTER);
+    script.on(bar + beat(3), BLASTER);
+  }
+
+  // kick 2 4
+  for bar in bars(39..71).chain(bars(79..123)) {
+    script.on(bar + beat(2), BLASTER);
+    script.on(bar + beat(4), BLASTER);
+  }
+
+  // snare 2 4
+  for bar in bars(53..68).chain(bars(83..123)).chain(bars(131..147)) {
+    script.only(bar + beat(2), ZOOM_OUT);
+    script.only(bar + beat(4), ZOOM_OUT);
+  }
+
+  // break kick
+  for bar in bars(123..151).step_by(2) {
+    script.clear(
+      Bound::Included(bar),
+      Bound::Excluded(bar + Position::from_bar(2)),
+    );
+    script.on(bar + beat(1) + quarter(1), CLEAR);
+    script.on(bar + beat(1) + quarter(1), PUSH_TOP);
+    script.on(bar + beat(1) + quarter(2), PUSH_TOP);
+    script.on(bar + beat(1) + quarter(3), PUSH_TOP);
+    script.on(bar + beat(2) + quarter(3), PUSH_TOP);
+    script.on(bar + beat(3) + quarter(3), PUSH_TOP);
+    script.on(bar + beat(3) + quarter(4), PUSH_TOP);
+    script.on(bar + beat(4) + quarter(1), PUSH_TOP);
+    script.on(bar + beat(4) + quarter(2), PUSH_TOP);
+    script.on(bar + beat(5) + quarter(1), PUSH_TOP);
+    script.on(bar + beat(6) + quarter(3), PUSH_TOP);
+    script.on(bar + beat(7) + quarter(3), PUSH_TOP);
+    script.on(bar + beat(8) + quarter(2), PUSH_TOP);
+  }
+
+  // end
+  script.on(bar(159) + beat(1), UNWIND);
+
+  script
+}

@@ -63,7 +63,7 @@ impl Program {
 
   pub(crate) fn script(self) -> Option<Script> {
     match self {
-      Self::Blaster => Some(maria::SCRIPT.into()),
+      Self::Blaster => Some(maria::script()),
       _ => None,
     }
   }
