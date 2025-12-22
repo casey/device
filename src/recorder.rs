@@ -86,6 +86,7 @@ impl Recorder {
       .current_dir(&self.tempdir_path)
       .stderr(options.stdio())
       .stdout(options.stdio())
+      .new_process_group()
       .output()
       .context(error::RecordingInvoke)?;
 
@@ -209,6 +210,7 @@ impl Recorder {
       .stdin(Stdio::piped())
       .stderr(options.stdio())
       .stdout(options.stdio())
+      .new_process_group()
       .spawn()
       .context(error::RecordingInvoke)?;
 
