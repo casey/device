@@ -13,5 +13,6 @@ pub(crate) fn run() -> Result {
   .render(&Analyzer::new(), &State::default(), None)?;
 
   print!("{FilterWgsl}");
+
   Ok(())
 }
