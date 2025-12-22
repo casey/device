@@ -113,7 +113,7 @@ impl Capture {
 
       tap.write(&mut samples);
 
-      let last = tap.beat();
+      let last = tap.position();
 
       let sound = tap.drain();
       analyzer.update(&sound, done, &state);
@@ -134,12 +134,12 @@ impl Capture {
 
       history.tick(&mut state);
 
-      let beat = tap.beat();
+      let position = tap.position();
 
       let tick = Tick {
         dt: fps.dt(),
-        beat,
-        advance: beat != last,
+        position,
+        last,
       };
 
       if let Some(script) = &script {

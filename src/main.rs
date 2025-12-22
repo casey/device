@@ -41,6 +41,7 @@ use {
     options::Options,
     patch::Patch,
     pipeline::Pipeline,
+    position::Position,
     present_mode::PresentMode,
     preset::Preset,
     press::Press,
@@ -196,6 +197,7 @@ mod mode;
 mod options;
 mod patch;
 mod pipeline;
+mod position;
 mod present_mode;
 mod preset;
 mod press;

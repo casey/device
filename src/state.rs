@@ -3,7 +3,6 @@ use super::*;
 #[derive(Clone)]
 pub(crate) struct State {
   pub(crate) alpha: f32,
-  pub(crate) beat: Option<u64>,
   pub(crate) callback: Option<Box<dyn Callback>>,
   pub(crate) capture_status: bool,
   pub(crate) complexity: f32,
@@ -14,6 +13,7 @@ pub(crate) struct State {
   pub(crate) filters: Vec<Filter>,
   pub(crate) fit: bool,
   pub(crate) interpolate: bool,
+  pub(crate) position: Option<Position>,
   pub(crate) rng: SmallRng,
   pub(crate) spread: bool,
   pub(crate) status: bool,
@@ -27,7 +27,7 @@ impl Default for State {
   fn default() -> Self {
     Self {
       alpha: 0.5,
-      beat: None,
+      position: None,
       callback: None,
       capture_status: false,
       complexity: 0.0,
@@ -257,7 +257,7 @@ impl State {
     self.transient.scaling -= Vec2f::new(ds, ds);
     self.transient.rotation -= self.velocity.w * dt;
 
-    self.beat = tick.beat;
+    self.position = tick.position;
 
     let mut callback = self.callback.take();
     if let Some(callback) = &mut callback {
