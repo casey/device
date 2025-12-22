@@ -48,14 +48,18 @@ pub(crate) fn script() -> Script {
     script.on(bar + beat(1) + quarter(2), PUSH_TOP);
     script.on(bar + beat(1) + quarter(3), PUSH_TOP);
     script.on(bar + beat(2) + quarter(3), PUSH_TOP);
+    script.on(bar + beat(3) + quarter(1), PUSH_TOP);
     script.on(bar + beat(3) + quarter(3), PUSH_TOP);
     script.on(bar + beat(3) + quarter(4), PUSH_TOP);
     script.on(bar + beat(4) + quarter(1), PUSH_TOP);
     script.on(bar + beat(4) + quarter(2), PUSH_TOP);
+    script.on(bar + beat(4) + quarter(4), PUSH_TOP);
     script.on(bar + beat(5) + quarter(1), PUSH_TOP);
     script.on(bar + beat(6) + quarter(3), PUSH_TOP);
+    script.on(bar + beat(7) + quarter(1), PUSH_TOP);
     script.on(bar + beat(7) + quarter(3), PUSH_TOP);
-    script.on(bar + beat(8) + quarter(2), PUSH_TOP);
+    script.on(bar + beat(8) + quarter(3), PUSH_TOP);
+    script.on(bar + beat(8) + quarter(4), PUSH_TOP);
   }
 
   // end
