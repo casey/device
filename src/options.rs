@@ -94,6 +94,14 @@ impl Options {
       })
   }
 
+  pub(crate) fn rng(&self) -> SmallRng {
+    if let Some(seed) = self.seed {
+      SmallRng::seed_from_u64(seed)
+    } else {
+      SmallRng::from_rng(&mut rand::rng())
+    }
+  }
+
   pub(crate) fn script(&self) -> Option<Script> {
     self.program.and_then(Program::script)
   }
@@ -102,14 +110,6 @@ impl Options {
     let size = Size::new(self.width.unwrap_or(size.x), self.height.unwrap_or(size.y));
     let resolution = self.resolution.unwrap_or(size.x.max(size.y));
     (size, resolution)
-  }
-
-  pub(crate) fn rng(&self) -> SmallRng {
-    if let Some(seed) = self.seed {
-      SmallRng::seed_from_u64(seed)
-    } else {
-      SmallRng::from_rng(&mut rand::rng())
-    }
   }
 
   pub(crate) fn state(&self, rng: &mut SmallRng) -> State {
