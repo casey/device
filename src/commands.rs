@@ -28,11 +28,6 @@ impl Commands {
   }
 }
 
-// ideas:
-// - gotta remove the rng from State::default
-// - can't remove state::default
-// - how do commands get rng? additional rng argument?
-
 pub(crate) fn advance(rng: &mut SmallRng, state: &mut State) {
   if state.count % TIME == 3 {
     state.pop();
