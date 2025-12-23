@@ -66,14 +66,12 @@ expo: (program "expo")
 transit: (program "transit")
 radio: (program "radio")
 
-blaster:
+blaster seed:
   cargo run \
     --release \
     -- \
-    --width 3840 \
-    --height 2160 \
     --program blaster \
-    --status \
+    --seed {{ seed }} \
     run
 
 curtains:
