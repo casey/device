@@ -60,13 +60,16 @@ impl App {
       }
     }
 
-    if save
-      && let Command::RngState(_)
-      | Command::State(_)
-      | Command::HistoryState(_)
-      | Command::History(_) = command
-    {
-      self.history.commands.push(command);
+    if save {
+      match command {
+        Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => {}
+        Command::RngState(_)
+        | Command::State(_)
+        | Command::HistoryState(_)
+        | Command::History(_) => {
+          self.history.commands.push(command);
+        }
+      }
     }
   }
 
