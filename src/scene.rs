@@ -27,17 +27,6 @@ pub(crate) enum Scene {
 }
 
 impl Scene {
-  pub(crate) fn image_format(self) -> Option<ImageFormat> {
-    match self {
-      Self::Blaster
-      | Self::Kaleidoscope
-      | Self::Pattern
-      | Self::Starburst
-      | Self::StarburstRandom => Some(ImageFormat::Bgra8Unorm),
-      _ => None,
-    }
-  }
-
   pub(crate) fn name(self) -> &'static str {
     self.into()
   }

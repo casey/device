@@ -76,7 +76,7 @@ impl Capture {
     let (size, resolution) = options.size(size);
 
     let mut renderer = pollster::block_on(Renderer::new(
-      options.image_format(),
+      options.image_format,
       None,
       resolution,
       size,

@@ -3,8 +3,8 @@ use super::*;
 #[derive(Clone, Copy, Debug, Default, ValueEnum, IntoStaticStr)]
 #[strum(serialize_all = "kebab-case")]
 pub(crate) enum ImageFormat {
-  Bgra8Unorm,
   #[default]
+  Bgra8Unorm,
   Bgra8UnormSrgb,
 }
 
