@@ -41,6 +41,13 @@ impl Program {
     Ok(())
   }
 
+  pub(crate) fn script(self) -> Option<Script> {
+    match self {
+      Self::Blaster => Some(maria::script()),
+      _ => None,
+    }
+  }
+
   pub(crate) fn state(self, rng: &mut SmallRng) -> State {
     match self {
       Self::Hello => Scene::Hello.state(rng),
@@ -60,13 +67,6 @@ impl Program {
         state.interpolate = true;
         state
       }
-    }
-  }
-
-  pub(crate) fn script(self) -> Option<Script> {
-    match self {
-      Self::Blaster => Some(maria::script()),
-      _ => None,
     }
   }
 }
