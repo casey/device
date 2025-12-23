@@ -370,7 +370,11 @@ impl Preset {
       Preset::MOVEMENT_RESPONSIVE
         .iter()
         .chain(Preset::MOVEMENT_VELOCITY)
-        .chain(Preset::TRANSFORM)
+        .chain(
+          Preset::TRANSFORM
+            .iter()
+            .filter(|preset| !matches!(preset, Preset::ZoomInCenter | Preset::ZoomInCorner)),
+        )
         .copied()
         .collect()
     });
