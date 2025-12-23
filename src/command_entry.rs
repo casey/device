@@ -2,8 +2,8 @@ use super::*;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct CommandEntry {
-  pub(crate) name: &'static str,
   pub(crate) command: Command,
+  pub(crate) name: &'static str,
 }
 
 impl CommandEntry {
