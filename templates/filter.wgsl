@@ -135,8 +135,9 @@ fn field_x(p: vec2f) -> bool {
 }
 
 fn grid(uv: vec2f) -> vec2f {
-  return round(vec2(uv.x, (uv.y - 1) * -1)  * uniforms.grid)
-    / uniforms.grid * uniforms.grid_alpha;
+  let steps = uniforms.grid * coefficient();
+  return round(vec2(uv.x, (uv.y - 1) * -1) * steps)
+    / steps * uniforms.grid_alpha;
 }
 
 fn mod_floor(x: vec2f, y: f32) -> vec2f {
