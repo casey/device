@@ -49,6 +49,13 @@ impl Program {
     }
   }
 
+  pub(crate) fn fit(self) -> Option<bool> {
+    match self {
+      Self::Blaster => Some(true),
+      _ => None,
+    }
+  }
+
   pub(crate) fn scene(self) -> Scene {
     match self {
       Self::Hello => Scene::Hello,

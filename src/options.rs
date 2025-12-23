@@ -120,6 +120,9 @@ impl Options {
       if let Some(db) = program.db() {
         state.db = db;
       }
+      if let Some(fit) = program.fit() {
+        state.fit = fit;
+      }
       state
     } else {
       default()

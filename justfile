@@ -72,7 +72,6 @@ blaster:
     -- \
     --width 3840 \
     --height 2160 \
-    --fit \
     --program blaster \
     --status \
     run
@@ -113,7 +112,6 @@ capture-blaster:
     -- \
     --width 3840 \
     --height 2160 \
-    --fit \
     --fps 60 \
     --program blaster \
     --verbose \
