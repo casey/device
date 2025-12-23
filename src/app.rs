@@ -34,7 +34,12 @@ pub(crate) struct App {
 }
 
 impl App {
-  pub(crate) fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command, save: bool) {
+  pub(crate) fn dispatch(
+    &mut self,
+    event_loop: &ActiveEventLoop,
+    command: Command,
+    remember: bool,
+  ) {
     match command {
       Command::App(command) => command(self),
       Command::AppEventLoop(command) => command(self, event_loop),
@@ -60,7 +65,7 @@ impl App {
       }
     }
 
-    if save {
+    if remember {
       match command {
         Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => {}
         Command::RngState(_)
