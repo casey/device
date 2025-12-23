@@ -53,6 +53,9 @@ doc:
 bindings:
   cargo run bindings
 
+commands:
+  cargo run commands
+
 program program:
   cargo run --release -- --program {{program}}
 

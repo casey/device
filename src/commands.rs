@@ -233,7 +233,7 @@ pub(crate) fn execute_command(app: &mut App, event_loop: &ActiveEventLoop) {
   };
   let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
   if let Some(command) = app.commands.name(command.as_str()) {
-    app.dispatch(event_loop, command);
+    app.dispatch(event_loop, command, true);
   } else {
     eprintln!("unknown command: {command}");
   }
@@ -348,6 +348,13 @@ pub(crate) fn push_top(rng: &mut SmallRng, state: &mut State) {
   state
     .filters
     .push(Preset::random(rng, state.filters.len()).filter());
+}
+
+pub(crate) fn repeat(app: &mut App, event_loop: &ActiveEventLoop) {
+  let Some(last) = app.history.commands.last() else {
+    return;
+  };
+  app.dispatch(event_loop, *last, false);
 }
 
 pub(crate) fn reload_shaders(app: &mut App) {

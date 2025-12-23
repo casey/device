@@ -34,7 +34,7 @@ pub(crate) struct App {
 }
 
 impl App {
-  pub(crate) fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command) {
+  pub(crate) fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command, save: bool) {
     match command {
       Command::App(command) => command(self),
       Command::AppEventLoop(command) => command(self, event_loop),
@@ -58,6 +58,15 @@ impl App {
       Command::History(command) => {
         command(&mut self.history);
       }
+    }
+
+    if save
+      && let Command::RngState(_)
+      | Command::State(_)
+      | Command::HistoryState(_)
+      | Command::History(_) = command
+    {
+      self.history.commands.push(command);
     }
   }
 
@@ -299,7 +308,7 @@ impl App {
     }
 
     if let Some(command) = self.bindings.key((&self.mode).into(), &key, self.modifiers) {
-      self.dispatch(event_loop, command);
+      self.dispatch(event_loop, command, true);
     }
   }
 
@@ -322,7 +331,7 @@ impl App {
             .bindings
             .button(message.controller, message.control, press)
           {
-            self.dispatch(event_loop, command);
+            self.dispatch(event_loop, command, true);
           }
         }
         Event::Encoder(parameter) => {
@@ -405,7 +414,7 @@ impl App {
 
     for CommandEntry { name, command } in commands {
       log::info!("dispatching script command {name}");
-      self.dispatch(event_loop, command);
+      self.dispatch(event_loop, command, false);
     }
 
     self.state.tick(tick);

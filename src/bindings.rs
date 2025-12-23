@@ -38,6 +38,7 @@ const CHARACTER_BINDINGS: &[(ModeKind, char, ModifiersState, CommandEntry)] = {
   &[
     (Normal, '+',  OFF,        INCREMENT_DB),
     (Normal, '-',  OFF,        DECREMENT_DB),
+    (Normal, '.',  OFF,        REPEAT),
     (Normal, ':',  OFF,        ENTER_COMMAND_MODE),
     (Normal, '>',  OFF,        CAPTURE),
     (Normal, '?',  OFF,        PRINT),

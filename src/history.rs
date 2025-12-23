@@ -2,6 +2,7 @@ use super::*;
 
 #[derive(Default)]
 pub(crate) struct History {
+  pub(crate) commands: Vec<Command>,
   pub(crate) states: Vec<State>,
   pub(crate) unwind: bool,
 }
