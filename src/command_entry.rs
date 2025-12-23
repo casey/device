@@ -8,6 +8,6 @@ pub(crate) struct CommandEntry {
 
 impl CommandEntry {
   pub(crate) const fn new(name: &'static str, command: Command) -> Self {
-    Self { name, command }
+    Self { command, name }
   }
 }
