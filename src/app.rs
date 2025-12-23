@@ -34,46 +34,38 @@ pub(crate) struct App {
 }
 
 impl App {
-  pub(crate) fn dispatch(
-    &mut self,
-    event_loop: &ActiveEventLoop,
-    command: Command,
-    remember: bool,
-  ) {
+  pub(crate) fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command) {
+    use Command::*;
+
     match command {
-      Command::App(command) => command(self),
-      Command::AppEventLoop(command) => command(self, event_loop),
-      Command::AppFallible(command) => {
+      App(command) => command(self),
+      AppEventLoop(command) => command(self, event_loop),
+      AppFallible(command) => {
         if let Err(err) = command(self) {
           self.errors.push(err);
           event_loop.exit();
         }
       }
-      Command::RngState(command) => {
+      RngState(command) => {
         self.history.states.push(self.state.clone());
         command(&mut self.rng, &mut self.state);
       }
-      Command::State(command) => {
+      State(command) => {
         self.history.states.push(self.state.clone());
         command(&mut self.state);
       }
-      Command::HistoryState(command) => {
+      HistoryState(command) => {
         command(&mut self.history, &mut self.state);
       }
-      Command::History(command) => {
+      History(command) => {
         command(&mut self.history);
       }
     }
 
-    if remember {
-      match command {
-        Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => {}
-        Command::RngState(_)
-        | Command::State(_)
-        | Command::HistoryState(_)
-        | Command::History(_) => {
-          self.history.commands.push(command);
-        }
+    match command {
+      App(_) | AppEventLoop(_) | AppFallible(_) => {}
+      RngState(_) | State(_) | HistoryState(_) | History(_) => {
+        self.history.commands.push(command);
       }
     }
   }
@@ -316,7 +308,7 @@ impl App {
     }
 
     if let Some(command) = self.bindings.key((&self.mode).into(), &key, self.modifiers) {
-      self.dispatch(event_loop, command, true);
+      self.dispatch(event_loop, command);
     }
   }
 
@@ -339,7 +331,7 @@ impl App {
             .bindings
             .button(message.controller, message.control, press)
           {
-            self.dispatch(event_loop, command, true);
+            self.dispatch(event_loop, command);
           }
         }
         Event::Encoder(parameter) => {
@@ -422,7 +414,7 @@ impl App {
 
     for CommandEntry { name, command } in commands {
       log::info!("dispatching script command {name}");
-      self.dispatch(event_loop, command, false);
+      self.dispatch(event_loop, command);
     }
 
     self.state.tick(tick);
