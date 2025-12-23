@@ -176,13 +176,13 @@ pub(crate) struct Bindings {
 
 impl Bindings {
   pub(crate) fn button(&self, controller: Controller, button: u8, press: Press) -> Option<Command> {
-    let command = self.button.get(&(controller, button, press)).copied();
+    let entry = self.button.get(&(controller, button, press)).copied();
 
-    if command.is_none() {
+    if entry.is_none() {
       log::info!("unbound button: {controller:?} {button} {press:?}");
     }
 
-    command.map(|command| command.1)
+    entry.map(|entry| entry.command)
   }
 
   pub(crate) fn encoder(
@@ -190,17 +190,17 @@ impl Bindings {
     controller: Controller,
     encoder: u8,
   ) -> Option<fn(&mut State, u7) -> f32> {
-    let command = self.encoder.get(&(controller, encoder)).copied();
+    let entry = self.encoder.get(&(controller, encoder)).copied();
 
-    if command.is_none() {
+    if entry.is_none() {
       log::info!("unbound encoder: {controller:?} {encoder}");
     }
 
-    command.map(|command| command.1)
+    entry.map(|entry| entry.1)
   }
 
   pub(crate) fn key(&self, mode: ModeKind, key: &Key, modifiers: Modifiers) -> Option<Command> {
-    let command = match key {
+    let entry = match key {
       Key::Character(character) => {
         let character = character.to_uppercase();
 
@@ -215,11 +215,11 @@ impl Bindings {
       _ => None,
     };
 
-    if command.is_none() {
+    if entry.is_none() {
       log::info!("unbound key: {key:?} {modifiers:?}");
     }
 
-    command.map(|command| command.1)
+    entry.map(|entry| entry.command)
   }
 
   pub(crate) fn new() -> Self {
@@ -283,14 +283,14 @@ impl Display for Bindings {
     {
       let mut modes = BTreeMap::<ModeKind, Vec<[String; 2]>>::new();
 
-      for ((mode, character, modifiers), (name, _command)) in &self.character {
+      for ((mode, character, modifiers), CommandEntry { name, .. }) in &self.character {
         modes
           .entry(*mode)
           .or_default()
           .push([binding(*modifiers, character), (*name).into()]);
       }
 
-      for ((mode, named_key, modifiers), (name, _command)) in &self.named {
+      for ((mode, named_key, modifiers), CommandEntry { name, .. }) in &self.named {
         modes.entry(*mode).or_default().push([
           binding(*modifiers, &format!("{named_key:?}")),
           (*name).into(),
@@ -326,7 +326,7 @@ impl Display for Bindings {
 
     {
       let mut spectra = Vec::new();
-      for ((controller, control, _press), (name, _command)) in &self.button {
+      for ((controller, control, _press), CommandEntry { name, .. }) in &self.button {
         if *controller != Controller::Spectra {
           continue;
         }

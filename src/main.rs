@@ -13,6 +13,7 @@ use {
     capture::Capture,
     capture_thread::CaptureThread,
     command::Command,
+    command_entry::CommandEntry,
     command_ext::CommandExt,
     commands::Commands,
     composite_uniforms::CompositeUniforms,
@@ -167,6 +168,7 @@ mod capture;
 mod capture_thread;
 mod color;
 mod command;
+mod command_entry;
 mod command_ext;
 mod commands;
 mod composite_uniforms;
@@ -247,7 +249,6 @@ const TAU: f32 = f32::consts::TAU;
 const TIME: u64 = 4;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
-type CommandEntry = (&'static str, Command);
 type SmallString = ArrayString<15>;
 type TextureFieldKey = (
   Vector2<OrderedFloat<f32>>,

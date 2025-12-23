@@ -51,7 +51,7 @@ impl Capture {
     let script = options.script();
 
     if let Some(script) = &script {
-      for (name, command) in script.commands() {
+      for CommandEntry { name, command } in script.commands() {
         match command {
           Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => {
             return Err(error::CaptureScriptAppCommand { command: name }.build());
@@ -148,7 +148,7 @@ impl Capture {
       };
 
       if let Some(script) = &script {
-        for (name, command) in script.tick(tick) {
+        for CommandEntry { name, command } in script.tick(tick) {
           log::info!("dispatching script command {name}");
           match command {
             Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => unreachable!(),

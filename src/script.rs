@@ -56,8 +56,8 @@ impl Display for Script {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     for (position, commands) in &self.commands {
       write!(f, "{position}")?;
-      for command in commands {
-        write!(f, " {}", command.0)?;
+      for entry in commands {
+        write!(f, " {}", entry.name)?;
       }
       writeln!(f)?;
     }

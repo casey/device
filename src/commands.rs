@@ -20,7 +20,7 @@ impl Commands {
   pub(crate) fn new() -> Self {
     let mut map = BTreeMap::new();
 
-    for (name, command) in generated::COMMANDS {
+    for CommandEntry { name, command } in generated::COMMANDS {
       map.insert(name.replace('_', "-"), *command);
     }
 
