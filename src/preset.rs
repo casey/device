@@ -384,25 +384,6 @@ impl Preset {
       TAIL.choose(rng).copied().unwrap()
     }
   }
-
-  pub(crate) fn random_simple(rng: &mut SmallRng, i: usize) -> Self {
-    static TAIL: LazyLock<Vec<Preset>> = LazyLock::new(|| {
-      Preset::COLOR
-        .iter()
-        .chain(Preset::COLOR_RESPONSIVE)
-        .chain(Preset::COLOR_VELOCITY)
-        .chain(Preset::MOVEMENT_RESPONSIVE)
-        .chain(Preset::MOVEMENT_VELOCITY)
-        .chain(Preset::TRANSFORM)
-        .copied()
-        .collect()
-    });
-    if i == 0 {
-      Self::SHAPE.choose(rng).copied().unwrap()
-    } else {
-      TAIL.choose(rng).copied().unwrap()
-    }
-  }
 }
 
 impl Display for Preset {
