@@ -83,6 +83,19 @@ blaster seed:
     --seed {{ seed }} \
     run
 
+blaster-variations:
+  #!/usr/bin/env bash
+  cargo build --release
+  for i in {0..100}; do
+    ./target/release/device \
+      --width 3840 \
+      --height 2160 \
+      --program blaster \
+      --seed $i \
+      --verbose \
+      capture
+  done
+
 curtains:
   cargo run --release -- --song 'curtains closing' run
 
