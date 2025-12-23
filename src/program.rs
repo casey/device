@@ -41,30 +41,25 @@ impl Program {
     Ok(())
   }
 
-  pub(crate) fn db(self) -> Option<f32> {
+  pub(crate) fn state(self, rng: &mut SmallRng) -> State {
     match self {
-      Self::Radio => Some(-10.0),
-      Self::Blaster => Some(-15.0),
-      _ => None,
-    }
-  }
-
-  pub(crate) fn fit(self) -> Option<bool> {
-    match self {
-      Self::Blaster => Some(true),
-      _ => None,
-    }
-  }
-
-  pub(crate) fn scene(self) -> Scene {
-    match self {
-      Self::Hello => Scene::Hello,
-      Self::Busy => Scene::Highwaystar,
-      Self::Noise => Scene::Noise,
-      Self::Expo => Scene::Starburst,
-      Self::Transit => Scene::Kaleidoscope,
-      Self::Radio => Scene::BlackHole,
-      Self::Blaster => Scene::None,
+      Self::Hello => Scene::Hello.state(rng),
+      Self::Busy => Scene::Highwaystar.state(rng),
+      Self::Noise => Scene::Noise.state(rng),
+      Self::Expo => Scene::Starburst.state(rng),
+      Self::Transit => Scene::Kaleidoscope.state(rng),
+      Self::Radio => {
+        let mut scene = Scene::BlackHole.state(rng);
+        scene.db = -10.0;
+        scene
+      }
+      Self::Blaster => {
+        let mut state = Scene::None.state(rng);
+        state.db = -15.0;
+        state.fit = true;
+        state.interpolate = true;
+        state
+      }
     }
   }
 

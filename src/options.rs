@@ -105,14 +105,7 @@ impl Options {
     let mut state = if let Some(scene) = self.scene {
       scene.state(rng)
     } else if let Some(program) = self.program {
-      let mut state = program.scene().state(rng);
-      if let Some(db) = program.db() {
-        state.db = db;
-      }
-      if let Some(fit) = program.fit() {
-        state.fit = fit;
-      }
-      state
+      program.state(rng)
     } else {
       default()
     };
