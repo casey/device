@@ -356,6 +356,13 @@ pub(crate) fn reload_shaders(app: &mut App) {
   }
 }
 
+pub(crate) fn repeat(app: &mut App, event_loop: &ActiveEventLoop) {
+  let Some(last) = app.history.commands.last() else {
+    return;
+  };
+  app.dispatch(event_loop, *last);
+}
+
 pub(crate) fn right(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),

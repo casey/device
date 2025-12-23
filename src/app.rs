@@ -35,28 +35,37 @@ pub(crate) struct App {
 
 impl App {
   pub(crate) fn dispatch(&mut self, event_loop: &ActiveEventLoop, command: Command) {
+    use Command::*;
+
     match command {
-      Command::App(command) => command(self),
-      Command::AppEventLoop(command) => command(self, event_loop),
-      Command::AppFallible(command) => {
+      App(command) => command(self),
+      AppEventLoop(command) => command(self, event_loop),
+      AppFallible(command) => {
         if let Err(err) = command(self) {
           self.errors.push(err);
           event_loop.exit();
         }
       }
-      Command::RngState(command) => {
+      RngState(command) => {
         self.history.states.push(self.state.clone());
         command(&mut self.rng, &mut self.state);
       }
-      Command::State(command) => {
+      State(command) => {
         self.history.states.push(self.state.clone());
         command(&mut self.state);
       }
-      Command::HistoryState(command) => {
+      HistoryState(command) => {
         command(&mut self.history, &mut self.state);
       }
-      Command::History(command) => {
+      History(command) => {
         command(&mut self.history);
+      }
+    }
+
+    match command {
+      App(_) | AppEventLoop(_) | AppFallible(_) => {}
+      RngState(_) | State(_) | HistoryState(_) | History(_) => {
+        self.history.commands.push(command);
       }
     }
   }
