@@ -152,7 +152,7 @@ impl App {
     self.window = Some(window.clone());
 
     let renderer = pollster::block_on(Renderer::new(
-      self.options.image_format(),
+      self.options.image_format,
       self.present_mode,
       resolution,
       size,

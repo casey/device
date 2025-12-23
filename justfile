@@ -41,6 +41,15 @@ reference *args:
   status=$?
   exit $status
 
+accept-reference:
+  #!/usr/bin/env bash
+  for image in reference/*.png; do
+    if [[ $image == *.test.png ]]; then
+      continue
+    fi
+    mv ${image%.*}.test.png $image
+  done
+
 outdated:
   cargo outdated --root-deps-only --workspace
 

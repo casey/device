@@ -539,26 +539,20 @@ impl Renderer {
       .await
       .context(error::RequestDevice)?;
 
-    let (surface, format) = if let Some(surface) = surface {
-      let capabilities = surface.get_capabilities(&adapter);
+    let format = format.unwrap_or_default();
 
-      let Some(preferred_format) = capabilities.formats.first() else {
-        return Err(error::UnsupportedSurfaceAdapter.build());
-      };
+    let surface = if let Some(surface) = surface {
+      let capabilities = surface.get_capabilities(&adapter);
 
       let mut config = surface
         .get_default_config(&adapter, size.x.get(), size.y.get())
         .context(error::DefaultConfig)?;
 
-      let format = if let Some(format) = format {
-        if !capabilities.formats.contains(&format.into()) {
-          return Err(error::UnsupportedSurfaceFormat { format }.build());
-        }
-        config.format = format.into();
-        format
-      } else {
-        ImageFormat::try_from(*preferred_format)?
-      };
+      if !capabilities.formats.contains(&format.into()) {
+        return Err(error::UnsupportedSurfaceFormat { format }.build());
+      }
+
+      config.format = format.into();
 
       if let Some(present_mode) = present_mode {
         if !capabilities.present_modes.contains(&present_mode.into()) {
@@ -569,9 +563,9 @@ impl Renderer {
 
       surface.configure(&device, &config);
 
-      (Some((surface, config)), format)
+      Some((surface, config))
     } else {
-      (None, format.unwrap_or_default())
+      None
     };
 
     let (tx, error_channel) = mpsc::channel();
