@@ -1,30 +1,42 @@
 use super::*;
 
 pub(crate) struct Commands {
-  map: BTreeMap<String, Command>,
+  entries: BTreeMap<&'static str, Command>,
 }
 
 impl Commands {
   pub(crate) fn complete(&self, prefix: &str) -> Option<&str> {
     self
-      .map
+      .entries
       .range::<str, (Bound<&str>, Bound<&str>)>((Bound::Included(prefix), Bound::Unbounded))
       .next()
       .and_then(|(name, _command)| name.strip_prefix(prefix))
   }
 
   pub(crate) fn name(&self, s: &str) -> Option<Command> {
-    self.map.get(s).copied()
+    self.entries.get(s).copied()
   }
 
   pub(crate) fn new() -> Self {
-    let mut map = BTreeMap::new();
+    let mut entries = BTreeMap::new();
 
-    for CommandEntry { name, command } in generated::COMMANDS {
-      map.insert(name.replace('_', "-"), *command);
+    for &CommandEntry { name, command } in generated::COMMANDS {
+      entries.insert(name, command);
     }
 
-    Self { map }
+    Self { entries }
+  }
+}
+
+impl Display for Commands {
+  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    for (i, (name, _command)) in self.entries.iter().enumerate() {
+      if i > 0 {
+        writeln!(f)?;
+      }
+      write!(f, "{name}")?;
+    }
+    Ok(())
   }
 }
 

@@ -2,6 +2,7 @@ use super::*;
 
 mod bindings;
 mod capture;
+mod commands;
 mod probe;
 mod run;
 mod shader;
@@ -10,6 +11,7 @@ mod shader;
 pub(crate) enum Subcommand {
   Bindings,
   Capture(capture::Capture),
+  Commands,
   Probe,
   Run(run::Run),
   Shader,
@@ -20,6 +22,7 @@ impl Subcommand {
     match self {
       Self::Bindings => bindings::run(),
       Self::Capture(capture) => capture.run(options, config),
+      Self::Commands => commands::run(),
       Self::Probe => probe::run(),
       Self::Run(run) => run.run(options, config),
       Self::Shader => shader::run(),
