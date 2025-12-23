@@ -83,18 +83,6 @@ pub(crate) fn blaster_black_and_white(rng: &mut SmallRng, state: &mut State) {
     .extend(presets.into_iter().map(Preset::filter));
 }
 
-pub(crate) fn blaster_simple(rng: &mut SmallRng, state: &mut State) {
-  let presets = (0..state.preset_limit())
-    .map(|i| Preset::random_simple(rng, i))
-    .collect::<Vec<Preset>>();
-
-  state.truncate(0);
-
-  state
-    .filters
-    .extend(presets.into_iter().map(Preset::filter));
-}
-
 pub(crate) fn bottom(state: &mut State) {
   state.filters.push(Filter {
     color: color::invert(),

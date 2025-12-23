@@ -26,27 +26,28 @@ pub(crate) fn script() -> Script {
   }
 
   // kick 1 3 with 2 4
-  for bar in bars(39..67) {
-    script.on(bar + beat(1), BLASTER_SIMPLE);
-    script.on(bar + beat(3), BLASTER_SIMPLE);
-  }
-
-  // kick 1 3 with 2 4 after lead
-  for bar in bars(67..123) {
+  for bar in bars(39..123) {
     script.on(bar + beat(1), BLASTER);
     script.on(bar + beat(3), BLASTER);
   }
 
   // kick 2 4
-  for bar in bars(39..67) {
-    script.on(bar + beat(2), BLASTER_SIMPLE);
-    script.on(bar + beat(4), BLASTER_SIMPLE);
-  }
-
-  // kick 2 4 after lead
-  for bar in bars(67..71).chain(bars(79..123)) {
+  for bar in bars(39..71).chain(bars(79..123)) {
     script.on(bar + beat(2), BLASTER);
     script.on(bar + beat(4), BLASTER);
+  }
+
+  // lead
+  for bar in bars(67..75).chain(bars(107..123)).step_by(2) {
+    script.only(bar + beat(1), BLASTER);
+    script.only(bar + beat(2), ZOOM_OUT);
+    script.only(bar + beat(3), ZOOM_OUT);
+    script.only(bar + beat(4), ZOOM_OUT);
+
+    script.only(bar + beat(5), ZOOM_OUT);
+    script.only(bar + beat(6), ZOOM_OUT);
+    script.only(bar + beat(7), ZOOM_OUT);
+    script.only(bar + beat(8), ZOOM_OUT);
   }
 
   // snare 2 4
