@@ -25,6 +25,7 @@ pub(crate) struct App {
   pub(crate) record: Option<Fps>,
   pub(crate) recorder_thread: Option<RecorderThread>,
   pub(crate) renderer: Option<Renderer>,
+  pub(crate) rng: SmallRng,
   pub(crate) script: Option<Script>,
   pub(crate) spf: Option<usize>,
   pub(crate) state: State,
@@ -42,6 +43,10 @@ impl App {
           self.errors.push(err);
           event_loop.exit();
         }
+      }
+      Command::RngState(command) => {
+        self.history.states.push(self.state.clone());
+        command(&mut self.rng, &mut self.state);
       }
       Command::State(command) => {
         self.history.states.push(self.state.clone());
@@ -221,7 +226,9 @@ impl App {
 
     options.add_source(&config, &mut tap)?;
 
-    let state = options.state();
+    let mut rng = options.rng();
+
+    let state = options.state(&mut rng);
 
     let now = Instant::now();
 
@@ -263,6 +270,7 @@ impl App {
       record,
       recorder_thread: None,
       renderer: None,
+      rng,
       script,
       spf,
       state,

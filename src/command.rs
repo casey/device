@@ -7,5 +7,6 @@ pub(crate) enum Command {
   AppFallible(fn(&mut App) -> Result),
   History(fn(&mut History)),
   HistoryState(fn(&mut History, &mut State)),
+  RngState(fn(&mut SmallRng, &mut State)),
   State(fn(&mut State)),
 }

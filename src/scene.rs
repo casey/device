@@ -42,14 +42,8 @@ impl Scene {
     self.into()
   }
 
-  pub(crate) fn state(self, seed: Option<u64>) -> State {
+  pub(crate) fn state(self, rng: &mut SmallRng) -> State {
     let mut state = State::default();
-
-    let mut rng = if let Some(seed) = seed {
-      SmallRng::seed_from_u64(seed)
-    } else {
-      SmallRng::from_rng(&mut rand::rng())
-    };
 
     match self {
       Self::All => {
@@ -73,7 +67,7 @@ impl Scene {
 
         state
           .filters
-          .extend((0..Preset::LIMIT).map(|i| Preset::random(&mut rng, i).filter()));
+          .extend((0..Preset::LIMIT).map(|i| Preset::random(rng, i).filter()));
       }
       Self::Bottom => {
         state.invert().bottom().push();
@@ -250,7 +244,7 @@ impl Scene {
           .rotate_position(0.1 * TAU);
 
         for _ in 0..20 {
-          state.field(*FIELDS.choose(&mut rng).unwrap()).push();
+          state.field(*FIELDS.choose(rng).unwrap()).push();
         }
 
         state
@@ -258,7 +252,7 @@ impl Scene {
           .rotate_position(0.2 * TAU);
 
         for _ in 0..10 {
-          state.field(*FIELDS.choose(&mut rng).unwrap()).push();
+          state.field(*FIELDS.choose(rng).unwrap()).push();
         }
       }
       Self::Test => {

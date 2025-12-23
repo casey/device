@@ -502,7 +502,7 @@ fn scenes() {
   }
   let mut errors = Vec::new();
   for scene in Scene::iter() {
-    let state = scene.state(Some(0));
+    let state = scene.state(&mut SmallRng::seed_from_u64(0));
     if let Err(err) = Test::new(format!("scene-{scene}")).state(state).try_run() {
       errors.push(Entry {
         name: scene.name(),

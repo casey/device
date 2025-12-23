@@ -44,7 +44,9 @@ impl Capture {
 
     let mut analyzer = Analyzer::new();
 
-    let mut state = options.state();
+    let mut rng = options.rng();
+
+    let mut state = options.state(&mut rng);
 
     let script = options.script();
 
@@ -54,7 +56,10 @@ impl Capture {
           Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => {
             return Err(error::CaptureScriptAppCommand { command: name }.build());
           }
-          Command::History(_) | Command::HistoryState(_) | Command::State(_) => {}
+          Command::History(_)
+          | Command::HistoryState(_)
+          | Command::RngState(_)
+          | Command::State(_) => {}
         }
       }
     }
@@ -149,6 +154,10 @@ impl Capture {
             Command::App(_) | Command::AppEventLoop(_) | Command::AppFallible(_) => unreachable!(),
             Command::History(command) => command(&mut history),
             Command::HistoryState(command) => command(&mut history, &mut state),
+            Command::RngState(command) => {
+              history.states.push(state.clone());
+              command(&mut rng, &mut state);
+            }
             Command::State(command) => {
               history.states.push(state.clone());
               command(&mut state);

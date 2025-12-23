@@ -104,11 +104,19 @@ impl Options {
     (size, resolution)
   }
 
-  pub(crate) fn state(&self) -> State {
+  pub(crate) fn rng(&self) -> SmallRng {
+    if let Some(seed) = self.seed {
+      SmallRng::seed_from_u64(seed)
+    } else {
+      SmallRng::from_rng(&mut rand::rng())
+    }
+  }
+
+  pub(crate) fn state(&self, rng: &mut SmallRng) -> State {
     let mut state = if let Some(scene) = self.scene {
-      scene.state(self.seed)
+      scene.state(rng)
     } else if let Some(program) = self.program {
-      let mut state = program.scene().state(self.seed);
+      let mut state = program.scene().state(rng);
       if let Some(db) = program.db() {
         state.db = db;
       }
