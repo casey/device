@@ -112,7 +112,7 @@ fn main() {
 
   for (name, variant) in &commands {
     lines.push(format!(
-      "pub(crate) const {}: CommandEntry = (\"{}\", {variant}({name}));",
+      "pub(crate) const {}: CommandEntry = CommandEntry::new(\"{}\", {variant}({name}));",
       name.to_uppercase(),
       name.replace('_', "-"),
     ));

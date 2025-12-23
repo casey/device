@@ -403,7 +403,7 @@ impl App {
       .unwrap_or_default()
       .to_vec();
 
-    for (name, command) in commands {
+    for CommandEntry { name, command } in commands {
       log::info!("dispatching script command {name}");
       self.dispatch(event_loop, command);
     }
