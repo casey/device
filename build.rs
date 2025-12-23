@@ -93,6 +93,7 @@ fn main() {
       (["app"], true) => "AppFallible",
       (["history", "state"], false) => "HistoryState",
       (["history"], false) => "History",
+      (["rng", "state"], false) => "RngState",
       (["state"], false) => "State",
       _ => panic!(
         "unsupported combination of inputs and fallibility: ({}, {fallible})",

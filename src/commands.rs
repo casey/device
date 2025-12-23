@@ -28,12 +28,12 @@ impl Commands {
   }
 }
 
-pub(crate) fn advance(state: &mut State) {
+pub(crate) fn advance(rng: &mut SmallRng, state: &mut State) {
   if state.count % TIME == 3 {
     state.pop();
     state.pop();
   } else {
-    push_top(state);
+    push_top(rng, state);
   }
   state.count += 1;
 }
@@ -47,9 +47,9 @@ pub(crate) fn all(state: &mut State) {
   });
 }
 
-pub(crate) fn blaster(state: &mut State) {
+pub(crate) fn blaster(rng: &mut SmallRng, state: &mut State) {
   let presets = (0..state.preset_limit())
-    .map(|i| Preset::random(&mut state.rng, i))
+    .map(|i| Preset::random(rng, i))
     .collect::<Vec<Preset>>();
 
   state.truncate(0);
@@ -59,9 +59,9 @@ pub(crate) fn blaster(state: &mut State) {
     .extend(presets.into_iter().map(Preset::filter));
 }
 
-pub(crate) fn blaster_black_and_white(state: &mut State) {
+pub(crate) fn blaster_black_and_white(rng: &mut SmallRng, state: &mut State) {
   let presets = (0..state.preset_limit())
-    .map(|i| Preset::random_black_and_white(&mut state.rng, i))
+    .map(|i| Preset::random_black_and_white(rng, i))
     .collect::<Vec<Preset>>();
 
   state.truncate(0);
@@ -71,9 +71,9 @@ pub(crate) fn blaster_black_and_white(state: &mut State) {
     .extend(presets.into_iter().map(Preset::filter));
 }
 
-pub(crate) fn blaster_simple(state: &mut State) {
+pub(crate) fn blaster_simple(rng: &mut SmallRng, state: &mut State) {
   let presets = (0..state.preset_limit())
-    .map(|i| Preset::random_simple(&mut state.rng, i))
+    .map(|i| Preset::random_simple(rng, i))
     .collect::<Vec<Preset>>();
 
   state.truncate(0);
@@ -177,13 +177,13 @@ pub(crate) fn cross(state: &mut State) {
   });
 }
 
-pub(crate) fn cycle(state: &mut State) {
+pub(crate) fn cycle(rng: &mut SmallRng, state: &mut State) {
   if state.count % TIME == 3 {
     state.pop();
     state.pop();
     state.pop();
   } else {
-    push_top(state);
+    push_top(rng, state);
   }
   state.count += 1;
 }
@@ -326,17 +326,16 @@ pub(crate) fn print_bindings(app: &mut App) {
   eprintln!("{}", app.bindings);
 }
 
-pub(crate) fn push_bottom(state: &mut State) {
-  state.filters.insert(
-    0,
-    Preset::random(&mut state.rng, state.filters.len()).filter(),
-  );
-}
-
-pub(crate) fn push_top(state: &mut State) {
+pub(crate) fn push_bottom(rng: &mut SmallRng, state: &mut State) {
   state
     .filters
-    .push(Preset::random(&mut state.rng, state.filters.len()).filter());
+    .insert(0, Preset::random(rng, state.filters.len()).filter());
+}
+
+pub(crate) fn push_top(rng: &mut SmallRng, state: &mut State) {
+  state
+    .filters
+    .push(Preset::random(rng, state.filters.len()).filter());
 }
 
 pub(crate) fn reload_shaders(app: &mut App) {
@@ -379,8 +378,8 @@ pub(crate) fn set_patch_sine(app: &mut App) {
   app.patch = Patch::Sine;
 }
 
-pub(crate) fn shuffle(state: &mut State) {
-  state.filters.shuffle(&mut state.rng);
+pub(crate) fn shuffle(rng: &mut SmallRng, state: &mut State) {
+  state.filters.shuffle(rng);
 }
 
 pub(crate) fn spread(state: &mut State) {
