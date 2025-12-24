@@ -9,6 +9,7 @@ pub(crate) enum Scene {
   Bottom,
   Circle,
   Frequencies,
+  Grid,
   Hello,
   Highwaystar,
   Kaleidoscope,
@@ -21,7 +22,6 @@ pub(crate) enum Scene {
   Samples,
   Starburst,
   StarburstRandom,
-  Test,
   Top,
   X,
 }
@@ -66,6 +66,9 @@ impl Scene {
       }
       Self::Frequencies => {
         state.invert().frequencies().push();
+      }
+      Self::Grid => {
+        state.filters.push(Preset::Grid.filter(rng));
       }
       Self::Hello => {
         state
@@ -243,9 +246,6 @@ impl Scene {
         for _ in 0..10 {
           state.field(*FIELDS.choose(rng).unwrap()).push();
         }
-      }
-      Self::Test => {
-        state.filters.push(Preset::Test.filter(rng));
       }
       Self::X => {
         state.invert().x().push();
