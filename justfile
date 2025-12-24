@@ -94,7 +94,7 @@ blaster-variations:
       --seed $i \
       --verbose \
       capture \
-      --name $i
+      --stem $i
   done
 
 curtains:
