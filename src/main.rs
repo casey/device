@@ -260,6 +260,7 @@ type TextureFieldKey = (
 type Mat1x2f = nalgebra::Matrix1x2<f32>;
 type Mat2x3f = nalgebra::Matrix2x3<f32>;
 type Mat3f = nalgebra::Matrix3<f32>;
+type Mat3x2f = nalgebra::Matrix3x2<f32>;
 type Mat3x4f = nalgebra::Matrix3x4<f32>;
 type Mat4f = nalgebra::Matrix4<f32>;
 type Size = nalgebra::Vector2<NonZeroU32>;

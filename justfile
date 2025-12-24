@@ -68,6 +68,9 @@ commands:
 program program:
   cargo run --release -- --program {{program}}
 
+shader:
+  cargo run shader
+
 hello: (program "hello")
 busy: (program "busy")
 noise: (program "noise")
@@ -101,7 +104,7 @@ curtains:
   cargo run --release -- --song 'curtains closing' run
 
 maria:
-  cargo run --release -- --song 'total 4/13 maria' run
+  cargo run --release -- --song 'total 4/13 maria' --db -15 run
 
 nobrain:
   cargo run --release -- --song 'no brain$' run

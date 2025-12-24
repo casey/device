@@ -410,8 +410,9 @@ fn presets() {
   let mut errors = Vec::new();
   for preset in Preset::iter() {
     let mut state = State::default();
-    state.filters.push(Preset::Test.filter());
-    state.filters.push(preset.filter());
+    let mut rng = SmallRng::from_seed(default());
+    state.filters.push(Preset::Grid.filter(&mut rng));
+    state.filters.push(preset.filter(&mut rng));
     if let Err(err) = Test::new(format!("preset-{preset}")).state(state).try_run() {
       errors.push(Entry {
         name: preset.name(),

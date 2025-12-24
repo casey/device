@@ -68,6 +68,19 @@ impl Shared for Mat3f {
   }
 }
 
+impl Shared for Mat3x2f {
+  const ALIGNMENT: Alignment = Alignment::new(16);
+  const SIZE: usize = 32;
+
+  fn write_aligned(&self, buffer: &mut [u8]) {
+    for (column, buffer) in self.column_iter().zip(buffer.chunks_mut(f32::SIZE * 4)) {
+      for (scalar, buffer) in column.as_slice().iter().zip(buffer.chunks_mut(f32::SIZE)) {
+        scalar.write_aligned(buffer);
+      }
+    }
+  }
+}
+
 impl Shared for Mat2x3f {
   const ALIGNMENT: Alignment = Alignment::new(8);
   const SIZE: usize = 24;

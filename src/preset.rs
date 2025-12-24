@@ -1,5 +1,19 @@
 use super::*;
 
+const GRIDS: &[Mat3x2f] = &[
+  matrix!(0.0, 1.0; 0.0, 1.0; 0.0, 1.0), // monochrome rows
+  matrix!(1.0, 0.0; 1.0, 0.0; 1.0, 0.0), // monochrome columns
+  matrix!(0.5, 0.5; 0.5, 0.5; 0.5, 0.5), // monochrome grid
+  matrix!(1.0, 0.0; 0.0, 0.0; 0.0, 1.0), // red and blue grid
+  matrix!(0.0, 0.0; 0.0, 0.0; 0.0, 1.0), // blue rows
+  matrix!(0.0, 0.0; 0.0, 1.0; 0.0, 1.0), // cyan rows
+  matrix!(1.0, 0.0; 0.0, 0.0; 0.0, 0.0), // red columns
+  matrix!(0.0, 0.0; 0.0, 0.0; 1.0, 0.0), // blue columns
+  matrix!(0.0, 0.0; 1.0, 0.0; 1.0, 0.0), // cyan columns
+  matrix!(0.0, 1.0; 0.0, 0.0; 0.0, 0.0), // red rows
+  matrix!(1.0, 0.0; 0.0, 1.0; 0.0, 1.0), // red and cyan grid
+];
+
 #[derive(
   Clone, Copy, Debug, EnumIter, ValueEnum, IntoStaticStr, PartialEq, Ord, PartialOrd, Eq,
 )]
@@ -10,6 +24,7 @@ pub(crate) enum Preset {
   Desaturate,
   FlipHorizontal,
   FlipVertical,
+  Grid,
   Identity,
   Invert,
   InvertBlue,
@@ -35,7 +50,6 @@ pub(crate) enum Preset {
   ScaleVelocity,
   Spin,
   Square,
-  Test,
   Top,
   TranslateBlueVelocity,
   TranslateGreenVelocity,
@@ -51,6 +65,7 @@ pub(crate) enum Preset {
 
 impl Preset {
   const COLOR: &[Self] = &[
+    Self::Grid,
     Self::Invert,
     Self::InvertBlue,
     Self::InvertGreen,
@@ -60,7 +75,6 @@ impl Preset {
     Self::RotateBlue,
     Self::RotateGreen,
     Self::RotateRed,
-    Self::Test,
   ];
 
   const COLOR_RESPONSIVE: &[Self] = &[Self::RotateResponsive, Self::RotateRedResponsive];
@@ -106,7 +120,7 @@ impl Preset {
     Self::Identity,
   ];
 
-  pub(crate) fn filter(self) -> Filter {
+  pub(crate) fn filter(self, rng: &mut SmallRng) -> Filter {
     let mut filter = match self {
       Self::Circle => Filter {
         color: color::invert(),
@@ -128,6 +142,11 @@ impl Preset {
       },
       Self::FlipVertical => Filter {
         position: Mat3f::new_nonuniform_scaling(&Vec2f::new(1.0, -1.0)),
+        ..default()
+      },
+      Self::Grid => Filter {
+        grid: 10.0,
+        grid_transform: *GRIDS.choose(rng).unwrap(),
         ..default()
       },
       Self::Identity => Filter::default(),
@@ -277,11 +296,6 @@ impl Preset {
         field: Field::Square,
         ..default()
       },
-      Self::Test => Filter {
-        grid: 10.0,
-        grid_alpha: 1.0,
-        ..default()
-      },
       Self::Top => Filter {
         color: color::invert(),
         field: Field::Top,
@@ -384,36 +398,11 @@ impl Preset {
       TAIL.choose(rng).copied().unwrap()
     }
   }
-
-  pub(crate) fn random_simple(rng: &mut SmallRng, i: usize) -> Self {
-    static TAIL: LazyLock<Vec<Preset>> = LazyLock::new(|| {
-      Preset::COLOR
-        .iter()
-        .chain(Preset::COLOR_RESPONSIVE)
-        .chain(Preset::COLOR_VELOCITY)
-        .chain(Preset::MOVEMENT_RESPONSIVE)
-        .chain(Preset::MOVEMENT_VELOCITY)
-        .chain(Preset::TRANSFORM)
-        .copied()
-        .collect()
-    });
-    if i == 0 {
-      Self::SHAPE.choose(rng).copied().unwrap()
-    } else {
-      TAIL.choose(rng).copied().unwrap()
-    }
-  }
 }
 
 impl Display for Preset {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     f.write_str(self.name())
-  }
-}
-
-impl From<Preset> for Filter {
-  fn from(preset: Preset) -> Self {
-    preset.filter()
   }
 }
 
