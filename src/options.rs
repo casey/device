@@ -112,7 +112,7 @@ impl Options {
 
     if let Some(presets) = &self.preset {
       for preset in presets {
-        state.filters.push(preset.filter());
+        state.filters.push(preset.filter(rng));
       }
     }
 

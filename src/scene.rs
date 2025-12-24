@@ -48,7 +48,7 @@ impl Scene {
           ]
           .iter()
           .copied()
-          .map(Preset::filter),
+          .map(|preset| preset.filter(rng)),
         );
       }
       Self::Blaster => {
@@ -56,7 +56,7 @@ impl Scene {
 
         state
           .filters
-          .extend((0..Preset::LIMIT).map(|i| Preset::random(rng, i).filter()));
+          .extend((0..Preset::LIMIT).map(|i| Preset::random(rng, i).filter(rng)));
       }
       Self::Bottom => {
         state.invert().bottom().push();
@@ -245,7 +245,7 @@ impl Scene {
         }
       }
       Self::Test => {
-        state.filters.push(Preset::Test.into());
+        state.filters.push(Preset::Test.filter(rng));
       }
       Self::X => {
         state.invert().x().push();
