@@ -68,6 +68,9 @@ commands:
 program program:
   cargo run --release -- --program {{program}}
 
+shader:
+  cargo run shader
+
 hello: (program "hello")
 busy: (program "busy")
 noise: (program "noise")

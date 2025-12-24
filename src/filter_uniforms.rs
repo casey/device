@@ -11,7 +11,7 @@ pub(crate) struct FilterUniforms {
   pub(crate) frequency_range: f32,
   pub(crate) gain: f32,
   pub(crate) grid: f32,
-  pub(crate) grid_alpha: f32,
+  pub(crate) grid_transform: Mat3x2f,
   pub(crate) interpolate: bool,
   pub(crate) mirror: Vec4f,
   pub(crate) parameter: f32,
@@ -38,7 +38,7 @@ impl Uniforms for FilterUniforms {
     self.frequency_range.write(dst, &mut i, &mut a);
     self.gain.write(dst, &mut i, &mut a);
     self.grid.write(dst, &mut i, &mut a);
-    self.grid_alpha.write(dst, &mut i, &mut a);
+    self.grid_transform.write(dst, &mut i, &mut a);
     self.interpolate.write(dst, &mut i, &mut a);
     self.mirror.write(dst, &mut i, &mut a);
     self.parameter.write(dst, &mut i, &mut a);

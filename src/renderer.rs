@@ -916,7 +916,7 @@ impl Renderer {
           frequency_range,
           gain,
           grid: filter.grid,
-          grid_alpha: filter.grid_alpha,
+          grid_transform: filter.grid_transform,
           interpolate: state.interpolate,
           mirror: filter.mirror_uniform(),
           parameter: filter.field.parameter(),
