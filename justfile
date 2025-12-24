@@ -136,8 +136,8 @@ capture-blaster:
     -- \
     --width 3840 \
     --height 2160 \
-    --fps 60 \
     --program blaster \
+    --seed 1024 \
     --verbose \
     capture
 
