@@ -9,7 +9,7 @@ pub(crate) enum Program {
   Expo,
   Transit,
   Radio,
-  Blaster,
+  Maria,
 }
 
 impl Program {
@@ -33,7 +33,7 @@ impl Program {
         let wave = tap.load_wave(&config.find_song("next sun")?)?;
         tap.sequence_wave(&wave, 0.0, 0.0);
       }
-      Self::Blaster => {
+      Self::Maria => {
         let track = tap.load_track(&config.find_song("total 4/13 maria")?)?;
         tap.sequence_track(&track, 0.0, 0.0);
       }
@@ -43,7 +43,7 @@ impl Program {
 
   pub(crate) fn script(self) -> Option<Script> {
     match self {
-      Self::Blaster => Some(maria::script()),
+      Self::Maria => Some(maria::script()),
       _ => None,
     }
   }
@@ -60,7 +60,7 @@ impl Program {
         scene.db = -10.0;
         scene
       }
-      Self::Blaster => {
+      Self::Maria => {
         let mut state = Scene::None.state(rng);
         state.db = -15.0;
         state.interpolate = true;
