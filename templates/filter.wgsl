@@ -47,7 +47,7 @@ struct Uniforms {
   frequency_range: f32,
   gain: f32,
   grid: f32,
-  grid_alpha: f32,
+  grid_transform: mat2x3f,
   interpolate: u32,
   mirror: vec4f,
   parameter: f32,
@@ -134,10 +134,11 @@ fn field_x(p: vec2f) -> bool {
   return abs(abs(p.x) - abs(p.y)) < sqrt(2) * 0.25 * coefficient();
 }
 
-fn grid(uv: vec2f) -> vec2f {
+
+fn grid(uv: vec2f) -> vec3f {
   let steps = uniforms.grid * coefficient();
-  return round(vec2(uv.x, (uv.y - 1) * -1) * steps)
-    / steps * uniforms.grid_alpha;
+  let value = round(vec2(uv.x, (uv.y - 1) * -1) * steps) / steps;
+  return uniforms.grid_transform * value;
 }
 
 fn mod_floor(x: vec2f, y: f32) -> vec2f {
@@ -230,9 +231,7 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   // convert back to rgb
   var transformed_color = uniforms.color * vec4(input_color.rgb, 1.0);
 
-  let grid = grid(mirrored_uv);
-  transformed_color.g += grid.x;
-  transformed_color.b += grid.y;
+  transformed_color += grid(mirrored_uv);
 
   // blend transformed and original color
   let blend = mix(original_color.rgb, transformed_color, alpha);

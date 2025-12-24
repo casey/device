@@ -279,7 +279,11 @@ impl Preset {
       },
       Self::Test => Filter {
         grid: 10.0,
-        grid_alpha: 1.0,
+        grid_transform: matrix!(
+          0.0, 0.0;
+          1.0, 0.0;
+          0.0, 1.0;
+        ),
         ..default()
       },
       Self::Top => Filter {
