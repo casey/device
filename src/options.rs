@@ -20,8 +20,8 @@ const AUDIO: &str = "audio";
 pub(crate) struct Options {
   #[arg(allow_hyphen_values = true, long)]
   pub(crate) db: Option<f32>,
-  #[arg(long, action = ArgAction::SetTrue)]
-  pub(crate) fit: Option<bool>,
+  #[arg(long)]
+  pub(crate) fit: bool,
   #[arg(long)]
   pub(crate) fps: Option<Fps>,
   #[arg(long)]
@@ -30,8 +30,8 @@ pub(crate) struct Options {
   pub(crate) image_format: Option<ImageFormat>,
   #[arg(group = AUDIO, long)]
   pub(crate) input: bool,
-  #[arg(long, action = ArgAction::SetTrue)]
-  pub(crate) interpolate: Option<bool>,
+  #[arg(long)]
+  pub(crate) interpolate: bool,
   #[arg(long)]
   pub(crate) mute: bool,
   #[arg(long)]
@@ -48,8 +48,8 @@ pub(crate) struct Options {
   pub(crate) seed: Option<u64>,
   #[arg(group = AUDIO, long)]
   pub(crate) song: Option<String>,
-  #[arg(long, action = ArgAction::SetTrue)]
-  pub(crate) status: Option<bool>,
+  #[arg(long)]
+  pub(crate) status: bool,
   #[arg(group = AUDIO, long)]
   pub(crate) track: Option<Utf8PathBuf>,
   #[arg(long)]
@@ -117,15 +117,25 @@ impl Options {
     }
 
     state.db = self.db.unwrap_or(state.db);
-    state.fit = self.fit.unwrap_or(state.fit);
-    state.interpolate = self.interpolate.unwrap_or(state.interpolate);
-    state.status = self.status.unwrap_or(state.status);
+
     state.velocity = Vec4f::new(
       self.vx.unwrap_or(state.velocity.x),
       self.vy.unwrap_or(state.velocity.y),
       self.vz.unwrap_or(state.velocity.z),
       self.vw.unwrap_or(state.velocity.w),
     );
+
+    if self.fit {
+      state.fit = true;
+    }
+
+    if self.interpolate {
+      state.interpolate = true;
+    }
+
+    if self.status {
+      state.status = true;
+    }
 
     state
   }

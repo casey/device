@@ -63,7 +63,6 @@ impl Program {
       Self::Blaster => {
         let mut state = Scene::None.state(rng);
         state.db = -15.0;
-        state.fit = true;
         state.interpolate = true;
         state
       }
