@@ -7,9 +7,9 @@ pub(crate) struct Config {
 }
 
 impl Config {
-  pub(crate) fn capture(&self, name: Option<&str>, extension: &str) -> Utf8PathBuf {
-    let name = match name {
-      Some(name) => name.into(),
+  pub(crate) fn capture(&self, stem: Option<&str>, extension: &str) -> Utf8PathBuf {
+    let stem = match stem {
+      Some(stem) => stem.into(),
       None => SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
@@ -17,7 +17,7 @@ impl Config {
         .to_string(),
     };
 
-    let filename = format!("{name}.{extension}");
+    let filename = format!("{stem}.{extension}");
 
     if let Some(captures) = &self.captures {
       captures.join(filename)

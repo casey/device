@@ -54,7 +54,7 @@ impl Recorder {
     Ok(encoders)
   }
 
-  pub(crate) fn finish(mut self, options: &Options, config: &Config, name: Option<&str>) -> Result {
+  pub(crate) fn finish(mut self, options: &Options, config: &Config, stem: Option<&str>) -> Result {
     assert!(self.heap.is_empty());
 
     let frame_imbalance = self.frame_imbalance();
@@ -92,7 +92,7 @@ impl Recorder {
 
     Self::process_output(&output)?;
 
-    let path = config.capture(name, "mp4");
+    let path = config.capture(stem, "mp4");
 
     fs::rename(self.tempdir_path.join(RECORDING), &path).context(error::FilesystemIo { path })?;
 

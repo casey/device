@@ -28,7 +28,7 @@ pub(crate) struct Capture {
   #[arg(long)]
   duration: Option<NonZeroU32>,
   #[arg(long)]
-  name: Option<String>,
+  stem: Option<String>,
 }
 
 impl Capture {
@@ -173,7 +173,7 @@ impl Capture {
 
     progress.finish();
 
-    recorder.finish(&options, &config, self.name.as_deref())?;
+    recorder.finish(&options, &config, self.stem.as_deref())?;
 
     Ok(())
   }
