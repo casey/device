@@ -1,5 +1,19 @@
 use super::*;
 
+const GRIDS: &[Mat3x2f] = &[
+  matrix!(0.0, 1.0; 0.0, 1.0; 0.0, 1.0), // monochrome rows
+  matrix!(1.0, 0.0; 1.0, 0.0; 1.0, 0.0), // monochrome columns
+  matrix!(0.5, 0.5; 0.5, 0.5; 0.5, 0.5), // monochrome grid
+  matrix!(1.0, 0.0; 0.0, 0.0; 0.0, 1.0), // red and blue grid
+  matrix!(0.0, 0.0; 0.0, 0.0; 0.0, 1.0), // blue rows
+  matrix!(0.0, 0.0; 0.0, 1.0; 0.0, 1.0), // cyan rows
+  matrix!(1.0, 0.0; 0.0, 0.0; 0.0, 0.0), // red columns
+  matrix!(0.0, 0.0; 0.0, 0.0; 1.0, 0.0), // blue columns
+  matrix!(0.0, 0.0; 1.0, 0.0; 1.0, 0.0), // cyan columns
+  matrix!(0.0, 1.0; 0.0, 0.0; 0.0, 0.0), // red rows
+  matrix!(1.0, 0.0; 0.0, 1.0; 0.0, 1.0), // red and cyan grid
+];
+
 #[derive(
   Clone, Copy, Debug, EnumIter, ValueEnum, IntoStaticStr, PartialEq, Ord, PartialOrd, Eq,
 )]
@@ -106,7 +120,7 @@ impl Preset {
     Self::Identity,
   ];
 
-  pub(crate) fn filter(self) -> Filter {
+  pub(crate) fn filter(self, rng: &mut SmallRng) -> Filter {
     let mut filter = match self {
       Self::Circle => Filter {
         color: color::invert(),
@@ -279,11 +293,7 @@ impl Preset {
       },
       Self::Test => Filter {
         grid: 10.0,
-        grid_transform: matrix!(
-          0.0, 0.0;
-          1.0, 0.0;
-          0.0, 1.0;
-        ),
+        grid_transform: *GRIDS.choose(rng).unwrap(),
         ..default()
       },
       Self::Top => Filter {
@@ -393,12 +403,6 @@ impl Preset {
 impl Display for Preset {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     f.write_str(self.name())
-  }
-}
-
-impl From<Preset> for Filter {
-  fn from(preset: Preset) -> Self {
-    preset.filter()
   }
 }
 
