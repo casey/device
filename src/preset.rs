@@ -24,6 +24,7 @@ pub(crate) enum Preset {
   Desaturate,
   FlipHorizontal,
   FlipVertical,
+  Grid,
   Identity,
   Invert,
   InvertBlue,
@@ -49,7 +50,6 @@ pub(crate) enum Preset {
   ScaleVelocity,
   Spin,
   Square,
-  Test,
   Top,
   TranslateBlueVelocity,
   TranslateGreenVelocity,
@@ -65,6 +65,7 @@ pub(crate) enum Preset {
 
 impl Preset {
   const COLOR: &[Self] = &[
+    Self::Grid,
     Self::Invert,
     Self::InvertBlue,
     Self::InvertGreen,
@@ -74,7 +75,6 @@ impl Preset {
     Self::RotateBlue,
     Self::RotateGreen,
     Self::RotateRed,
-    Self::Test,
   ];
 
   const COLOR_RESPONSIVE: &[Self] = &[Self::RotateResponsive, Self::RotateRedResponsive];
@@ -142,6 +142,11 @@ impl Preset {
       },
       Self::FlipVertical => Filter {
         position: Mat3f::new_nonuniform_scaling(&Vec2f::new(1.0, -1.0)),
+        ..default()
+      },
+      Self::Grid => Filter {
+        grid: 10.0,
+        grid_transform: *GRIDS.choose(rng).unwrap(),
         ..default()
       },
       Self::Identity => Filter::default(),
@@ -289,11 +294,6 @@ impl Preset {
       Self::Square => Filter {
         color: color::invert(),
         field: Field::Square,
-        ..default()
-      },
-      Self::Test => Filter {
-        grid: 10.0,
-        grid_transform: *GRIDS.choose(rng).unwrap(),
         ..default()
       },
       Self::Top => Filter {
