@@ -105,7 +105,7 @@ pub(crate) fn bottom(state: &mut State) {
 }
 
 pub(crate) fn capture(app: &mut App) -> Result {
-  let destination = app.config.capture("png");
+  let destination = app.config.capture(None, "png");
   app.renderer.as_ref().unwrap().capture(move |capture| {
     if let Err(err) = capture.save(&destination) {
       log::error!("failed to send capture: {err}");

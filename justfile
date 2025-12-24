@@ -93,7 +93,8 @@ blaster-variations:
       --program blaster \
       --seed $i \
       --verbose \
-      capture
+      capture \
+      --name $i
   done
 
 curtains:

@@ -10,7 +10,7 @@ impl RecorderThread {
     drop(self.tx);
 
     match self.handle.join() {
-      Ok(Ok(recorder)) => recorder.finish(options, config),
+      Ok(Ok(recorder)) => recorder.finish(options, config, None),
       Ok(Err(err)) => Err(err),
       Err(panic_value) => Err(error::RecordingJoin { panic_value }.build()),
     }

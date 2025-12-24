@@ -27,6 +27,8 @@ const TICK_CHARS: &str = concat!(
 pub(crate) struct Capture {
   #[arg(long)]
   duration: Option<NonZeroU32>,
+  #[arg(long)]
+  name: Option<String>,
 }
 
 impl Capture {
@@ -171,7 +173,7 @@ impl Capture {
 
     progress.finish();
 
-    recorder.finish(&options, &config)?;
+    recorder.finish(&options, &config, self.name.as_deref())?;
 
     Ok(())
   }
