@@ -25,6 +25,8 @@ pub(crate) fn script() -> Script {
     script.on(bar + beat(3), BLASTER_BLACK_AND_WHITE);
   }
 
+  script.on(bar(39), TOGGLE_FIT);
+
   // kick 1 3 with 2 4
   for bar in bars(39..123) {
     script.on(bar + beat(1), BLASTER);

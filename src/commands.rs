@@ -310,6 +310,8 @@ pub(crate) fn print(app: &mut App) {
     eprintln!("allocated: {allocated}");
   }
 
+  eprintln!("fit: {}", app.state.fit);
+
   eprintln!(
     "filters: {}",
     app
