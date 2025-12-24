@@ -3,8 +3,6 @@ use {
   std::process::{Child, ChildStdin, Command},
 };
 
-const VIDEO: &str = "video.mp4";
-
 pub(crate) struct Recorder {
   audio: Sound,
   encoder: Child,
@@ -21,6 +19,8 @@ pub(crate) struct Recorder {
 }
 
 impl Recorder {
+  const VIDEO: &str = "video.mp4";
+
   fn encoders() -> Result<BTreeSet<String>> {
     let output = Command::new("ffmpeg")
       .args(["-hide_banner", "-encoders"])
@@ -54,7 +54,7 @@ impl Recorder {
     Ok(encoders)
   }
 
-  pub(crate) fn finish(mut self, options: &Options, config: &Config) -> Result {
+  pub(crate) fn finish(mut self, options: &Options, config: &Config, stem: Option<&str>) -> Result {
     assert!(self.heap.is_empty());
 
     let frame_imbalance = self.frame_imbalance();
@@ -77,7 +77,7 @@ impl Recorder {
 
     let output = Command::new("ffmpeg")
       .arg("-hide_banner")
-      .args(["-i", VIDEO])
+      .args(["-i", Self::VIDEO])
       .args(["-i", AUDIO])
       .args(["-c:v", "copy"])
       .args(["-movflags", "+faststart"])
@@ -92,7 +92,7 @@ impl Recorder {
 
     Self::process_output(&output)?;
 
-    let path = config.capture("mp4");
+    let path = config.capture(stem, "mp4");
 
     fs::rename(self.tempdir_path.join(RECORDING), &path).context(error::FilesystemIo { path })?;
 
@@ -205,7 +205,7 @@ impl Recorder {
       .args(["-colorspace", "bt709"])
       .args(["-level:v", if realtime { "5.2" } else { "5.1" }])
       .args(["-pix_fmt", "yuv420p"])
-      .arg(VIDEO)
+      .arg(Self::VIDEO)
       .current_dir(&tempdir_path)
       .stdin(Stdio::piped())
       .stderr(options.stdio())
