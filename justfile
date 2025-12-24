@@ -103,9 +103,6 @@ maria-variations:
 curtains:
   cargo run --release -- --song 'curtains closing' run
 
-maria:
-  cargo run --release -- --song 'total 4/13 maria' --db -15 run
-
 nobrain:
   cargo run --release -- --song 'no brain$' run
 
