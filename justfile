@@ -78,22 +78,22 @@ expo: (program "expo")
 transit: (program "transit")
 radio: (program "radio")
 
-blaster seed:
+maria seed:
   cargo run \
     --release \
     -- \
-    --program blaster \
+    --program maria \
     --seed {{ seed }} \
     run
 
-blaster-variations:
+maria-variations:
   #!/usr/bin/env bash
   cargo build --release
   for i in {0..100}; do
     ./target/release/device \
       --width 3840 \
       --height 2160 \
-      --program blaster \
+      --program maria \
       --seed $i \
       --verbose \
       capture \
@@ -111,7 +111,7 @@ nobrain:
 
 preset preset:
   cargo run --release -- \
-    --program blaster \
+    --program grid \
     --mute \
     --preset {{preset}} \
     run
@@ -130,13 +130,13 @@ capture-expo: (capture "expo")
 capture-transit: (capture "transit")
 capture-radio: (capture "radio")
 
-capture-blaster:
+capture-maria:
   cargo run \
     --release \
     -- \
     --width 3840 \
     --height 2160 \
-    --program blaster \
+    --program maria \
     --seed 1024 \
     --verbose \
     capture
