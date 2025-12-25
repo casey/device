@@ -8,7 +8,11 @@ pub(crate) struct Tick {
 }
 
 impl Tick {
-  pub(crate) fn advance(self) -> bool {
-    self.position != self.last
+  pub(crate) fn advance(self) -> Option<Position> {
+    if self.position == self.last {
+      None
+    } else {
+      self.position
+    }
   }
 }

@@ -86,6 +86,15 @@ maria seed:
     --seed {{ seed }} \
     run
 
+unicode:
+  cargo run \
+    --release \
+    -- \
+    --width 3840 \
+    --height 2160 \
+    --program unicode \
+    run
+
 maria-variations:
   #!/usr/bin/env bash
   cargo build --release
@@ -138,6 +147,16 @@ capture-maria:
     --verbose \
     capture
 
+capture-unicode:
+  cargo run \
+    --release \
+    -- \
+    --width 3840 \
+    --height 2160 \
+    --program unicode \
+    --verbose \
+    capture
+
 record-curtains:
   cargo run --release -- \
     --fps 60 \
@@ -146,3 +165,14 @@ record-curtains:
     --verbose \
     run \
     --record
+
+last-resort:
+  git clone git@github.com:unicode-org/last-resort-font.git static/last-resort-font
+
+ucd:
+  mkdir -p tmp
+  curl https://www.unicode.org/Public/17.0.0/ucd/UCD.zip -O --output-dir tmp
+  curl https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip -O --output-dir tmp
+  rm -rf static/{ucd,unihan}
+  unzip tmp/UCD.zip -d static/ucd
+  unzip tmp/Unihan.zip -d static/unihan

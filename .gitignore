@@ -1,4 +1,10 @@
 /capture.png
 /recording.mp4
 /reference/*.test.png
+/static/last-resort-font
+/static/last-resort.ttx
+/static/last-resort.txt
+/static/ucd
+/static/unihan
 /target
+/tmp

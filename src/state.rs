@@ -236,15 +236,16 @@ impl State {
     &mut self,
     position: Vec2f,
     scale: f32,
-    text: &'static str,
+    text: &str,
     weight: FontWeight,
   ) -> &mut Self {
-    self.filter.field = Field::Texture(TextureField {
-      position,
-      scale,
-      text: text.into(),
-      weight,
-    });
+    self.filter.field = Field::texture(
+      TextureField::default()
+        .position(position)
+        .scale(scale)
+        .text(text)
+        .weight(weight),
+    );
     self
   }
 

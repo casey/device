@@ -1,20 +1,8 @@
-use {super::*, generated::*};
-
-fn bar(bar: u64) -> Position {
-  Position::from_bar(bar.checked_sub(1).unwrap())
-}
-
-fn bars(range: Range<u64>) -> impl Iterator<Item = Position> {
-  range.map(|bar| Position::from_bar(bar.checked_sub(1).unwrap()))
-}
-
-fn beat(beat: u64) -> Position {
-  Position::from_beat(beat.checked_sub(1).unwrap())
-}
-
-fn quarter(quarter: u64) -> Position {
-  Position::from_quarter(quarter.checked_sub(1).unwrap())
-}
+use {
+  super::*,
+  generated::*,
+  position::{bar, bars, beat, quarter},
+};
 
 pub(crate) fn script() -> Script {
   let mut script = Script::default();

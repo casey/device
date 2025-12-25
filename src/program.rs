@@ -10,6 +10,7 @@ pub(crate) enum Program {
   Transit,
   Radio,
   Maria,
+  Unicode,
 }
 
 impl Program {
@@ -35,6 +36,10 @@ impl Program {
       }
       Self::Maria => {
         let track = tap.load_track(&config.find_song("total 4/13 maria")?)?;
+        tap.sequence_track(&track, 0.0, 0.0);
+      }
+      Self::Unicode => {
+        let track = tap.load_track(&config.find_song("romare.*all night")?)?;
         tap.sequence_track(&track, 0.0, 0.0);
       }
     }
@@ -66,6 +71,10 @@ impl Program {
         state.interpolate = true;
         state
       }
+      Self::Unicode => State {
+        callback: Some(Box::new(unicode::Unicode::default())),
+        ..default()
+      },
     }
   }
 }
