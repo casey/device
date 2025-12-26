@@ -95,9 +95,13 @@ impl Callback for Unicode {
 
     state.filters.push(Filter {
       color: color::invert(),
-      field: Field::texture(TextureField::default().text(&c.to_string()).font_stack(
-        FontStack::Single(FontFamily::Named(Cow::Borrowed("Last Resort Private"))),
-      )),
+      field: Field::texture(
+        TextureField::default()
+          .text(c)
+          .font_stack(FontStack::Single(FontFamily::Named(Cow::Borrowed(
+            "Last Resort Private",
+          )))),
+      ),
       position_response: Transformation2 {
         scaling: Vec2f::new(0.975, 0.975),
         ..default()

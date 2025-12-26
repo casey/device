@@ -32,7 +32,7 @@ impl TextureField {
     self
   }
 
-  pub(crate) fn text(mut self, text: &str) -> Self {
+  pub(crate) fn text(mut self, text: impl Into<SmallString>) -> Self {
     self.text = text.into();
     self
   }
