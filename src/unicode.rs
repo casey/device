@@ -5,21 +5,12 @@ use {
 
 #[derive(Clone, Default)]
 pub(crate) struct Unicode {
-  index: u32,
   extra: u32,
+  index: u32,
 }
 
 impl Callback for Unicode {
   fn call(&mut self, state: &mut State, tick: Tick) {
-    let Some(position) = tick.advance() else {
-      return;
-    };
-
-    if position >= bbq(126, 4, 1) {
-      state.filters.clear();
-      return;
-    }
-
     const EXTRA: &[Position] = &[
       bbq(25, 3, 3),
       bbq(29, 3, 3),
@@ -48,6 +39,15 @@ impl Callback for Unicode {
       bbq(117, 3, 3),
       bbq(118, 3, 3),
     ];
+
+    let Some(position) = tick.advance() else {
+      return;
+    };
+
+    if position >= bbq(126, 4, 1) {
+      state.filters.clear();
+      return;
+    }
 
     let extra = EXTRA.contains(&position);
 
@@ -80,13 +80,7 @@ impl Callback for Unicode {
       }
     }
 
-    const COUNT: u32 = 376;
-
-    if self.index >= COUNT {
-      eprintln!("out!");
-    }
-
-    let codepoint = 0xE000 + self.index % COUNT;
+    let codepoint = 0xE000 + self.index % 376;
 
     let c = char::try_from(codepoint).unwrap();
 
