@@ -4,12 +4,12 @@ use {
 };
 
 #[derive(Clone, Default)]
-pub(crate) struct Unicode {
+pub(crate) struct AllNight {
   extra: u32,
   index: u32,
 }
 
-impl Callback for Unicode {
+impl Callback for AllNight {
   fn call(&mut self, state: &mut State, tick: Tick) {
     const EXTRA: &[Position] = &[
       bbq(25, 3, 3),

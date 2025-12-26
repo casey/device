@@ -1,7 +1,7 @@
-use {super::*, unicode::Unicode};
+use {super::*, all_night::AllNight};
 
+mod all_night;
 mod maria;
-mod unicode;
 
 #[derive(Clone, Copy, ValueEnum)]
 #[allow(clippy::arbitrary_source_item_ordering)]
@@ -13,7 +13,7 @@ pub(crate) enum Program {
   Transit,
   Radio,
   Maria,
-  Unicode,
+  AllNight,
 }
 
 impl Program {
@@ -41,7 +41,7 @@ impl Program {
         let track = tap.load_track(&config.find_song("total 4/13 maria")?)?;
         tap.sequence_track(&track, 0.0, 0.0);
       }
-      Self::Unicode => {
+      Self::AllNight => {
         let track = tap.load_track(&config.find_song("romare.*all night")?)?;
         tap.sequence_track(&track, 0.0, 0.0);
       }
@@ -74,8 +74,8 @@ impl Program {
         state.interpolate = true;
         state
       }
-      Self::Unicode => State {
-        callback: Some(Box::new(Unicode::default())),
+      Self::AllNight => State {
+        callback: Some(Box::new(AllNight::default())),
         ..default()
       },
     }
