@@ -80,9 +80,7 @@ impl Callback for AllNight {
       }
     }
 
-    let codepoint = 0xE000 + self.index % 376;
-
-    let c = char::try_from(codepoint).unwrap();
+    let c = (0xE000 + self.index % 376).try_into().unwrap();
 
     log::info!("codepoint: {}", Codepoint(c));
 
