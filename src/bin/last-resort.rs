@@ -26,8 +26,7 @@ impl Display for LastResort<'_> {
     )?;
 
     for (i, name) in self.glyphs.iter().enumerate() {
-      let codepoint = 0xE000 + i;
-      writeln!(f, r#"      <map code="0x{codepoint:x}" name="{name}"/>"#)?;
+      writeln!(f, r#"      <map code="0x{:x}" name="{name}"/>"#, 0xE000 + i)?;
     }
 
     writeln!(
