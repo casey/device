@@ -86,13 +86,13 @@ maria seed:
     --seed {{ seed }} \
     run
 
-unicode:
+all-night:
   cargo run \
     --release \
     -- \
     --width 3840 \
     --height 2160 \
-    --program unicode \
+    --program all-night \
     run
 
 maria-variations:
@@ -147,13 +147,13 @@ capture-maria:
     --verbose \
     capture
 
-capture-unicode:
+capture-all-night:
   cargo run \
     --release \
     -- \
     --width 3840 \
     --height 2160 \
-    --program unicode \
+    --program all-night \
     --verbose \
     capture
 
