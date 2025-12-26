@@ -1,4 +1,7 @@
-use super::*;
+use {super::*, unicode::Unicode};
+
+mod maria;
+mod unicode;
 
 #[derive(Clone, Copy, ValueEnum)]
 #[allow(clippy::arbitrary_source_item_ordering)]
@@ -72,7 +75,7 @@ impl Program {
         state
       }
       Self::Unicode => State {
-        callback: Some(Box::new(unicode::Unicode::default())),
+        callback: Some(Box::new(Unicode::default())),
         ..default()
       },
     }

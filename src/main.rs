@@ -194,7 +194,6 @@ mod input;
 mod interrupt;
 mod into_stereo;
 mod into_utf8_path;
-mod maria;
 mod message;
 mod mirror;
 mod mode;
@@ -235,7 +234,6 @@ mod to_affine;
 mod track;
 mod transformation2;
 mod transformation3;
-mod unicode;
 mod uniforms;
 mod window_attributes_ext;
 
