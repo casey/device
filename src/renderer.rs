@@ -14,6 +14,7 @@ pub(crate) struct Renderer {
   error_channel: mpsc::Receiver<wgpu::Error>,
   field_texture_bind_group_layout: BindGroupLayout,
   filter_pipeline: Pipeline,
+  filtering_clamp_to_border_sampler: Sampler,
   filtering_sampler: Sampler,
   font_context: FontContext,
   format: ImageFormat,
@@ -35,14 +36,6 @@ pub(crate) struct Renderer {
 
 impl Renderer {
   const COMPOSITE_UNIFORMS: usize = 3;
-
-  const FONT_STACK: FontStack<'static> = FontStack::List(Cow::Borrowed(&[
-    FontFamily::Named(Cow::Borrowed("Helvetica Neue")),
-    FontFamily::Generic(GenericFamily::SansSerif),
-    FontFamily::Named(Cow::Borrowed("Apple Symbols")),
-    FontFamily::Named(Cow::Borrowed("Zapf Dingbats")),
-    FontFamily::Named(Cow::Borrowed("Last Resort")),
-  ]));
 
   const IMAGE_SUBRESOURCE_RANGE_FULL: ImageSubresourceRange = ImageSubresourceRange {
     array_layer_count: None,
@@ -398,6 +391,10 @@ impl Renderer {
       entries: &[
         BindGroupEntry {
           binding: binding.next(),
+          resource: BindingResource::Sampler(&self.filtering_clamp_to_border_sampler),
+        },
+        BindGroupEntry {
+          binding: binding.next(),
           resource: BindingResource::Sampler(&self.filtering_sampler),
         },
         BindGroupEntry {
@@ -437,6 +434,12 @@ impl Renderer {
     let mut binding = Counter::default();
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
+        BindGroupLayoutEntry {
+          binding: binding.next(),
+          count: None,
+          ty: BindingType::Sampler(SamplerBindingType::Filtering),
+          visibility: ShaderStages::FRAGMENT,
+        },
         BindGroupLayoutEntry {
           binding: binding.next(),
           count: None,
@@ -604,6 +607,14 @@ impl Renderer {
       ..default()
     });
 
+    let filtering_clamp_to_border_sampler = device.create_sampler(&SamplerDescriptor {
+      address_mode_u: AddressMode::ClampToBorder,
+      address_mode_v: AddressMode::ClampToBorder,
+      mag_filter: FilterMode::Linear,
+      min_filter: FilterMode::Linear,
+      ..default()
+    });
+
     let limits = device.limits();
 
     let uniform_buffer_stride = |uniform_buffer_size| {
@@ -741,8 +752,9 @@ impl Renderer {
       composite_pipeline,
       device,
       error_channel,
-      filter_pipeline,
       field_texture_bind_group_layout,
+      filter_pipeline,
+      filtering_clamp_to_border_sampler,
       filtering_sampler,
       font_context: FontContext::new(),
       format,
@@ -912,7 +924,7 @@ impl Renderer {
           color: filter.color_uniform(response),
           coordinates: filter.coordinates,
           destination_offset: tiling.destination_offset(i),
-          field: filter.field,
+          field: filter.field.clone(),
           frequency_range,
           gain,
           grid: filter.grid,
@@ -1076,16 +1088,9 @@ impl Renderer {
       return Ok(());
     }
 
-    let Field::Texture(texture_field) = filter.field else {
+    let Field::Texture(field) = &filter.field else {
       return Ok(());
     };
-
-    let TextureField {
-      text,
-      scale,
-      weight,
-      position,
-    } = texture_field;
 
     self.vello_scene.reset();
 
@@ -1093,18 +1098,18 @@ impl Renderer {
       let mut builder =
         self
           .layout_context
-          .ranged_builder(&mut self.font_context, &text, 1.0, true);
+          .ranged_builder(&mut self.font_context, &field.text, 1.0, true);
       builder.push_default(StyleProperty::FontSize(font_size));
-      builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
-      builder.push_default(StyleProperty::FontWeight(weight));
-      let mut layout = builder.build(text);
+      builder.push_default(StyleProperty::FontStack(field.font_stack.clone()));
+      builder.push_default(StyleProperty::FontWeight(field.weight));
+      let mut layout = builder.build(field.text);
       layout.break_all_lines(None);
       layout
     };
 
     let font_size = {
       let layout = layout(1.0);
-      self.resolution.get() as f32 / layout.width().max(layout.height()) * scale
+      self.resolution.get() as f32 / layout.width().max(layout.height()) * field.scale
     };
 
     let mut layout = layout(font_size);
@@ -1123,8 +1128,8 @@ impl Renderer {
       let center = (resolution - layout.height() as f64) * 0.5;
 
       Vec2 {
-        x: resolution * 0.5 * f64::from(position.x),
-        y: center + resolution * 0.5 * f64::from(position.y),
+        x: resolution * 0.5 * f64::from(field.position.x),
+        y: center + resolution * 0.5 * f64::from(field.position.y),
       }
     };
 
@@ -1272,7 +1277,7 @@ impl Renderer {
       .layout_context
       .ranged_builder(&mut self.font_context, &text, 1.0, true);
     builder.push_default(StyleProperty::FontSize(font_size));
-    builder.push_default(StyleProperty::FontStack(Self::FONT_STACK));
+    builder.push_default(StyleProperty::FontStack(DEFAULT_FONT_STACK));
     builder.push_default(StyleProperty::FontWeight(FontWeight::LIGHT));
 
     let mut layout = builder.build(&text);

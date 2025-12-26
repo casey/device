@@ -2,6 +2,10 @@
 
 @group(0)
 @binding({{ binding.next() }})
+var filtering_clamp_to_border_sampler: sampler;
+
+@group(0)
+@binding({{ binding.next() }})
 var filtering_sampler: sampler;
 
 @group(0)
@@ -113,7 +117,7 @@ fn field_square(p: vec2f) -> bool {
 
 fn field_texture_sample(p: vec2f) -> f32 {
   let uv = p * 0.5 + 0.5;
-  return textureSample(field_texture_binding, non_filtering_sampler, uv).a;
+  return textureSample(field_texture_binding, filtering_clamp_to_border_sampler, uv).a;
 }
 
 fn field_texture(p: vec2f) -> bool {

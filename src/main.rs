@@ -12,6 +12,7 @@ use {
     callback::Callback,
     capture::Capture,
     capture_thread::CaptureThread,
+    codepoint::Codepoint,
     command::Command,
     command_entry::CommandEntry,
     command_ext::CommandExt,
@@ -92,7 +93,6 @@ use {
   nalgebra::{
     Rotation2, Translation2, Translation3, Unit, UnitQuaternion, Vector2, matrix, vector,
   },
-  ordered_float::OrderedFloat,
   parley::{FontContext, FontFamily, FontStack, FontWeight, GenericFamily, LayoutContext},
   rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
@@ -112,13 +112,14 @@ use {
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
-    ops::{Add, Bound, Deref, Range},
+    ops::{Add, Bound, Deref, Range, Sub},
     process::{self, ExitStatus, Stdio},
+    rc::Rc,
     str::FromStr,
     string::FromUtf8Error,
     sync::{
       Arc, LazyLock, Mutex,
-      atomic::{self, AtomicBool, AtomicUsize},
+      atomic::{self, AtomicBool, AtomicU64, AtomicUsize},
       mpsc,
     },
     thread::JoinHandle,
@@ -166,6 +167,7 @@ mod bool_ext;
 mod callback;
 mod capture;
 mod capture_thread;
+mod codepoint;
 mod color;
 mod command;
 mod command_entry;
@@ -192,7 +194,6 @@ mod input;
 mod interrupt;
 mod into_stereo;
 mod into_utf8_path;
-mod maria;
 mod message;
 mod mirror;
 mod mode;
@@ -242,6 +243,13 @@ const MIB: usize = KIB << 10;
 const AUDIO: &str = "audio.wav";
 const COLOR_CHANNELS: usize = 4;
 const DEFAULT_BUFFER_SIZE: u32 = 128;
+const DEFAULT_FONT_STACK: FontStack<'static> = FontStack::List(Cow::Borrowed(&[
+  FontFamily::Named(Cow::Borrowed("Helvetica Neue")),
+  FontFamily::Generic(GenericFamily::SansSerif),
+  FontFamily::Named(Cow::Borrowed("Apple Symbols")),
+  FontFamily::Named(Cow::Borrowed("Zapf Dingbats")),
+  FontFamily::Named(Cow::Borrowed("Last Resort")),
+]));
 const DEFAULT_FPS: NonZeroU32 = NonZeroU32::new(60).unwrap();
 const DEFAULT_RESOLUTION: NonZeroU32 = NonZeroU32::new(1024).unwrap();
 const RECORDING: &str = "recording.mp4";
@@ -250,12 +258,6 @@ const TIME: u64 = 4;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
 type SmallString = ArrayString<15>;
-type TextureFieldKey = (
-  Vector2<OrderedFloat<f32>>,
-  OrderedFloat<f32>,
-  ArrayString<15>,
-  OrderedFloat<f32>,
-);
 
 type Mat1x2f = nalgebra::Matrix1x2<f32>;
 type Mat2x3f = nalgebra::Matrix2x3<f32>;

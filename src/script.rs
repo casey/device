@@ -36,11 +36,7 @@ impl Script {
   }
 
   pub(crate) fn tick(&self, tick: Tick) -> &[CommandEntry] {
-    if !tick.advance() {
-      return default();
-    }
-
-    let Some(position) = tick.position else {
+    let Some(position) = tick.advance() else {
       return default();
     };
 

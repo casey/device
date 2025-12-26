@@ -1,11 +1,14 @@
 use super::*;
 
-#[derive(Clone, Copy, Debug, EnumIter, IntoStaticStr)]
+#[derive(Clone, Debug, Default, EnumIter, IntoStaticStr)]
 #[repr(u32)]
 pub(crate) enum Field {
+  #[default]
   All,
   Bottom,
-  Circle { radius: f32 },
+  Circle {
+    radius: f32,
+  },
   Cross,
   Frequencies,
   Left,
@@ -13,29 +16,22 @@ pub(crate) enum Field {
   Right,
   Samples,
   Square,
-  Texture(TextureField),
+  Texture(Rc<TextureField>),
   Top,
   Triangle,
   X,
 }
 
-#[allow(clippy::derivable_impls)]
-impl Default for Field {
-  fn default() -> Self {
-    Field::All
-  }
-}
-
 impl Field {
-  pub(crate) fn constant(self) -> String {
+  pub(crate) fn constant(&self) -> String {
     format!("FIELD_{}", self.name().to_uppercase())
   }
 
-  pub(crate) fn function(self) -> String {
+  pub(crate) fn function(&self) -> String {
     format!("field_{}", self.name().to_lowercase())
   }
 
-  pub(crate) fn icon(self) -> char {
+  pub(crate) fn icon(&self) -> char {
     match self {
       Self::All => 'A',
       Self::Bottom => 'B',
@@ -54,18 +50,22 @@ impl Field {
     }
   }
 
-  pub(crate) fn name(self) -> &'static str {
+  pub(crate) fn name(&self) -> &'static str {
     self.into()
   }
 
-  pub(crate) fn number(self) -> u32 {
-    unsafe { *(&raw const self).cast() }
+  pub(crate) fn number(&self) -> u32 {
+    unsafe { *(&raw const *self).cast() }
   }
 
-  pub(crate) fn parameter(self) -> f32 {
+  pub(crate) fn parameter(&self) -> f32 {
     match self {
-      Self::Circle { radius } => radius,
+      Self::Circle { radius } => *radius,
       _ => 0.0,
     }
+  }
+
+  pub(crate) fn texture(texture: TextureField) -> Self {
+    Self::Texture(Rc::new(texture))
   }
 }

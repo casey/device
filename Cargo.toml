@@ -8,13 +8,14 @@ homepage = "https://github.com/casey/device"
 include = ["/build.rs", "/src", "/templates"]
 license = "CC0-1.0"
 repository = "https://github.com/casey/device"
+default-run = "device"
 
 [package.metadata.bundle]
 name = "Device"
 identifier = "com.rodarmor.device"
 
 [dependencies]
-assert_float_eq = "1.2.0"
+anyhow = "1.0.100"
 boilerplate = { version = "1.1.0", features = ["reload"]}
 camino = { version = "1.2.1", features = ["serde1"] }
 clap = { version = "4.5.21", features = ["derive"] }
@@ -28,7 +29,6 @@ log = "0.4.22"
 midir = "0.10.1"
 midly = "0.5.3"
 nalgebra = "0.34.1"
-ordered-float = "5.1.0"
 parley = "0.7.0"
 png = "0.18.0"
 pollster = "0.4.0"
@@ -43,6 +43,7 @@ snafu = "0.8.5"
 strum = { version = "0.27.1", features = ["derive"] }
 tabled = "0.20.0"
 tempfile = "3.17.1"
+ucd-parse = "0.1.13"
 usized = { version = "0.0.2", default-features = false, features = ["64bit"] }
 vello = "0.6.0"
 walkdir = "2.5.0"
@@ -54,6 +55,7 @@ quote = "1.0.0"
 syn = "2.0.0"
 
 [dev-dependencies]
+assert_float_eq = "1.2.0"
 pretty_assertions = "1.0.0"
 tempfile = "3.17.1"
 

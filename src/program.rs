@@ -1,4 +1,7 @@
-use super::*;
+use {super::*, all_night::AllNight};
+
+mod all_night;
+mod maria;
 
 #[derive(Clone, Copy, ValueEnum)]
 #[allow(clippy::arbitrary_source_item_ordering)]
@@ -10,6 +13,7 @@ pub(crate) enum Program {
   Transit,
   Radio,
   Maria,
+  AllNight,
 }
 
 impl Program {
@@ -35,6 +39,10 @@ impl Program {
       }
       Self::Maria => {
         let track = tap.load_track(&config.find_song("total 4/13 maria")?)?;
+        tap.sequence_track(&track, 0.0, 0.0);
+      }
+      Self::AllNight => {
+        let track = tap.load_track(&config.find_song("romare.*all night")?)?;
         tap.sequence_track(&track, 0.0, 0.0);
       }
     }
@@ -66,6 +74,10 @@ impl Program {
         state.interpolate = true;
         state
       }
+      Self::AllNight => State {
+        callback: Some(Box::new(AllNight::default())),
+        ..default()
+      },
     }
   }
 }

@@ -2,7 +2,7 @@ use super::*;
 
 pub(crate) struct Resources {
   pub(crate) dummy_field_texture: BindGroup,
-  pub(crate) field_textures: HashMap<TextureFieldKey, BindGroup>,
+  pub(crate) field_textures: HashMap<u64, BindGroup>,
   pub(crate) overlay_bind_group: BindGroup,
   pub(crate) overlay_view: TextureView,
   pub(crate) pool: Arc<Mutex<Vec<Buffer>>>,

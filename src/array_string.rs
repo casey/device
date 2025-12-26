@@ -12,6 +12,14 @@ impl<const CAPACITY: usize> ArrayString<CAPACITY> {
   }
 }
 
+impl<const CAPACITY: usize> From<char> for ArrayString<CAPACITY> {
+  fn from(character: char) -> Self {
+    let mut array = [0; CAPACITY];
+    let size = character.encode_utf8(&mut array).len().try_into().unwrap();
+    Self { array, size }
+  }
+}
+
 impl<const CAPACITY: usize> From<&str> for ArrayString<CAPACITY> {
   fn from(s: &str) -> Self {
     let mut array = [0; CAPACITY];
