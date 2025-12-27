@@ -4,12 +4,16 @@ pub(crate) fn callback(config: &Config) -> Result<Box<dyn Callback>> {
   let path = &config.find_image(r"nichijou-principal-german-suplex-deer")?;
 
   let reader = BufReader::new(File::open(path).context(error::FilesystemIo { path })?);
-  let decoder = GifDecoder::new(reader).context(error::ImageDecode { path })?;
+  let decoder = GifDecoder::new(reader)
+    .map_err(Box::new)
+    .context(error::ImageDecode { path })?;
 
   let mut media = Vec::new();
 
   for frame in decoder.into_frames() {
-    let frame = frame.context(error::ImageDecode { path })?;
+    let frame = frame
+      .map_err(Box::new)
+      .context(error::ImageDecode { path })?;
     let buffer = frame.into_buffer();
     let width = buffer.width();
     let height = buffer.height();

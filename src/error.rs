@@ -153,7 +153,7 @@ pub(crate) enum Error {
   ImageDecode {
     backtrace: Option<Backtrace>,
     path: Utf8PathBuf,
-    source: ::image::ImageError,
+    source: Box<::image::ImageError>,
   },
   #[snafu(display("no images directory configured"))]
   Images { backtrace: Option<Backtrace> },
