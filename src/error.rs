@@ -149,6 +149,12 @@ pub(crate) enum Error {
   },
   #[snafu(display("could not get home directory"))]
   Home { backtrace: Option<Backtrace> },
+  #[snafu(display("failed to decode image"))]
+  ImageDecode {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: ::image::ImageError,
+  },
   #[snafu(display("no images directory configured"))]
   Images { backtrace: Option<Backtrace> },
   #[snafu(display("internal error: {message}"))]

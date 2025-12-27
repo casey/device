@@ -91,15 +91,15 @@ impl Program {
         ..default()
       },
       Self::Suplex => {
-        let path = config.find_image(r"nichijou-principal-german-suplex-deer")?;
+        let path = &config.find_image(r"nichijou-principal-german-suplex-deer")?;
 
-        let reader = BufReader::new(File::open(&path).context(error::FilesystemIo { path })?);
-        let decoder = GifDecoder::new(reader).unwrap();
+        let reader = BufReader::new(File::open(path).context(error::FilesystemIo { path })?);
+        let decoder = GifDecoder::new(reader).context(error::ImageDecode { path })?;
 
         let mut media = Vec::new();
 
         for frame in decoder.into_frames() {
-          let frame = frame.unwrap();
+          let frame = frame.context(error::ImageDecode { path })?;
           let buffer = frame.into_buffer();
 
           let width = buffer.width();
