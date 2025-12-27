@@ -120,8 +120,6 @@ impl Capture {
 
       tap.write(&mut samples);
 
-      let last = tap.position();
-
       let sound = tap.drain();
       analyzer.update(&sound, done, &state);
       renderer.render(&analyzer, &state, None)?;
@@ -141,15 +139,7 @@ impl Capture {
 
       history.tick(&mut state);
 
-      let position = tap.position();
-
-      let tick = Tick {
-        dt: fps.dt(),
-        last,
-        position,
-        tempo: tap.tempo(),
-        time: tap.time(),
-      };
+      let tick = tap.tick(fps.dt());
 
       if let Some(script) = &script {
         for CommandEntry { name, command } in script.tick(tick) {

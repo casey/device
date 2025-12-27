@@ -18,6 +18,7 @@ pub(crate) struct Tap {
   backend: Arc<Mutex<Backend>>,
   done: f64,
   format: SoundFormat,
+  last: Option<Position>,
   muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
   sequencer: Sequencer,
@@ -142,6 +143,7 @@ impl Tap {
         channels: Self::CHANNELS,
         sample_rate,
       },
+      last: None,
       muted,
       paused,
       sequencer,
@@ -159,7 +161,7 @@ impl Tap {
     self.paused.store(false, atomic::Ordering::Relaxed);
   }
 
-  pub(crate) fn position(&self) -> Option<Position> {
+  fn position(&self) -> Option<Position> {
     let tempo = self.tempo?;
 
     if self.time < tempo.offset {
@@ -242,12 +244,17 @@ impl Tap {
     Ok(())
   }
 
-  pub(crate) fn tempo(&self) -> Option<Tempo> {
-    self.tempo
-  }
-
-  pub(crate) fn time(&self) -> f64 {
-    self.time
+  pub(crate) fn tick(&mut self, dt: Duration) -> Tick {
+    let last = self.last;
+    let position = self.position();
+    self.last = position;
+    Tick {
+      dt,
+      last,
+      position,
+      tempo: self.tempo,
+      time: self.time,
+    }
   }
 
   pub(crate) fn toggle_muted(&self) {

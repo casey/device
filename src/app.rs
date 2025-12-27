@@ -356,8 +356,6 @@ impl App {
 
     self.process_messages(event_loop);
 
-    let last = self.tap.position();
-
     let sound = if let Some(input) = &self.input {
       input.drain_exact(self.spf)
     } else {
@@ -399,13 +397,7 @@ impl App {
 
     self.history.tick(&mut self.state);
 
-    let tick = Tick {
-      dt,
-      last,
-      position: self.tap.position(),
-      tempo: self.tap.tempo(),
-      time: self.tap.time(),
-    };
+    let tick = self.tap.tick(dt);
 
     let commands = self
       .script
