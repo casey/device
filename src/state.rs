@@ -155,6 +155,10 @@ impl State {
     self
   }
 
+  pub(crate) fn new() -> Self {
+    Self::default()
+  }
+
   pub(crate) fn none(&mut self) -> &mut Self {
     self.filter.field = Field::None;
     self
@@ -241,12 +245,14 @@ impl State {
     text: &str,
     weight: FontWeight,
   ) -> &mut Self {
-    self.filter.field = Field::texture(
-      TextureField::default()
+    self.filter.field = Field::Texture;
+    self.filter.media = Some(
+      Media::new()
         .position(position)
         .scale(scale)
         .text(text)
-        .weight(weight),
+        .weight(weight)
+        .into(),
     );
     self
   }

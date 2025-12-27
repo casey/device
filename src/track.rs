@@ -1,6 +1,6 @@
 use super::*;
 
 pub(crate) struct Track {
-  pub(crate) audio: Arc<Wave>,
   pub(crate) tempo: Tempo,
+  pub(crate) wave: Arc<Wave>,
 }

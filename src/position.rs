@@ -32,6 +32,10 @@ impl Position {
     Self { quarter }
   }
 
+  pub(crate) const fn is_phrase(self) -> bool {
+    self.quarter.is_multiple_of(32)
+  }
+
   pub(crate) const fn quarter(self) -> u64 {
     self.quarter
   }

@@ -18,6 +18,7 @@ pub(crate) struct Tap {
   backend: Arc<Mutex<Backend>>,
   done: f64,
   format: SoundFormat,
+  last: Option<Position>,
   muted: Arc<AtomicBool>,
   paused: Arc<AtomicBool>,
   sequencer: Sequencer,
@@ -59,8 +60,8 @@ impl Tap {
 
   pub(crate) fn load_track(&self, path: &Utf8Path) -> Result<Track> {
     Ok(Track {
-      audio: self.load_wave(path)?,
       tempo: Tempo::detect(path)?,
+      wave: self.load_wave(path)?,
     })
   }
 
@@ -142,6 +143,7 @@ impl Tap {
         channels: Self::CHANNELS,
         sample_rate,
       },
+      last: None,
       muted,
       paused,
       sequencer,
@@ -159,7 +161,7 @@ impl Tap {
     self.paused.store(false, atomic::Ordering::Relaxed);
   }
 
-  pub(crate) fn position(&self) -> Option<Position> {
+  fn position(&self) -> Option<Position> {
     let tempo = self.tempo?;
 
     if self.time < tempo.offset {
@@ -167,7 +169,7 @@ impl Tap {
     }
 
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    let quarter = ((self.time - tempo.offset) / 60.0 * tempo.bpm * 4.0) as u64;
+    let quarter = (tempo.beats(self.time) * 4.0) as u64;
 
     Some(Position::from_quarter(quarter))
   }
@@ -188,7 +190,7 @@ impl Tap {
   }
 
   pub(crate) fn sequence_track(&mut self, track: &Track, fade_in: f64, fade_out: f64) {
-    self.sequence_wave(&track.audio, fade_in, fade_out);
+    self.sequence_wave(&track.wave, fade_in, fade_out);
     self.tempo = Some(Tempo {
       bpm: track.tempo.bpm,
       offset: self.time + track.tempo.offset,
@@ -240,6 +242,19 @@ impl Tap {
     );
 
     Ok(())
+  }
+
+  pub(crate) fn tick(&mut self, dt: Duration) -> Tick {
+    let last = self.last;
+    let position = self.position();
+    self.last = position;
+    Tick {
+      dt,
+      last,
+      position,
+      tempo: self.tempo,
+      time: self.time,
+    }
   }
 
   pub(crate) fn toggle_muted(&self) {

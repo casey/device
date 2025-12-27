@@ -9,6 +9,12 @@ pub(crate) struct AllNight {
   index: u32,
 }
 
+impl AllNight {
+  pub(crate) fn new() -> Self {
+    Self::default()
+  }
+}
+
 impl Callback for AllNight {
   fn call(&mut self, state: &mut State, tick: Tick) {
     const EXTRA: &[Position] = &[
@@ -93,12 +99,14 @@ impl Callback for AllNight {
 
     state.filters.push(Filter {
       color: color::invert(),
-      field: Field::texture(
-        TextureField::default()
+      field: Field::Texture,
+      media: Some(
+        Media::new()
           .text(c)
           .font_stack(FontStack::Single(FontFamily::Named(Cow::Borrowed(
             "Last Resort Private",
-          )))),
+          ))))
+          .handle(),
       ),
       position_response: Transformation2 {
         scaling: Vec2f::new(0.975, 0.975),

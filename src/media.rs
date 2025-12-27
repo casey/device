@@ -1,25 +1,32 @@
 use super::*;
 
-static KEY: AtomicU64 = AtomicU64::new(0);
-
 #[derive(Debug)]
-pub(crate) struct TextureField {
+pub(crate) struct Media {
   pub(crate) font_stack: FontStack<'static>,
-  key: u64,
+  pub(crate) image: Option<ImageData>,
   pub(crate) position: Vec2f,
   pub(crate) scale: f32,
-  pub(crate) text: SmallString,
+  pub(crate) text: String,
   pub(crate) weight: FontWeight,
 }
 
-impl TextureField {
+impl Media {
   pub(crate) fn font_stack(mut self, font_stack: FontStack<'static>) -> Self {
     self.font_stack = font_stack;
     self
   }
 
-  pub(crate) fn key(&self) -> u64 {
-    self.key
+  pub(crate) fn handle(self) -> MediaHandle {
+    self.into()
+  }
+
+  pub(crate) fn image(mut self, image: ImageData) -> Self {
+    self.image = Some(image);
+    self
+  }
+
+  pub(crate) fn new() -> Self {
+    Self::default()
   }
 
   pub(crate) fn position(mut self, position: Vec2f) -> Self {
@@ -32,7 +39,7 @@ impl TextureField {
     self
   }
 
-  pub(crate) fn text(mut self, text: impl Into<SmallString>) -> Self {
+  pub(crate) fn text(mut self, text: impl Into<String>) -> Self {
     self.text = text.into();
     self
   }
@@ -43,14 +50,14 @@ impl TextureField {
   }
 }
 
-impl Default for TextureField {
+impl Default for Media {
   fn default() -> Self {
     Self {
       font_stack: DEFAULT_FONT_STACK,
-      key: KEY.fetch_add(1, atomic::Ordering::Relaxed),
-      position: Vec2f::zeros(),
+      image: None,
+      position: Vec2f::default(),
       scale: 1.0,
-      text: "".into(),
+      text: String::new(),
       weight: FontWeight::NORMAL,
     }
   }

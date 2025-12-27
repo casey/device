@@ -22,6 +22,10 @@ impl Script {
     self.commands.values().flatten().copied()
   }
 
+  pub(crate) fn new() -> Self {
+    Self::default()
+  }
+
   pub(crate) fn on(&mut self, position: Position, entry: CommandEntry) {
     self.commands.entry(position).or_default().push(entry);
   }

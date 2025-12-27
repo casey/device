@@ -63,7 +63,7 @@ impl Test {
       height: None,
       name,
       resolution: None,
-      state: State::default(),
+      state: State::new(),
       width: None,
     }
   }
@@ -143,7 +143,7 @@ impl Test {
 #[ignore]
 #[cfg(false)]
 fn mirror_tile() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .left()
@@ -164,7 +164,7 @@ fn mirror_tile() {
 #[ignore]
 #[cfg(false)]
 fn zoom_tile() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .x()
@@ -183,7 +183,7 @@ fn zoom_tile() {
 #[test]
 #[ignore]
 fn all() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().all().push();
   Test::new(name!()).state(state).run();
 }
@@ -191,8 +191,9 @@ fn all() {
 #[test]
 #[ignore]
 fn blend_mode_source() {
-  let mut state = State::default();
-  state.filter.field = Field::texture(TextureField::default().text("😀"));
+  let mut state = State::new();
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(Media::new().text("😀").into());
   state.filter.blend_mode = BlendMode::Source;
   state.push();
   Test::new(name!()).state(state).run();
@@ -201,8 +202,9 @@ fn blend_mode_source() {
 #[test]
 #[ignore]
 fn blend_mode_source_invert() {
-  let mut state = State::default();
-  state.filter.field = Field::texture(TextureField::default().text("😀"));
+  let mut state = State::new();
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(Media::new().text("😀").into());
   state.filter.blend_mode = BlendMode::Source;
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -211,7 +213,7 @@ fn blend_mode_source_invert() {
 #[test]
 #[ignore]
 fn circle() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().circle().push();
   Test::new(name!()).state(state).run();
 }
@@ -219,7 +221,7 @@ fn circle() {
 #[test]
 #[ignore]
 fn circle_medium_even() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().circle().push();
   Test::new(name!()).resolution(32).state(state).run();
 }
@@ -227,7 +229,7 @@ fn circle_medium_even() {
 #[test]
 #[ignore]
 fn circle_medium_odd() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().circle().push();
   Test::new(name!()).resolution(31).state(state).run();
 }
@@ -235,7 +237,7 @@ fn circle_medium_odd() {
 #[test]
 #[ignore]
 fn circle_scale() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().circle().scale(2.0).times(2);
   Test::new(name!()).state(state).run();
 }
@@ -243,7 +245,7 @@ fn circle_scale() {
 #[test]
 #[ignore]
 fn circle_scale_interpolated() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .circle()
@@ -256,7 +258,7 @@ fn circle_scale_interpolated() {
 #[test]
 #[ignore]
 fn circle_small_even() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().circle().push();
   Test::new(name!()).resolution(10).state(state).run();
 }
@@ -264,7 +266,7 @@ fn circle_small_even() {
 #[test]
 #[ignore]
 fn circle_small_odd() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().circle().push();
   Test::new(name!()).resolution(9).state(state).run();
 }
@@ -272,7 +274,7 @@ fn circle_small_odd() {
 #[test]
 #[ignore]
 fn coordinates() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.coordinates(true).all().push();
   Test::new(name!()).state(state).run();
 }
@@ -280,7 +282,7 @@ fn coordinates() {
 #[test]
 #[ignore]
 fn cross() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().cross().push();
   Test::new(name!()).state(state).run();
 }
@@ -288,13 +290,13 @@ fn cross() {
 #[test]
 #[ignore]
 fn default_state() {
-  Test::new(name!()).state(State::default()).run();
+  Test::new(name!()).state(State::new()).run();
 }
 
 #[test]
 #[ignore]
 fn left() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().left().push();
   Test::new(name!()).state(state).run();
 }
@@ -302,7 +304,7 @@ fn left() {
 #[test]
 #[ignore]
 fn left_top() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().left().push().top().push();
   Test::new(name!()).state(state).run();
 }
@@ -310,7 +312,7 @@ fn left_top() {
 #[test]
 #[ignore]
 fn mirror_x() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .left()
@@ -327,7 +329,7 @@ fn mirror_x() {
 #[test]
 #[ignore]
 fn mirror_x_inverse() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .left()
@@ -344,7 +346,7 @@ fn mirror_x_inverse() {
 #[test]
 #[ignore]
 fn mirror_xy() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .left()
@@ -362,7 +364,7 @@ fn mirror_xy() {
 #[test]
 #[ignore]
 fn mirror_xy_field() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .left()
@@ -379,7 +381,7 @@ fn mirror_xy_field() {
 #[test]
 #[ignore]
 fn mirror_y() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .left()
@@ -396,7 +398,7 @@ fn mirror_y() {
 #[test]
 #[ignore]
 fn mirror_y_inverse() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .left()
@@ -413,7 +415,7 @@ fn mirror_y_inverse() {
 #[test]
 #[ignore]
 fn none() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().none().push();
   Test::new(name!()).state(state).run();
 }
@@ -429,7 +431,7 @@ fn presets() {
   }
   let mut errors = Vec::new();
   for preset in Preset::iter() {
-    let mut state = State::default();
+    let mut state = State::new();
     let mut rng = SmallRng::from_seed(default());
     state.filters.push(Preset::Grid.filter(&mut rng));
     state.filters.push(preset.filter(&mut rng));
@@ -450,7 +452,7 @@ fn presets() {
 #[test]
 #[ignore]
 fn rotate_blue() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.rotate_color(Axis::Blue, TAU / 2.0).all().push();
   Test::new(name!()).state(state).run();
 }
@@ -458,7 +460,7 @@ fn rotate_blue() {
 #[test]
 #[ignore]
 fn rotate_green() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.rotate_color(Axis::Green, TAU / 2.0).all().push();
   Test::new(name!()).state(state).run();
 }
@@ -466,7 +468,7 @@ fn rotate_green() {
 #[test]
 #[ignore]
 fn rotate_red() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.rotate_color(Axis::Red, TAU / 2.0).all().push();
   Test::new(name!()).state(state).run();
 }
@@ -474,7 +476,7 @@ fn rotate_red() {
 #[test]
 #[ignore]
 fn rotation() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .rotation(TAU)
     .rms(Mat1x2f::new(0.0, 0.1))
@@ -487,7 +489,7 @@ fn rotation() {
 #[test]
 #[ignore]
 fn sampling_repeat_off() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .repeat(false)
     .rotate_position(0.2 * TAU)
@@ -501,7 +503,7 @@ fn sampling_repeat_off() {
 #[test]
 #[ignore]
 fn sampling_repeat_on() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .repeat(true)
     .rotate_position(0.2 * TAU)
@@ -541,7 +543,7 @@ fn scenes() {
 #[test]
 #[ignore]
 fn square() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().square().push();
   Test::new(name!()).state(state).run();
 }
@@ -572,8 +574,9 @@ fn status_capture() {
 #[test]
 #[ignore]
 fn texture() {
-  let mut state = State::default();
-  state.filter.field = Field::texture(TextureField::default().text("A"));
+  let mut state = State::new();
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(Media::new().text("A").into());
   state.invert().push();
   Test::new(name!()).state(state).run();
 }
@@ -581,12 +584,14 @@ fn texture() {
 #[test]
 #[ignore]
 fn texture_bottom() {
-  let mut state = State::default();
-  state.filter.field = Field::texture(
-    TextureField::default()
+  let mut state = State::new();
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(
+    Media::new()
       .text("A")
       .position(Vec2f::new(0.0, 0.5))
-      .scale(0.5),
+      .scale(0.5)
+      .into(),
   );
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -595,12 +600,14 @@ fn texture_bottom() {
 #[test]
 #[ignore]
 fn texture_left() {
-  let mut state = State::default();
-  state.filter.field = Field::texture(
-    TextureField::default()
+  let mut state = State::new();
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(
+    Media::new()
       .position(Vec2f::new(-0.5, 0.0))
       .scale(0.5)
-      .text("A"),
+      .text("A")
+      .into(),
   );
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -609,12 +616,14 @@ fn texture_left() {
 #[test]
 #[ignore]
 fn texture_right() {
-  let mut state = State::default();
-  state.filter.field = Field::texture(
-    TextureField::default()
+  let mut state = State::new();
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(
+    Media::new()
       .position(Vec2f::new(0.5, 0.0))
       .scale(0.5)
-      .text("A"),
+      .text("A")
+      .into(),
   );
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -623,8 +632,9 @@ fn texture_right() {
 #[test]
 #[ignore]
 fn texture_small() {
-  let mut state = State::default();
-  state.filter.field = Field::texture(TextureField::default().scale(0.5).text("A"));
+  let mut state = State::new();
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(Media::new().scale(0.5).text("A").into());
   state.invert().push();
   Test::new(name!()).state(state).run();
 }
@@ -632,12 +642,14 @@ fn texture_small() {
 #[test]
 #[ignore]
 fn texture_top() {
-  let mut state = State::default();
-  state.filter.field = Field::texture(
-    TextureField::default()
+  let mut state = State::new();
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(
+    Media::new()
       .position(Vec2f::new(0.0, -0.5))
       .scale(0.5)
-      .text("A"),
+      .text("A")
+      .into(),
   );
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -646,7 +658,7 @@ fn texture_top() {
 #[test]
 #[ignore]
 fn tile() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .invert()
     .x()
@@ -670,7 +682,7 @@ fn tile() {
 #[test]
 #[ignore]
 fn triangle() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().triangle().push();
   Test::new(name!()).state(state).run();
 }
@@ -678,7 +690,7 @@ fn triangle() {
 #[test]
 #[ignore]
 fn x() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   Test::new(name!()).state(state).run();
 }
@@ -686,7 +698,7 @@ fn x() {
 #[test]
 #[ignore]
 fn x_medium_even() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   Test::new(name!()).resolution(32).state(state).run();
 }
@@ -694,7 +706,7 @@ fn x_medium_even() {
 #[test]
 #[ignore]
 fn x_medium_odd() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   Test::new(name!()).resolution(31).state(state).run();
 }
@@ -702,7 +714,7 @@ fn x_medium_odd() {
 #[test]
 #[ignore]
 fn x_scale() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.repeat(false).invert().x().scale(2.0).times(2);
   Test::new(name!()).state(state).run();
 }
@@ -710,7 +722,7 @@ fn x_scale() {
 #[test]
 #[ignore]
 fn x_scale_interpolated() {
-  let mut state = State::default();
+  let mut state = State::new();
   state
     .repeat(false)
     .invert()
@@ -723,7 +735,7 @@ fn x_scale_interpolated() {
 #[test]
 #[ignore]
 fn x_scale_repeat() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.repeat(true).invert().x().scale(2.0).times(2);
   Test::new(name!()).state(state).run();
 }
@@ -731,7 +743,7 @@ fn x_scale_repeat() {
 #[test]
 #[ignore]
 fn x_small_even() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   Test::new(name!()).resolution(10).state(state).run();
 }
@@ -739,7 +751,7 @@ fn x_small_even() {
 #[test]
 #[ignore]
 fn x_small_odd() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   Test::new(name!()).resolution(9).state(state).run();
 }
@@ -747,7 +759,7 @@ fn x_small_odd() {
 #[test]
 #[ignore]
 fn x_tall() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   Test::new(name!()).width(128).height(256).state(state).run();
 }
@@ -755,7 +767,7 @@ fn x_tall() {
 #[test]
 #[ignore]
 fn x_tall_fit() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   state.fit = true;
   Test::new(name!()).width(128).height(256).state(state).run();
@@ -764,7 +776,7 @@ fn x_tall_fit() {
 #[test]
 #[ignore]
 fn x_wide() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   Test::new(name!()).width(256).height(128).state(state).run();
 }
@@ -772,7 +784,7 @@ fn x_wide() {
 #[test]
 #[ignore]
 fn x_wide_fit() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.invert().x().push();
   state.fit = true;
   Test::new(name!()).width(256).height(128).state(state).run();
@@ -781,7 +793,7 @@ fn x_wide_fit() {
 #[test]
 #[ignore]
 fn zero_base() {
-  let mut state = State::default();
+  let mut state = State::new();
   state.filters.push(Filter {
     field: Field::X,
     color: color::invert(),

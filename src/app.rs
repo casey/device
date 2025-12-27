@@ -237,7 +237,7 @@ impl App {
 
     let mut rng = options.rng();
 
-    let state = options.state(&mut rng);
+    let state = options.state(&config, &mut rng)?;
 
     let now = Instant::now();
 
@@ -356,8 +356,6 @@ impl App {
 
     self.process_messages(event_loop);
 
-    let last = self.tap.position();
-
     let sound = if let Some(input) = &self.input {
       input.drain_exact(self.spf)
     } else {
@@ -399,11 +397,7 @@ impl App {
 
     self.history.tick(&mut self.state);
 
-    let tick = Tick {
-      position: self.tap.position(),
-      dt,
-      last,
-    };
+    let tick = self.tap.tick(dt);
 
     let commands = self
       .script

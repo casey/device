@@ -122,8 +122,41 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: io::Error,
   },
+  #[snafu(
+    display(
+      "more than one file found: {}",
+      matches.iter().map(ToString::to_string).collect::<Vec<String>>().join(", ")
+    )
+  )]
+  FindAmbiguous {
+    backtrace: Option<Backtrace>,
+    matches: Vec<Utf8PathBuf>,
+  },
+  #[snafu(display("could not find files matching pattern `{pattern}`"))]
+  FindMatch {
+    backtrace: Option<Backtrace>,
+    pattern: String,
+  },
+  #[snafu(display("invalid find regex"))]
+  FindRegex {
+    backtrace: Option<Backtrace>,
+    source: regex::Error,
+  },
+  #[snafu(display("I/O error while searching"))]
+  FindWalk {
+    backtrace: Option<Backtrace>,
+    source: walkdir::Error,
+  },
   #[snafu(display("could not get home directory"))]
   Home { backtrace: Option<Backtrace> },
+  #[snafu(display("failed to decode image"))]
+  ImageDecode {
+    backtrace: Option<Backtrace>,
+    path: Utf8PathBuf,
+    source: Box<::image::ImageError>,
+  },
+  #[snafu(display("no images directory configured"))]
+  Images { backtrace: Option<Backtrace> },
   #[snafu(display("internal error: {message}"))]
   Internal {
     backtrace: Option<Backtrace>,
@@ -263,31 +296,6 @@ pub(crate) enum Error {
   SignalRegister {
     backtrace: Option<Backtrace>,
     source: io::Error,
-  },
-  #[snafu(
-    display(
-      "more than one match for song: {}",
-      matches.iter().map(ToString::to_string).collect::<Vec<String>>().join(", ")
-    )
-  )]
-  SongAmbiguous {
-    backtrace: Option<Backtrace>,
-    matches: Vec<Utf8PathBuf>,
-  },
-  #[snafu(display("could not match song `{song}`"))]
-  SongMatch {
-    backtrace: Option<Backtrace>,
-    song: Regex,
-  },
-  #[snafu(display("invalid song regex"))]
-  SongRegex {
-    backtrace: Option<Backtrace>,
-    source: regex::Error,
-  },
-  #[snafu(display("I/O error finding song"))]
-  SongWalk {
-    backtrace: Option<Backtrace>,
-    source: walkdir::Error,
   },
   #[snafu(display("I/O error creating tempdir"))]
   TempdirIo {

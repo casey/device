@@ -3,6 +3,7 @@ use super::*;
 #[derive(Default, Deserialize)]
 pub(crate) struct Config {
   captures: Option<Utf8PathBuf>,
+  images: Option<Utf8PathBuf>,
   music: Option<Utf8PathBuf>,
 }
 
@@ -26,18 +27,16 @@ impl Config {
     }
   }
 
-  pub(crate) fn find_song(&self, song: &str) -> Result<Utf8PathBuf> {
-    let song = RegexBuilder::new(song)
+  fn find(dir: &Utf8Path, pattern: &str) -> Result<Utf8PathBuf> {
+    let regex = RegexBuilder::new(pattern)
       .case_insensitive(true)
       .build()
-      .context(error::SongRegex)?;
+      .context(error::FindRegex)?;
 
     let mut matches = Vec::<Utf8PathBuf>::new();
 
-    let music = self.music()?;
-
-    for entry in WalkDir::new(music) {
-      let entry = entry.context(error::SongWalk)?;
+    for entry in WalkDir::new(dir) {
+      let entry = entry.context(error::FindWalk)?;
 
       if entry.file_type().is_dir() {
         continue;
@@ -45,25 +44,33 @@ impl Config {
 
       let path = entry.path();
 
-      let haystack = path.strip_prefix(music).unwrap().with_extension("");
+      let haystack = path.strip_prefix(dir).unwrap().with_extension("");
 
       let Some(haystack) = haystack.to_str() else {
         continue;
       };
 
-      if song.is_match(haystack) {
+      if regex.is_match(haystack) {
         matches.push(path.into_utf8_path()?.into());
       }
     }
 
     if matches.len() > 1 {
-      return Err(error::SongAmbiguous { matches }.build());
+      return Err(error::FindAmbiguous { matches }.build());
     }
 
     match matches.into_iter().next() {
       Some(path) => Ok(path),
-      None => Err(error::SongMatch { song }.build()),
+      None => Err(error::FindMatch { pattern }.build()),
     }
+  }
+
+  pub(crate) fn find_image(&self, pattern: &str) -> Result<Utf8PathBuf> {
+    Self::find(self.images()?, pattern)
+  }
+
+  pub(crate) fn find_song(&self, pattern: &str) -> Result<Utf8PathBuf> {
+    Self::find(self.music()?, pattern)
   }
 
   fn home() -> Result<Utf8PathBuf> {
@@ -73,6 +80,10 @@ impl Config {
         .into_utf8_path()?
         .to_owned(),
     )
+  }
+
+  pub(crate) fn images(&self) -> Result<&Utf8Path> {
+    self.images.as_deref().context(error::Images)
   }
 
   pub(crate) fn load() -> Result<Self> {

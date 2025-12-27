@@ -145,7 +145,7 @@ impl Renderer {
     source: &TextureView,
     source_sampler: &Sampler,
   ) -> BindGroup {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.composite_pipeline.bind_group_layout,
       entries: &[
@@ -186,7 +186,7 @@ impl Renderer {
     device: &wgpu::Device,
     uniform_buffer_size: u32,
   ) -> BindGroupLayout {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
         BindGroupLayoutEntry {
@@ -351,7 +351,7 @@ impl Renderer {
   }
 
   fn field_texture_bind_group(&self, filter: &TextureView) -> BindGroup {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.field_texture_bind_group_layout,
       entries: &[BindGroupEntry {
@@ -363,7 +363,7 @@ impl Renderer {
   }
 
   fn field_texture_bind_group_layout(device: &wgpu::Device) -> BindGroupLayout {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[BindGroupLayoutEntry {
         binding: binding.next(),
@@ -385,7 +385,7 @@ impl Renderer {
     source: &TextureView,
     samples: &TextureView,
   ) -> BindGroup {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.filter_pipeline.bind_group_layout,
       entries: &[
@@ -431,7 +431,7 @@ impl Renderer {
   }
 
   fn filter_bind_group_layout(device: &wgpu::Device, uniform_buffer_size: u32) -> BindGroupLayout {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
         BindGroupLayoutEntry {
@@ -1013,7 +1013,7 @@ impl Renderer {
     let mut destination = 1;
     for filter in 0..filters {
       let texture_bind_group =
-        if let Some(key) = state.filters.get(filter).and_then(Filter::texture_key) {
+        if let Some(key) = state.filters.get(filter).and_then(Filter::media_key) {
           self.resources().field_textures.get(&key).unwrap()
         } else {
           &self.resources().dummy_field_texture
@@ -1077,11 +1077,11 @@ impl Renderer {
     use {
       kurbo::{Affine, Vec2},
       parley::{Alignment, AlignmentOptions, PositionedLayoutItem, StyleProperty},
-      peniko::{Brush, Color, Fill},
+      peniko::{Brush, Color, Fill, ImageBrush, ImageQuality, ImageSampler},
       vello::{AaConfig, RenderParams},
     };
 
-    let Some(key) = filter.texture_key() else {
+    let Some(key) = filter.media_key() else {
       return Ok(());
     };
 
@@ -1089,9 +1089,11 @@ impl Renderer {
       return Ok(());
     }
 
-    let Field::Texture(field) = &filter.field else {
+    let Some(handle) = &filter.media else {
       return Ok(());
     };
+
+    let media = handle.media();
 
     self.vello_scene.reset();
 
@@ -1099,18 +1101,18 @@ impl Renderer {
       let mut builder =
         self
           .layout_context
-          .ranged_builder(&mut self.font_context, &field.text, 1.0, true);
+          .ranged_builder(&mut self.font_context, &media.text, 1.0, true);
       builder.push_default(StyleProperty::FontSize(font_size));
-      builder.push_default(StyleProperty::FontStack(field.font_stack.clone()));
-      builder.push_default(StyleProperty::FontWeight(field.weight));
-      let mut layout = builder.build(field.text);
+      builder.push_default(StyleProperty::FontStack(media.font_stack.clone()));
+      builder.push_default(StyleProperty::FontWeight(media.weight));
+      let mut layout = builder.build(&media.text);
       layout.break_all_lines(None);
       layout
     };
 
     let font_size = {
       let layout = layout(1.0);
-      self.resolution.get() as f32 / layout.width().max(layout.height()) * field.scale
+      self.resolution.get() as f32 / layout.width().max(layout.height()) * media.scale
     };
 
     let mut layout = layout(font_size);
@@ -1129,8 +1131,8 @@ impl Renderer {
       let center = (resolution - layout.height() as f64) * 0.5;
 
       Vec2 {
-        x: resolution * 0.5 * f64::from(field.position.x),
-        y: center + resolution * 0.5 * f64::from(field.position.y),
+        x: resolution * 0.5 * f64::from(media.position.x),
+        y: center + resolution * 0.5 * f64::from(media.position.y),
       }
     };
 
@@ -1165,6 +1167,23 @@ impl Renderer {
           }
         }
       }
+    }
+
+    if let Some(image) = &media.image {
+      let resolution = self.resolution.get() as f64;
+      let width = f64::from(image.width);
+      let height = f64::from(image.height);
+      let scale = (resolution / width).min(resolution / height);
+      self.vello_scene.draw_image(
+        ImageBrush {
+          image,
+          sampler: ImageSampler::new().with_quality(ImageQuality::High),
+        },
+        Affine::scale(scale).then_translate(Vec2 {
+          x: (resolution - width * scale) * 0.5,
+          y: (resolution - height * scale) * 0.5,
+        }),
+      );
     }
 
     log::info!("allocating new field texture");

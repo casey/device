@@ -10,7 +10,7 @@ pub(crate) fn run() -> Result {
     Size::new(resolution, resolution),
     None,
   ))?
-  .render(&Analyzer::new(), &State::default(), None)?;
+  .render(&Analyzer::new(), &State::new(), None)?;
 
   print!("{FilterWgsl}");
 

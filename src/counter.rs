@@ -2,6 +2,10 @@
 pub(crate) struct Counter(u32);
 
 impl Counter {
+  pub(crate) fn new() -> Self {
+    Self::default()
+  }
+
   pub(crate) fn next(&mut self) -> u32 {
     let next = self.0;
     self.0 += 1;
@@ -15,7 +19,7 @@ mod tests {
 
   #[test]
   fn counter() {
-    let mut c = Counter::default();
+    let mut c = Counter::new();
     assert_eq!(c.next(), 0);
     assert_eq!(c.next(), 1);
     assert_eq!(c.next(), 2);

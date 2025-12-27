@@ -159,7 +159,8 @@ pub(crate) fn coordinates(state: &mut State) {
 
 pub(crate) fn count(state: &mut State) {
   state.filters.push(Filter {
-    field: Field::texture(TextureField::default().text(state.count.to_string())),
+    field: Field::Texture,
+    media: Some(Media::default().text(state.count.to_string()).into()),
     color: color::invert(),
     ..default()
   });
