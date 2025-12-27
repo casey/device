@@ -9,6 +9,14 @@ pub(crate) struct Tempo {
 }
 
 impl Tempo {
+  pub(crate) fn bars(self, time: f64) -> f64 {
+    self.beats(time) / 4.0
+  }
+
+  pub(crate) fn beats(self, time: f64) -> f64 {
+    (time - self.offset) / 60.0 * self.bpm
+  }
+
   pub(crate) fn detect(path: &Utf8Path) -> Result<Self> {
     let bpm = {
       let stdout = Command::new("aubio").arg("tempo").arg(path).stdout_utf8()?;

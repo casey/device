@@ -5,6 +5,8 @@ pub(crate) struct Tick {
   pub(crate) dt: Duration,
   pub(crate) last: Option<Position>,
   pub(crate) position: Option<Position>,
+  pub(crate) tempo: Option<Tempo>,
+  pub(crate) time: f64,
 }
 
 impl Tick {
@@ -14,5 +16,9 @@ impl Tick {
     } else {
       self.position
     }
+  }
+
+  pub(crate) fn advanced(self) -> bool {
+    self.advance().is_some()
   }
 }

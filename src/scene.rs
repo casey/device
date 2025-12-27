@@ -236,7 +236,7 @@ impl Scene {
           .rotate_position(0.1 * TAU);
 
         for _ in 0..20 {
-          state.field(FIELDS.choose(rng).unwrap().clone()).push();
+          state.field(FIELDS.choose(rng).copied().unwrap()).push();
         }
 
         state
@@ -244,7 +244,7 @@ impl Scene {
           .rotate_position(0.2 * TAU);
 
         for _ in 0..10 {
-          state.field(FIELDS.choose(rng).unwrap().clone()).push();
+          state.field(FIELDS.choose(rng).copied().unwrap()).push();
         }
       }
       Self::X => {

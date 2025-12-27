@@ -101,11 +101,11 @@ impl Options {
     (size, resolution)
   }
 
-  pub(crate) fn state(&self, rng: &mut SmallRng) -> State {
+  pub(crate) fn state(&self, config: &Config, rng: &mut SmallRng) -> Result<State> {
     let mut state = if let Some(scene) = self.scene {
       scene.state(rng)
     } else if let Some(program) = self.program {
-      program.state(rng)
+      program.state(config, rng)?
     } else {
       default()
     };
@@ -137,7 +137,7 @@ impl Options {
       state.status = true;
     }
 
-    state
+    Ok(state)
   }
 
   pub(crate) fn stdio(&self) -> Stdio {

@@ -48,7 +48,7 @@ impl Capture {
 
     let mut rng = options.rng();
 
-    let mut state = options.state(&mut rng);
+    let mut state = options.state(&config, &mut rng)?;
 
     let script = options.script();
 
@@ -145,8 +145,10 @@ impl Capture {
 
       let tick = Tick {
         dt: fps.dt(),
-        position,
         last,
+        position,
+        tempo: tap.tempo(),
+        time: tap.time(),
       };
 
       if let Some(script) = &script {

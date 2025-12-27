@@ -5,7 +5,6 @@ use {
     analyzer::Analyzer,
     app::App,
     arguments::Arguments,
-    array_string::ArrayString,
     axis::Axis,
     bindings::Bindings,
     blend_mode::BlendMode,
@@ -38,6 +37,8 @@ use {
     interrupt::Interrupt,
     into_stereo::IntoStereo,
     into_utf8_path::IntoUtf8Path,
+    media::Media,
+    media_handle::MediaHandle,
     message::Message,
     mirror::Mirror,
     mode::{Mode, ModeKind},
@@ -69,7 +70,6 @@ use {
     target::Target,
     templates::{CompositeWgsl, FilterWgsl, VertexWgsl},
     tempo::Tempo,
-    texture_field::TextureField,
     tick::Tick,
     tiling::Tiling,
     to_affine::ToAffine,
@@ -79,6 +79,7 @@ use {
     uniforms::Uniforms,
     window_attributes_ext::WindowAttributesExt,
   },
+  ::image::{AnimationDecoder, codecs::gif::GifDecoder},
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
@@ -113,7 +114,7 @@ use {
     io::{self, BufReader, BufWriter, Write},
     mem,
     num::NonZeroU32,
-    ops::{Add, Bound, Deref, Range, Sub},
+    ops::{Add, Bound, Range, Sub},
     process::{self, ExitStatus, Stdio},
     rc::Rc,
     str::FromStr,
@@ -129,7 +130,10 @@ use {
   strum::{EnumDiscriminants, EnumIter, IntoEnumIterator, IntoStaticStr},
   tempfile::TempDir,
   usized::{IntoU64, IntoU128, IntoUsize},
-  vello::{kurbo, peniko},
+  vello::{
+    kurbo,
+    peniko::{self, ImageData},
+  },
   walkdir::WalkDir,
   wgpu::{
     AddressMode, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
@@ -161,6 +165,7 @@ mod allocator;
 mod analyzer;
 mod app;
 mod arguments;
+#[cfg(test)]
 mod array_string;
 mod axis;
 mod bindings;
@@ -196,6 +201,8 @@ mod input;
 mod interrupt;
 mod into_stereo;
 mod into_utf8_path;
+mod media;
+mod media_handle;
 mod message;
 mod mirror;
 mod mode;
@@ -229,7 +236,6 @@ mod tap;
 mod target;
 mod templates;
 mod tempo;
-mod texture_field;
 mod tick;
 mod tiling;
 mod to_affine;
@@ -260,7 +266,6 @@ const TAU: f32 = f32::consts::TAU;
 const TIME: u64 = 4;
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
-type SmallString = ArrayString<15>;
 
 type Mat1x2f = nalgebra::Matrix1x2<f32>;
 type Mat2x3f = nalgebra::Matrix2x3<f32>;

@@ -1,4 +1,6 @@
-use super::*;
+use {super::*, std::ops::Deref};
+
+type SmallString = ArrayString<15>;
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub(crate) struct ArrayString<const CAPACITY: usize> {

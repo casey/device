@@ -192,7 +192,8 @@ fn all() {
 #[ignore]
 fn blend_mode_source() {
   let mut state = State::default();
-  state.filter.field = Field::texture(TextureField::default().text("😀"));
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(Media::default().text("😀").into());
   state.filter.blend_mode = BlendMode::Source;
   state.push();
   Test::new(name!()).state(state).run();
@@ -202,7 +203,8 @@ fn blend_mode_source() {
 #[ignore]
 fn blend_mode_source_invert() {
   let mut state = State::default();
-  state.filter.field = Field::texture(TextureField::default().text("😀"));
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(Media::default().text("😀").into());
   state.filter.blend_mode = BlendMode::Source;
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -573,7 +575,8 @@ fn status_capture() {
 #[ignore]
 fn texture() {
   let mut state = State::default();
-  state.filter.field = Field::texture(TextureField::default().text("A"));
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(Media::default().text("A").into());
   state.invert().push();
   Test::new(name!()).state(state).run();
 }
@@ -582,11 +585,13 @@ fn texture() {
 #[ignore]
 fn texture_bottom() {
   let mut state = State::default();
-  state.filter.field = Field::texture(
-    TextureField::default()
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(
+    Media::default()
       .text("A")
       .position(Vec2f::new(0.0, 0.5))
-      .scale(0.5),
+      .scale(0.5)
+      .into(),
   );
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -596,11 +601,13 @@ fn texture_bottom() {
 #[ignore]
 fn texture_left() {
   let mut state = State::default();
-  state.filter.field = Field::texture(
-    TextureField::default()
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(
+    Media::default()
       .position(Vec2f::new(-0.5, 0.0))
       .scale(0.5)
-      .text("A"),
+      .text("A")
+      .into(),
   );
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -610,11 +617,13 @@ fn texture_left() {
 #[ignore]
 fn texture_right() {
   let mut state = State::default();
-  state.filter.field = Field::texture(
-    TextureField::default()
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(
+    Media::default()
       .position(Vec2f::new(0.5, 0.0))
       .scale(0.5)
-      .text("A"),
+      .text("A")
+      .into(),
   );
   state.invert().push();
   Test::new(name!()).state(state).run();
@@ -624,7 +633,8 @@ fn texture_right() {
 #[ignore]
 fn texture_small() {
   let mut state = State::default();
-  state.filter.field = Field::texture(TextureField::default().scale(0.5).text("A"));
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(Media::default().scale(0.5).text("A").into());
   state.invert().push();
   Test::new(name!()).state(state).run();
 }
@@ -633,11 +643,13 @@ fn texture_small() {
 #[ignore]
 fn texture_top() {
   let mut state = State::default();
-  state.filter.field = Field::texture(
-    TextureField::default()
+  state.filter.field = Field::Texture;
+  state.filter.media = Some(
+    Media::default()
       .position(Vec2f::new(0.0, -0.5))
       .scale(0.5)
-      .text("A"),
+      .text("A")
+      .into(),
   );
   state.invert().push();
   Test::new(name!()).state(state).run();

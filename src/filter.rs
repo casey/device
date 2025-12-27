@@ -13,6 +13,7 @@ pub(crate) struct Filter {
   pub(crate) field: Field,
   pub(crate) grid: f32,
   pub(crate) grid_transform: Mat3x2f,
+  pub(crate) media: Option<MediaHandle>,
   pub(crate) mirror: Vector2<Mirror>,
   pub(crate) position: Mat3f,
   pub(crate) position_response: Transformation2,
@@ -37,6 +38,7 @@ impl Default for Filter {
       field: Field::default(),
       grid: 1.0,
       grid_transform: Mat3x2f::default(),
+      media: None,
       mirror: Vector2::default(),
       position: Mat3f::identity(),
       position_response: Transformation2::default(),
@@ -61,6 +63,10 @@ impl Filter {
     self.field.icon()
   }
 
+  pub(crate) fn media_key(&self) -> Option<u64> {
+    self.media.as_ref().map(MediaHandle::key)
+  }
+
   pub(crate) fn mirror_uniform(&self) -> Vec4f {
     Vec4f::new(
       self.mirror.x.is_on().into_f32(),
@@ -75,14 +81,6 @@ impl Filter {
       * self.position_velocity.response(self.elapsed.as_secs_f32())
       * self.position)
       .to_affine()
-  }
-
-  pub(crate) fn texture_key(&self) -> Option<u64> {
-    if let Field::Texture(texture_field) = &self.field {
-      Some(texture_field.key())
-    } else {
-      None
-    }
   }
 
   pub(crate) fn tick(&mut self, tick: Tick) {

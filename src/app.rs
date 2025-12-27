@@ -237,7 +237,7 @@ impl App {
 
     let mut rng = options.rng();
 
-    let state = options.state(&mut rng);
+    let state = options.state(&config, &mut rng)?;
 
     let now = Instant::now();
 
@@ -400,9 +400,11 @@ impl App {
     self.history.tick(&mut self.state);
 
     let tick = Tick {
-      position: self.tap.position(),
       dt,
       last,
+      position: self.tap.position(),
+      tempo: self.tap.tempo(),
+      time: self.tap.time(),
     };
 
     let commands = self
