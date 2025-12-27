@@ -64,9 +64,9 @@ impl Analyzer {
     let half = n / 2;
     let spacing = sound.format().sample_rate as f32 / n as f32;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    let threshold = (20.0 / spacing) as usize;
+    let threshold = (state.bandpass.x / spacing) as usize;
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    let cutoff = (15_000.0 / spacing) as usize;
+    let cutoff = (state.bandpass.y / spacing) as usize;
 
     self.frequencies.clear();
     self.frequencies.extend(
