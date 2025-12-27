@@ -2,6 +2,7 @@ use {super::*, all_night::AllNight, position::bbq};
 
 mod all_night;
 mod maria;
+mod suplex;
 
 #[derive(Clone, Copy, ValueEnum)]
 #[allow(clippy::arbitrary_source_item_ordering)]
@@ -90,69 +91,10 @@ impl Program {
         callback: Some(Box::new(AllNight::new())),
         ..default()
       },
-      Self::Suplex => {
-        let path = &config.find_image(r"nichijou-principal-german-suplex-deer")?;
-
-        let reader = BufReader::new(File::open(path).context(error::FilesystemIo { path })?);
-        let decoder = GifDecoder::new(reader).context(error::ImageDecode { path })?;
-
-        let mut media = Vec::new();
-
-        for frame in decoder.into_frames() {
-          let frame = frame.context(error::ImageDecode { path })?;
-          let buffer = frame.into_buffer();
-
-          let width = buffer.width();
-          let height = buffer.height();
-
-          let image = ImageData {
-            alpha_type: peniko::ImageAlphaType::Alpha,
-            data: buffer.into_vec().into(),
-            format: peniko::ImageFormat::Rgba8,
-            height,
-            width,
-          };
-
-          media.push(Media::new().image(image).handle());
-        }
-
-        let mut state = State::new();
-
-        state.filters.push(Filter {
-          blend_mode: BlendMode::Source,
-          media: Some(media[0].clone()),
-          ..default()
-        });
-
-        let mut index = 0;
-
-        state.callback(move |state, tick| {
-          let Some(position) = tick.position else {
-            return;
-          };
-
-          let tempo = tick.tempo.unwrap();
-
-          if position < bbq(19, 1, 1) {
-            if tick.advanced() && position.is_phrase() {
-              state.filters[0].media = Some(media[index % media.len()].clone());
-              index += 1;
-            }
-          } else if position < bbq(23, 1, 1) {
-          } else if position < bbq(24, 1, 1) {
-            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-            let frame =
-              index + (tempo.bars(tick.time).fract() * (media.len() - index) as f64) as usize;
-            state.filters[0].media = Some(media[frame.min(media.len() - 1)].clone());
-          } else {
-            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-            let frame = (tempo.bars(tick.time).fract() * media.len() as f64) as usize;
-            state.filters[0].media = Some(media[frame.min(media.len() - 1)].clone());
-          }
-        });
-
-        state
-      }
+      Self::Suplex => State {
+        callback: Some(suplex::callback(config)?),
+        ..default()
+      },
     };
 
     Ok(state)
