@@ -37,6 +37,10 @@ var field_texture_binding: texture_2d<f32>;
 const ERROR = vec4f(0, 1, 0, 1);
 const TRANSPARENT = vec4f(0, 0, 0, 0);
 
+%% for blend_mode in BlendMode::iter() {
+const {{ blend_mode.constant() }}: u32 = {{ blend_mode.number() }};
+%% }
+
 %% for field in Field::iter() {
 const {{ field.constant() }}: u32 = {{ field.number() }};
 %% }
@@ -44,6 +48,7 @@ const {{ field.constant() }}: u32 = {{ field.number() }};
 struct Uniforms {
   alpha: f32,
   base: f32,
+  blend_mode: u32,
   color: mat4x3f,
   coordinates: u32,
   destination_offset: vec2f,
@@ -115,13 +120,13 @@ fn field_square(p: vec2f) -> bool {
   return max(abs(p.x), abs(p.y)) < 0.5 * coefficient();
 }
 
-fn field_texture_sample(p: vec2f) -> f32 {
+fn field_texture_sample(p: vec2f) -> vec4f {
   let uv = p * 0.5 + 0.5;
-  return textureSample(field_texture_binding, filtering_clamp_to_border_sampler, uv).a;
+  return textureSample(field_texture_binding, filtering_clamp_to_border_sampler, uv);
 }
 
 fn field_texture(p: vec2f) -> bool {
-  return field_texture_sample(p) > 0.0;
+  return field_texture_sample(p).a > 0.0;
 }
 
 fn field_top(p: vec2f) -> bool {
@@ -203,7 +208,7 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
   }
 
   // Sample original color
-  let original_color = textureSample(
+  let destination_color = textureSample(
     source,
     non_filtering_sampler,
     (mirrored_uv / f32(uniforms.tiling) + uniforms.source_offset) * tile_scale,
@@ -226,19 +231,30 @@ fn fragment(@builtin(position) position: vec4f) -> @location(0) vec4f {
 
   if on {
     if uniforms.field == FIELD_TEXTURE {
-      alpha = field_texture_sample(transformed);
+      alpha = field_texture_sample(transformed).a;
     } else {
       alpha = uniforms.alpha;
     }
   }
 
-  // convert back to rgb
-  var transformed_color = uniforms.color * vec4(input_color.rgb, 1.0);
+  switch uniforms.blend_mode {
+    case BLEND_MODE_DESTINATION {
+    }
+    case BLEND_MODE_SOURCE {
+      input_color = field_texture_sample(transformed);
+    }
+    default {
+      return ERROR;
+    }
+  }
 
-  transformed_color += grid(mirrored_uv);
+  // convert back to rgb
+  var source_color = uniforms.color * vec4(input_color.rgb, 1.0);
+
+  source_color += grid(mirrored_uv);
 
   // blend transformed and original color
-  let blend = mix(original_color.rgb, transformed_color, alpha);
+  let blend = mix(destination_color.rgb, source_color, alpha);
 
   // return blend with opaque alpha channel
   return vec4(blend, 1);

@@ -921,10 +921,11 @@ impl Renderer {
         uniforms.push(FilterUniforms {
           alpha: filter.alpha,
           base: filter.base,
+          blend_mode: filter.blend_mode,
           color: filter.color_uniform(response),
           coordinates: filter.coordinates,
           destination_offset: tiling.destination_offset(i),
-          field: filter.field.clone(),
+          field: filter.field.number(),
           frequency_range,
           gain,
           grid: filter.grid,

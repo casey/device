@@ -8,6 +8,7 @@ use {
     array_string::ArrayString,
     axis::Axis,
     bindings::Bindings,
+    blend_mode::BlendMode,
     bool_ext::BoolExt,
     callback::Callback,
     capture::Capture,
@@ -163,6 +164,7 @@ mod arguments;
 mod array_string;
 mod axis;
 mod bindings;
+mod blend_mode;
 mod bool_ext;
 mod callback;
 mod capture;
@@ -246,6 +248,7 @@ const DEFAULT_BUFFER_SIZE: u32 = 128;
 const DEFAULT_FONT_STACK: FontStack<'static> = FontStack::List(Cow::Borrowed(&[
   FontFamily::Named(Cow::Borrowed("Helvetica Neue")),
   FontFamily::Generic(GenericFamily::SansSerif),
+  FontFamily::Named(Cow::Borrowed("Apple Color Emoji")),
   FontFamily::Named(Cow::Borrowed("Apple Symbols")),
   FontFamily::Named(Cow::Borrowed("Zapf Dingbats")),
   FontFamily::Named(Cow::Borrowed("Last Resort")),

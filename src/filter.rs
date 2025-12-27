@@ -4,6 +4,7 @@ use super::*;
 pub(crate) struct Filter {
   pub(crate) alpha: f32,
   pub(crate) base: f32,
+  pub(crate) blend_mode: BlendMode,
   pub(crate) color: Mat4f,
   pub(crate) color_response: Transformation3,
   pub(crate) color_velocity: Transformation3,
@@ -27,6 +28,7 @@ impl Default for Filter {
     Self {
       alpha: 1.0,
       base: 1.0,
+      blend_mode: BlendMode::default(),
       color: Mat4f::identity(),
       color_response: Transformation3::default(),
       color_velocity: Transformation3::default(),

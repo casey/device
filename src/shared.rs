@@ -46,7 +46,7 @@ impl Shared for u32 {
   }
 }
 
-impl Shared for Field {
+impl Shared for BlendMode {
   const ALIGNMENT: Alignment = u32::ALIGNMENT;
   const SIZE: usize = u32::SIZE;
 
