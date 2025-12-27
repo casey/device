@@ -145,7 +145,7 @@ fn field_x(p: vec2f) -> bool {
 
 
 fn grid(uv: vec2f) -> vec3f {
-  let steps = uniforms.grid * coefficient();
+  let steps = max(uniforms.grid * coefficient(), 1.0);
   let value = round(vec2(uv.x, (uv.y - 1) * -1) * steps) / steps;
   return uniforms.grid_transform * value;
 }

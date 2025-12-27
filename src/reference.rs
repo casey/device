@@ -777,3 +777,21 @@ fn x_wide_fit() {
   state.fit = true;
   Test::new(name!()).width(256).height(128).state(state).run();
 }
+
+#[test]
+#[ignore]
+fn zero_base() {
+  let mut state = State::default();
+  state.filters.push(Filter {
+    field: Field::X,
+    color: color::invert(),
+    ..default()
+  });
+  state.filters.push(Filter {
+    field: Field::Left,
+    color: color::invert(),
+    base: 0.0,
+    ..default()
+  });
+  Test::new(name!()).state(state).run();
+}

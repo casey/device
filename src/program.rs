@@ -64,9 +64,9 @@ impl Program {
       Self::Expo => Scene::Starburst.state(rng),
       Self::Transit => Scene::Kaleidoscope.state(rng),
       Self::Radio => {
-        let mut scene = Scene::BlackHole.state(rng);
-        scene.db = -10.0;
-        scene
+        let mut state = Scene::BlackHole.state(rng);
+        state.db = -10.0;
+        state
       }
       Self::Maria => {
         let mut state = Scene::None.state(rng);

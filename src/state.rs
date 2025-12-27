@@ -3,6 +3,7 @@ use super::*;
 #[derive(Clone)]
 pub(crate) struct State {
   pub(crate) alpha: f32,
+  pub(crate) bandpass: Vec2f,
   pub(crate) callback: Option<Box<dyn Callback>>,
   pub(crate) capture_status: bool,
   pub(crate) complexity: f32,
@@ -26,6 +27,7 @@ impl Default for State {
   fn default() -> Self {
     Self {
       alpha: 0.5,
+      bandpass: Vec2f::new(20.0, 15_000.0),
       position: None,
       callback: None,
       capture_status: false,
