@@ -124,7 +124,7 @@ pub(crate) enum Error {
   },
   #[snafu(
     display(
-      "more than one match found: {}",
+      "more than one file found: {}",
       matches.iter().map(ToString::to_string).collect::<Vec<String>>().join(", ")
     )
   )]
@@ -132,7 +132,7 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     matches: Vec<Utf8PathBuf>,
   },
-  #[snafu(display("could not match pattern `{pattern}`"))]
+  #[snafu(display("could not find files matching pattern `{pattern}`"))]
   FindMatch {
     backtrace: Option<Backtrace>,
     pattern: String,
@@ -142,7 +142,7 @@ pub(crate) enum Error {
     backtrace: Option<Backtrace>,
     source: regex::Error,
   },
-  #[snafu(display("I/O error finding song"))]
+  #[snafu(display("I/O error while searching"))]
   FindWalk {
     backtrace: Option<Backtrace>,
     source: walkdir::Error,
