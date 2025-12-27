@@ -1,4 +1,4 @@
-%% let mut binding = Counter::default();
+%% let mut binding = Counter::new();
 
 @group(0)
 @binding({{ binding.next() }})

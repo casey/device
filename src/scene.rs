@@ -32,7 +32,7 @@ impl Scene {
   }
 
   pub(crate) fn state(self, rng: &mut SmallRng) -> State {
-    let mut state = State::default();
+    let mut state = State::new();
 
     match self {
       Self::All => {

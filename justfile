@@ -157,6 +157,16 @@ capture-all-night:
     --verbose \
     capture
 
+capture-suplex:
+  cargo run \
+    --release \
+    -- \
+    --width 3840 \
+    --height 2160 \
+    --program suplex \
+    --verbose \
+    capture
+
 record-curtains:
   cargo run --release -- \
     --fps 60 \

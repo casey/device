@@ -57,7 +57,7 @@ impl Default for Media {
       image: None,
       position: Vec2f::default(),
       scale: 1.0,
-      text: String::default(),
+      text: String::new(),
       weight: FontWeight::NORMAL,
     }
   }

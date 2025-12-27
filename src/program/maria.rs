@@ -5,7 +5,7 @@ use {
 };
 
 pub(crate) fn script() -> Script {
-  let mut script = Script::default();
+  let mut script = Script::new();
 
   // kick 1 3
   for bar in bars(1..39) {

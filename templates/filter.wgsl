@@ -1,4 +1,4 @@
-%% let mut binding = Counter::default();
+%% let mut binding = Counter::new();
 
 @group(0)
 @binding({{ binding.next() }})
@@ -28,7 +28,7 @@ var samples: texture_1d<f32>;
 @binding({{ binding.next() }})
 var<uniform> uniforms: Uniforms;
 
-%% let mut binding = Counter::default();
+%% let mut binding = Counter::new();
 
 @group(1)
 @binding({{ binding.next() }})

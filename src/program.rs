@@ -87,7 +87,7 @@ impl Program {
         state
       }
       Self::AllNight => State {
-        callback: Some(Box::new(AllNight::default())),
+        callback: Some(Box::new(AllNight::new())),
         ..default()
       },
       Self::Suplex => {
@@ -116,7 +116,7 @@ impl Program {
           media.push(Media::new().image(image).handle());
         }
 
-        let mut state = State::default();
+        let mut state = State::new();
 
         state.filters.push(Filter {
           blend_mode: BlendMode::Source,

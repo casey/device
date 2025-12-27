@@ -145,7 +145,7 @@ impl Renderer {
     source: &TextureView,
     source_sampler: &Sampler,
   ) -> BindGroup {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.composite_pipeline.bind_group_layout,
       entries: &[
@@ -186,7 +186,7 @@ impl Renderer {
     device: &wgpu::Device,
     uniform_buffer_size: u32,
   ) -> BindGroupLayout {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
         BindGroupLayoutEntry {
@@ -351,7 +351,7 @@ impl Renderer {
   }
 
   fn field_texture_bind_group(&self, filter: &TextureView) -> BindGroup {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.field_texture_bind_group_layout,
       entries: &[BindGroupEntry {
@@ -363,7 +363,7 @@ impl Renderer {
   }
 
   fn field_texture_bind_group_layout(device: &wgpu::Device) -> BindGroupLayout {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[BindGroupLayoutEntry {
         binding: binding.next(),
@@ -385,7 +385,7 @@ impl Renderer {
     source: &TextureView,
     samples: &TextureView,
   ) -> BindGroup {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     self.device.create_bind_group(&BindGroupDescriptor {
       layout: &self.filter_pipeline.bind_group_layout,
       entries: &[
@@ -431,7 +431,7 @@ impl Renderer {
   }
 
   fn filter_bind_group_layout(device: &wgpu::Device, uniform_buffer_size: u32) -> BindGroupLayout {
-    let mut binding = Counter::default();
+    let mut binding = Counter::new();
     device.create_bind_group_layout(&BindGroupLayoutDescriptor {
       entries: &[
         BindGroupLayoutEntry {
@@ -1077,7 +1077,7 @@ impl Renderer {
     use {
       kurbo::{Affine, Vec2},
       parley::{Alignment, AlignmentOptions, PositionedLayoutItem, StyleProperty},
-      peniko::{Brush, Color, Fill, ImageBrush, ImageSampler},
+      peniko::{Brush, Color, Fill, ImageBrush, ImageQuality, ImageSampler},
       vello::{AaConfig, RenderParams},
     };
 
@@ -1177,7 +1177,7 @@ impl Renderer {
       self.vello_scene.draw_image(
         ImageBrush {
           image,
-          sampler: ImageSampler::new(),
+          sampler: ImageSampler::new().with_quality(ImageQuality::High),
         },
         Affine::scale(scale).then_translate(Vec2 {
           x: (resolution - width * scale) * 0.5,
