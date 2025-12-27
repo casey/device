@@ -4,10 +4,11 @@ use super::*;
 pub(crate) struct FilterUniforms {
   pub(crate) alpha: f32,
   pub(crate) base: f32,
+  pub(crate) blend_mode: BlendMode,
   pub(crate) color: Mat3x4f,
   pub(crate) coordinates: bool,
   pub(crate) destination_offset: Vec2f,
-  pub(crate) field: Field,
+  pub(crate) field: u32,
   pub(crate) frequency_range: f32,
   pub(crate) gain: f32,
   pub(crate) grid: f32,
@@ -31,6 +32,7 @@ impl Uniforms for FilterUniforms {
     let mut a = Alignment::new(1);
     self.alpha.write(dst, &mut i, &mut a);
     self.base.write(dst, &mut i, &mut a);
+    self.blend_mode.write(dst, &mut i, &mut a);
     self.color.write(dst, &mut i, &mut a);
     self.coordinates.write(dst, &mut i, &mut a);
     self.destination_offset.write(dst, &mut i, &mut a);

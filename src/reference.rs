@@ -190,6 +190,26 @@ fn all() {
 
 #[test]
 #[ignore]
+fn blend_mode_source() {
+  let mut state = State::default();
+  state.filter.field = Field::texture(TextureField::default().text("😀"));
+  state.filter.blend_mode = BlendMode::Source;
+  state.push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
+fn blend_mode_source_invert() {
+  let mut state = State::default();
+  state.filter.field = Field::texture(TextureField::default().text("😀"));
+  state.filter.blend_mode = BlendMode::Source;
+  state.invert().push();
+  Test::new(name!()).state(state).run();
+}
+
+#[test]
+#[ignore]
 fn circle() {
   let mut state = State::default();
   state.invert().circle().push();
