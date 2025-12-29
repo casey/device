@@ -308,7 +308,7 @@ pub(crate) fn print(app: &mut App) {
     eprintln!("allocated: {allocated}");
   }
 
-  eprintln!("fit: {}", app.state.fit);
+  eprintln!("viewport: {}", app.state.viewport);
 
   eprintln!(
     "filters: {}",
@@ -416,7 +416,7 @@ pub(crate) fn swap(state: &mut State) {
 }
 
 pub(crate) fn toggle_fit(state: &mut State) {
-  state.fit.toggle();
+  state.viewport.toggle();
 }
 
 pub(crate) fn toggle_fullscreen(app: &mut App) {

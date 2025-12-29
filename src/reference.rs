@@ -769,7 +769,7 @@ fn x_tall() {
 fn x_tall_fit() {
   let mut state = State::new();
   state.invert().x().push();
-  state.fit = true;
+  state.viewport = Viewport::Fit;
   Test::new(name!()).width(128).height(256).state(state).run();
 }
 
@@ -786,7 +786,7 @@ fn x_wide() {
 fn x_wide_fit() {
   let mut state = State::new();
   state.invert().x().push();
-  state.fit = true;
+  state.viewport = Viewport::Fit;
   Test::new(name!()).width(256).height(128).state(state).run();
 }
 

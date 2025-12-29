@@ -949,10 +949,21 @@ impl Renderer {
 
     let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
 
-    let aspect_ratio_correction = if state.fit == (aspect_ratio > 1.0) {
-      Vec2f::new(1.0 * aspect_ratio, 1.0)
-    } else {
-      Vec2f::new(1.0, 1.0 / aspect_ratio)
+    let aspect_ratio_correction = match state.viewport {
+      Viewport::Fit => {
+        if aspect_ratio > 1.0 {
+          Vec2f::new(1.0 * aspect_ratio, 1.0)
+        } else {
+          Vec2f::new(1.0, 1.0 / aspect_ratio)
+        }
+      }
+      Viewport::Fill => {
+        if aspect_ratio > 1.0 {
+          Vec2f::new(1.0, 1.0 / aspect_ratio)
+        } else {
+          Vec2f::new(1.0 * aspect_ratio, 1.0)
+        }
+      }
     };
 
     {
@@ -1256,35 +1267,36 @@ impl Renderer {
       items.join(" ")
     };
 
-    let bounds = if state.fit {
-      Rect {
+    let bounds = match state.viewport {
+      Viewport::Fit => Rect {
         x0: 0.0,
         y0: 0.0,
         x1: self.resolution.get() as f64,
         y1: self.resolution.get() as f64,
-      }
-    } else {
-      let dy = self
-        .size
-        .x
-        .get()
-        .checked_sub(self.size.y.get())
-        .map(|dy| dy as f64 / 2.0)
-        .unwrap_or_default();
+      },
+      Viewport::Fill => {
+        let dy = self
+          .size
+          .x
+          .get()
+          .checked_sub(self.size.y.get())
+          .map(|dy| dy as f64 / 2.0)
+          .unwrap_or_default();
 
-      let dx = self
-        .size
-        .y
-        .get()
-        .checked_sub(self.size.x.get())
-        .map(|dx| dx as f64 / 2.0)
-        .unwrap_or_default();
+        let dx = self
+          .size
+          .y
+          .get()
+          .checked_sub(self.size.x.get())
+          .map(|dx| dx as f64 / 2.0)
+          .unwrap_or_default();
 
-      Rect {
-        x0: dx,
-        y0: dy,
-        x1: self.size.x.get() as f64 + dx,
-        y1: self.size.y.get() as f64 + dy,
+        Rect {
+          x0: dx,
+          y0: dy,
+          x1: self.size.x.get() as f64 + dx,
+          y1: self.size.y.get() as f64 + dy,
+        }
       }
     };
 

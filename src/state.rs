@@ -12,7 +12,6 @@ pub(crate) struct State {
   pub(crate) encoder: f32,
   pub(crate) filter: Filter,
   pub(crate) filters: Vec<Filter>,
-  pub(crate) fit: bool,
   pub(crate) interpolate: bool,
   pub(crate) position: Option<Position>,
   pub(crate) spread: bool,
@@ -20,6 +19,7 @@ pub(crate) struct State {
   pub(crate) tile: bool,
   pub(crate) transient: Transformation2,
   pub(crate) velocity: Vec4f,
+  pub(crate) viewport: Viewport,
   pub(crate) wrap: bool,
 }
 
@@ -37,7 +37,7 @@ impl Default for State {
       encoder: 0.0,
       filter: Filter::default(),
       filters: Vec::new(),
-      fit: false,
+      viewport: Viewport::default(),
       interpolate: false,
       spread: false,
       status: false,

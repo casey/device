@@ -126,7 +126,7 @@ impl Options {
     );
 
     if self.fit {
-      state.fit = true;
+      state.viewport = Viewport::Fit;
     }
 
     if self.interpolate {
