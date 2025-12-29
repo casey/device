@@ -45,6 +45,10 @@ impl Renderer {
     mip_level_count: None,
   };
 
+  fn aspect_ratio(&self) -> f32 {
+    self.size.x.get() as f32 / self.size.y.get() as f32
+  }
+
   fn begin_render_pass<'a>(encoder: &'a mut CommandEncoder, view: &TextureView) -> RenderPass<'a> {
     encoder.begin_render_pass(&RenderPassDescriptor {
       color_attachments: &[Some(RenderPassColorAttachment {
@@ -948,7 +952,7 @@ impl Renderer {
     }
 
     {
-      let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
+      let aspect_ratio = self.aspect_ratio();
 
       let scaling = match state.viewport {
         Viewport::Fit => {
@@ -1284,9 +1288,7 @@ impl Renderer {
         y1: self.resolution.get() as f64,
       },
       Viewport::Fill { position } => {
-        let resolution = self.resolution.get() as f64;
-
-        let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
+        let aspect_ratio = self.aspect_ratio();
 
         let aspect_ratio_correction = if aspect_ratio > 1.0 {
           Vec2f::new(1.0, 1.0 / aspect_ratio)
@@ -1299,17 +1301,17 @@ impl Renderer {
           (1.0 - aspect_ratio_correction.y) / 2.0,
         );
 
-        let shift = Vec2f::new(position.x * padding.x, position.y * padding.y);
+        let shift = position.component_mul(&padding);
+        let min = padding + shift;
+        let max = vector!(1.0, 1.0) - padding + shift;
 
-        let min = Vec2f::new(padding.x + shift.x, padding.y + shift.y);
-
-        let max = Vec2f::new(1.0 - padding.x + shift.x, 1.0 - padding.y + shift.y);
+        let resolution = self.resolution.get() as f32;
 
         Rect {
-          x0: f64::from(min.x) * resolution,
-          y0: f64::from(min.y) * resolution,
-          x1: f64::from(max.x) * resolution,
-          y1: f64::from(max.y) * resolution,
+          x0: (min.x * resolution).into(),
+          y0: (min.y * resolution).into(),
+          x1: (max.x * resolution).into(),
+          y1: (max.y * resolution).into(),
         }
       }
     };

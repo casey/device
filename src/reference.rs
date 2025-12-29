@@ -573,6 +573,23 @@ fn status_capture() {
 
 #[test]
 #[ignore]
+fn status_capture_fill() {
+  Test::new(name!())
+    .width(256)
+    .height(128)
+    .state(State {
+      capture_status: true,
+      status: true,
+      viewport: Viewport::Fill {
+        position: Vec2f::new(-1.0, -1.0),
+      },
+      ..default()
+    })
+    .run();
+}
+
+#[test]
+#[ignore]
 fn texture() {
   let mut state = State::new();
   state.filter.field = Field::Texture;
