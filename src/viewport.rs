@@ -1,21 +1,33 @@
 use super::*;
 
-#[derive(Clone, Copy, Default, IntoStaticStr)]
+#[derive(Clone, Copy)]
 pub(crate) enum Viewport {
-  #[default]
-  Fill,
+  Fill { position: Vec2f },
   Fit,
+}
+
+impl Default for Viewport {
+  fn default() -> Self {
+    Self::Fill {
+      position: Vec2f::zeros(),
+    }
+  }
 }
 
 impl Viewport {
   pub(crate) fn name(self) -> &'static str {
-    self.into()
+    match self {
+      Self::Fill { .. } => "Fill",
+      Self::Fit => "Fit",
+    }
   }
 
   pub(crate) fn toggle(&mut self) {
-    *self = match self {
-      Self::Fit => Self::Fill,
-      Self::Fill => Self::Fit,
+    *self = match *self {
+      Self::Fit => Self::Fill {
+        position: Vec2f::zeros(),
+      },
+      Self::Fill { .. } => Self::Fit,
     };
   }
 }

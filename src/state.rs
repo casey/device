@@ -1,5 +1,20 @@
 use super::*;
 
+// what to do?
+// - I could anchor the display to the lower left corner
+//   - i think this is what would look the best
+// - I could try to move the equalizer up
+// - it does seem to be the case that I often want text on one layer only
+// - add black bars
+
+// left, right, center
+// top, bottom, center
+//
+// can it be a vec2?
+// 0 is center, obviously
+// -1 is left
+// +1 is right
+
 #[derive(Clone)]
 pub(crate) struct State {
   pub(crate) alpha: f32,

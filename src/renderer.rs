@@ -949,20 +949,26 @@ impl Renderer {
 
     let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
 
-    let aspect_ratio_correction = match state.viewport {
+    let (aspect_ratio_correction, viewport_translation) = match state.viewport {
       Viewport::Fit => {
-        if aspect_ratio > 1.0 {
+        let aspect_ratio_correction = if aspect_ratio > 1.0 {
           Vec2f::new(1.0 * aspect_ratio, 1.0)
         } else {
           Vec2f::new(1.0, 1.0 / aspect_ratio)
-        }
+        };
+        (aspect_ratio_correction, Vec2f::zeros())
       }
-      Viewport::Fill => {
-        if aspect_ratio > 1.0 {
+      Viewport::Fill { position } => {
+        let aspect_ratio_correction = if aspect_ratio > 1.0 {
           Vec2f::new(1.0, 1.0 / aspect_ratio)
         } else {
           Vec2f::new(1.0 * aspect_ratio, 1.0)
-        }
+        };
+        let viewport_translation = Vec2f::new(
+          position.x * (1.0 - aspect_ratio_correction.x),
+          position.y * (1.0 - aspect_ratio_correction.y),
+        );
+        (aspect_ratio_correction, viewport_translation)
       }
     };
 
@@ -977,6 +983,7 @@ impl Renderer {
         .append_scaling(2.0)
         .append_translation(&Vec2f::new(-1.0, -1.0))
         .append_nonuniform_scaling(&aspect_ratio_correction)
+        .append_translation(&viewport_translation)
         .append_translation(&Vec2f::new(1.0, 1.0))
         .append_scaling(1.0 / 2.0)
         .to_affine(),
@@ -1274,28 +1281,27 @@ impl Renderer {
         x1: self.resolution.get() as f64,
         y1: self.resolution.get() as f64,
       },
-      Viewport::Fill => {
-        let dy = self
-          .size
-          .x
-          .get()
-          .checked_sub(self.size.y.get())
-          .map(|dy| dy as f64 / 2.0)
-          .unwrap_or_default();
-
-        let dx = self
-          .size
-          .y
-          .get()
-          .checked_sub(self.size.x.get())
-          .map(|dx| dx as f64 / 2.0)
-          .unwrap_or_default();
+      Viewport::Fill { position } => {
+        let resolution = self.resolution.get() as f64;
+        let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
+        let aspect_ratio_correction = if aspect_ratio > 1.0 {
+          Vec2f::new(1.0, 1.0 / aspect_ratio)
+        } else {
+          Vec2f::new(1.0 * aspect_ratio, 1.0)
+        };
+        let padding = Vec2f::new(
+          (1.0 - aspect_ratio_correction.x) / 2.0,
+          (1.0 - aspect_ratio_correction.y) / 2.0,
+        );
+        let shift = Vec2f::new(position.x * padding.x, position.y * padding.y);
+        let min = Vec2f::new(padding.x + shift.x, padding.y + shift.y);
+        let max = Vec2f::new(1.0 - padding.x + shift.x, 1.0 - padding.y + shift.y);
 
         Rect {
-          x0: dx,
-          y0: dy,
-          x1: self.size.x.get() as f64 + dx,
-          y1: self.size.y.get() as f64 + dy,
+          x0: f64::from(min.x) * resolution,
+          y0: f64::from(min.y) * resolution,
+          x1: f64::from(max.x) * resolution,
+          y1: f64::from(max.y) * resolution,
         }
       }
     };

@@ -71,11 +71,14 @@ impl Scene {
         state.filters.push(Preset::Grid.filter(rng));
       }
       Self::Hello => {
+        state.viewport = Viewport::Fill {
+          position: vector!(0.0, 1.0),
+        };
         state
           .invert()
           .text(
-            Vec2f::new(-0.375, 0.48),
-            0.35,
+            Vec2f::new(-0.375, 0.75),
+            0.15,
             "hello world",
             FontWeight::LIGHT,
           )

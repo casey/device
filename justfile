@@ -66,7 +66,12 @@ commands:
   cargo run commands
 
 program program:
-  cargo run --release -- --program {{program}}
+  cargo run \
+    --release \
+    -- \
+    --width 3840 \
+    --height 2160 \
+  --program {{program}}
 
 shader:
   cargo run shader
@@ -129,7 +134,16 @@ capture program:
     --verbose \
     capture
 
-capture-hello: (capture "hello")
+capture-hello:
+  cargo run \
+    --release \
+    -- \
+    --width 3840 \
+    --height 2160 \
+    --program hello \
+    --verbose \
+    capture
+
 capture-busy: (capture "busy")
 capture-noise: (capture "noise")
 capture-expo: (capture "expo")
