@@ -139,6 +139,7 @@ capture-hello-landscape:
     --verbose \
     capture
 
+capture-hello: (capture "hello")
 capture-busy: (capture "busy")
 capture-noise: (capture "noise")
 capture-expo: (capture "expo")
