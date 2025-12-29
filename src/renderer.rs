@@ -1285,18 +1285,24 @@ impl Renderer {
       },
       Viewport::Fill { position } => {
         let resolution = self.resolution.get() as f64;
+
         let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
+
         let aspect_ratio_correction = if aspect_ratio > 1.0 {
           Vec2f::new(1.0, 1.0 / aspect_ratio)
         } else {
           Vec2f::new(1.0 * aspect_ratio, 1.0)
         };
+
         let padding = Vec2f::new(
           (1.0 - aspect_ratio_correction.x) / 2.0,
           (1.0 - aspect_ratio_correction.y) / 2.0,
         );
+
         let shift = Vec2f::new(position.x * padding.x, position.y * padding.y);
+
         let min = Vec2f::new(padding.x + shift.x, padding.y + shift.y);
+
         let max = Vec2f::new(1.0 - padding.x + shift.x, 1.0 - padding.y + shift.y);
 
         Rect {
