@@ -8,6 +8,7 @@ mod suplex;
 #[allow(clippy::arbitrary_source_item_ordering)]
 pub(crate) enum Program {
   Hello,
+  HelloLandscape,
   Busy,
   Noise,
   Expo,
@@ -21,7 +22,7 @@ pub(crate) enum Program {
 impl Program {
   pub(crate) fn add_source(self, config: &Config, tap: &mut Tap) -> Result {
     match self {
-      Self::Hello => {
+      Self::Hello | Self::HelloLandscape => {
         let wave = tap.load_wave(&config.find_song("old generic boss")?)?;
         tap.sequence_wave(&wave, 0.0, 0.0);
       }
@@ -72,6 +73,7 @@ impl Program {
   pub(crate) fn state(self, config: &Config, rng: &mut SmallRng) -> Result<State> {
     let state = match self {
       Self::Hello => Scene::Hello.state(rng),
+      Self::HelloLandscape => Scene::HelloLandscape.state(rng),
       Self::Busy => Scene::Highwaystar.state(rng),
       Self::Noise => Scene::Noise.state(rng),
       Self::Expo => Scene::Starburst.state(rng),

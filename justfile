@@ -134,13 +134,13 @@ capture program:
     --verbose \
     capture
 
-capture-hello:
+capture-hello-landscape:
   cargo run \
     --release \
     -- \
     --width 3840 \
     --height 2160 \
-    --program hello \
+    --program hello-landscape \
     --verbose \
     capture
 
