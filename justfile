@@ -66,12 +66,7 @@ commands:
   cargo run commands
 
 program program:
-  cargo run \
-    --release \
-    -- \
-    --width 3840 \
-    --height 2160 \
-  --program {{program}}
+  cargo run --release -- --program {{program}}
 
 shader:
   cargo run shader
