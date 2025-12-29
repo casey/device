@@ -947,32 +947,34 @@ impl Renderer {
       self.write_uniform_buffer(&self.filter_pipeline, &uniforms);
     }
 
-    let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
-
-    let (aspect_ratio_correction, viewport_translation) = match state.viewport {
-      Viewport::Fit => {
-        let aspect_ratio_correction = if aspect_ratio > 1.0 {
-          Vec2f::new(1.0 * aspect_ratio, 1.0)
-        } else {
-          Vec2f::new(1.0, 1.0 / aspect_ratio)
-        };
-        (aspect_ratio_correction, Vec2f::zeros())
-      }
-      Viewport::Fill { position } => {
-        let aspect_ratio_correction = if aspect_ratio > 1.0 {
-          Vec2f::new(1.0, 1.0 / aspect_ratio)
-        } else {
-          Vec2f::new(1.0 * aspect_ratio, 1.0)
-        };
-        let viewport_translation = Vec2f::new(
-          position.x * (1.0 - aspect_ratio_correction.x),
-          position.y * (1.0 - aspect_ratio_correction.y),
-        );
-        (aspect_ratio_correction, viewport_translation)
-      }
-    };
-
     {
+      let aspect_ratio = self.size.x.get() as f32 / self.size.y.get() as f32;
+
+      let scaling = match state.viewport {
+        Viewport::Fit => {
+          if aspect_ratio > 1.0 {
+            Vec2f::new(1.0 * aspect_ratio, 1.0)
+          } else {
+            Vec2f::new(1.0, 1.0 / aspect_ratio)
+          }
+        }
+        Viewport::Fill { .. } => {
+          if aspect_ratio > 1.0 {
+            Vec2f::new(1.0, 1.0 / aspect_ratio)
+          } else {
+            Vec2f::new(1.0 * aspect_ratio, 1.0)
+          }
+        }
+      };
+
+      let translation = match state.viewport {
+        Viewport::Fit => Vec2f::zeros(),
+        Viewport::Fill { position } => Vec2f::new(
+          position.x * (1.0 - scaling.x),
+          position.y * (1.0 - scaling.y),
+        ),
+      };
+
       let aspect_ratio_correction_uniforms = CompositeUniforms {
         destination: true,
         source: true,
@@ -982,8 +984,8 @@ impl Renderer {
         ))
         .append_scaling(2.0)
         .append_translation(&Vec2f::new(-1.0, -1.0))
-        .append_nonuniform_scaling(&aspect_ratio_correction)
-        .append_translation(&viewport_translation)
+        .append_nonuniform_scaling(&scaling)
+        .append_translation(&translation)
         .append_translation(&Vec2f::new(1.0, 1.0))
         .append_scaling(1.0 / 2.0)
         .to_affine(),

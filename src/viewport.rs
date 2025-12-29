@@ -1,6 +1,7 @@
 use super::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
 pub(crate) enum Viewport {
   Fill { position: Vec2f },
   Fit,
@@ -16,18 +17,15 @@ impl Default for Viewport {
 
 impl Viewport {
   pub(crate) fn name(self) -> &'static str {
-    match self {
-      Self::Fill { .. } => "Fill",
-      Self::Fit => "Fit",
-    }
+    self.into()
   }
 
   pub(crate) fn toggle(&mut self) {
     *self = match *self {
+      Self::Fill { .. } => Self::Fit,
       Self::Fit => Self::Fill {
         position: Vec2f::zeros(),
       },
-      Self::Fill { .. } => Self::Fit,
     };
   }
 }
