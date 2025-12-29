@@ -11,6 +11,7 @@ pub(crate) enum Scene {
   Frequencies,
   Grid,
   Hello,
+  HelloLandscape,
   Highwaystar,
   Kaleidoscope,
   Middle,
@@ -76,6 +77,23 @@ impl Scene {
           .text(
             Vec2f::new(-0.375, 0.48),
             0.35,
+            "hello world",
+            FontWeight::LIGHT,
+          )
+          .push()
+          .frequencies()
+          .push()
+          .db(-40.0);
+      }
+      Self::HelloLandscape => {
+        state.viewport = Viewport::Fill {
+          position: vector!(0.0, 1.0),
+        };
+        state
+          .invert()
+          .text(
+            Vec2f::new(-0.375, 0.75),
+            0.15,
             "hello world",
             FontWeight::LIGHT,
           )

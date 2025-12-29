@@ -129,6 +129,16 @@ capture program:
     --verbose \
     capture
 
+capture-hello-landscape:
+  cargo run \
+    --release \
+    -- \
+    --width 3840 \
+    --height 2160 \
+    --program hello-landscape \
+    --verbose \
+    capture
+
 capture-hello: (capture "hello")
 capture-busy: (capture "busy")
 capture-noise: (capture "noise")

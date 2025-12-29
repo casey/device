@@ -573,6 +573,23 @@ fn status_capture() {
 
 #[test]
 #[ignore]
+fn status_capture_fill() {
+  Test::new(name!())
+    .width(256)
+    .height(128)
+    .state(State {
+      capture_status: true,
+      status: true,
+      viewport: Viewport::Fill {
+        position: Vec2f::new(-1.0, -1.0),
+      },
+      ..default()
+    })
+    .run();
+}
+
+#[test]
+#[ignore]
 fn texture() {
   let mut state = State::new();
   state.filter.field = Field::Texture;
@@ -769,7 +786,7 @@ fn x_tall() {
 fn x_tall_fit() {
   let mut state = State::new();
   state.invert().x().push();
-  state.fit = true;
+  state.viewport = Viewport::Fit;
   Test::new(name!()).width(128).height(256).state(state).run();
 }
 
@@ -786,7 +803,7 @@ fn x_wide() {
 fn x_wide_fit() {
   let mut state = State::new();
   state.invert().x().push();
-  state.fit = true;
+  state.viewport = Viewport::Fit;
   Test::new(name!()).width(256).height(128).state(state).run();
 }
 

@@ -77,6 +77,7 @@ use {
     transformation2::Transformation2,
     transformation3::Transformation3,
     uniforms::Uniforms,
+    viewport::Viewport,
     window_attributes_ext::WindowAttributesExt,
   },
   ::image::{AnimationDecoder, codecs::gif::GifDecoder},
@@ -243,6 +244,7 @@ mod track;
 mod transformation2;
 mod transformation3;
 mod uniforms;
+mod viewport;
 mod window_attributes_ext;
 
 const KIB: usize = 1 << 10;
