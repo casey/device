@@ -11,6 +11,7 @@ use {
     sequencer::{Fade, Sequencer},
     wave::{Wave, WavePlayer},
   },
+  rubato::{Fft, FixedSync},
 };
 
 pub(crate) struct Tap {
@@ -90,13 +91,13 @@ impl Tap {
 
     let start = Instant::now();
 
-    let mut resampler = rubato::Fft::<f32>::new(
+    let mut resampler = Fft::<f32>::new(
       sample_rate,
       self.format.sample_rate.into_usize(),
       1024,
       2,
       input.channels(),
-      rubato::FixedSync::Both,
+      FixedSync::Both,
     )
     .context(error::WaveResamplerConstruction)?;
 
