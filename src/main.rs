@@ -53,7 +53,6 @@ use {
     recorder::Recorder,
     recorder_thread::RecorderThread,
     renderer::Renderer,
-    resampler_ext::ResamplerExt,
     resources::Resources,
     scene::Scene,
     score::Score,
@@ -78,9 +77,11 @@ use {
     transformation3::Transformation3,
     uniforms::Uniforms,
     viewport::Viewport,
+    wave_adapter::WaveAdapter,
     window_attributes_ext::WindowAttributesExt,
   },
   ::image::{AnimationDecoder, codecs::gif::GifDecoder},
+  audioadapter::{Adapter, AdapterMut},
   boilerplate::Boilerplate,
   camino::{Utf8Path, Utf8PathBuf},
   clap::{Parser, ValueEnum},
@@ -99,6 +100,7 @@ use {
   parley::{FontContext, FontFamily, FontStack, FontWeight, GenericFamily, LayoutContext},
   rand::{Rng, SeedableRng, prelude::SliceRandom, rngs::SmallRng, seq::IndexedRandom},
   regex::{Regex, RegexBuilder},
+  rubato::Resampler,
   rustfft::{FftPlanner, num_complex::Complex},
   serde::Deserialize,
   snafu::{ErrorCompat, IntoError, OptionExt, ResultExt, Snafu, ensure},
@@ -220,7 +222,6 @@ mod recorder_thread;
 #[cfg(test)]
 mod reference;
 mod renderer;
-mod resampler_ext;
 mod resources;
 mod scene;
 mod score;
@@ -245,6 +246,7 @@ mod transformation2;
 mod transformation3;
 mod uniforms;
 mod viewport;
+mod wave_adapter;
 mod window_attributes_ext;
 
 const KIB: usize = 1 << 10;

@@ -11,7 +11,7 @@ use {
     sequencer::{Fade, Sequencer},
     wave::{Wave, WavePlayer},
   },
-  rubato::FftFixedIn,
+  rubato::{Fft, FixedSync},
 };
 
 pub(crate) struct Tap {
@@ -91,34 +91,33 @@ impl Tap {
 
     let start = Instant::now();
 
-    let mut resampler = FftFixedIn::<f32>::new(
+    let mut resampler = Fft::<f32>::new(
       sample_rate,
       self.format.sample_rate.into_usize(),
       1024,
       2,
       input.channels(),
+      FixedSync::Both,
     )
     .context(error::WaveResamplerConstruction)?;
 
-    let input_channels = (0..input.channels())
-      .map(|channel| input.channel(channel).as_slice())
-      .collect::<Vec<&[f32]>>();
+    let needed = resampler.process_all_needed_output_len(input.len());
 
-    let output_channels = resampler
-      .process_all(
-        &input_channels,
-        None,
-        self.format.sample_rate as f64 / sample_rate as f64,
-      )
+    let mut output = Wave::new(input.channels(), self.format.sample_rate as f64);
+    output.resize(needed);
+
+    let input = WaveAdapter(input);
+    let mut output = WaveAdapter(output);
+
+    let (_in, out) = resampler
+      .process_all_into_buffer(&input, &mut output, input.0.len(), None)
       .context(error::WaveResample)?;
 
+    let mut output = output.into_inner();
+
+    output.resize(out);
+
     log::info!("resampled {path} in {:.2}s", start.elapsed().as_secs_f32());
-
-    let mut output = Wave::new(0, self.format.sample_rate as f64);
-
-    for channel in output_channels {
-      output.push_channel(&channel);
-    }
 
     Ok(Arc::new(output))
   }
