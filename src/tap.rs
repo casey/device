@@ -109,13 +109,17 @@ impl Tap {
     let input = WaveAdapter(input);
     let mut output = WaveAdapter(output);
 
-    resampler
+    let (_in, out) = resampler
       .process_all_into_buffer(&input, &mut output, input.0.len(), None)
       .context(error::WaveResample)?;
 
+    let mut output = output.into_inner();
+
+    output.resize(out);
+
     log::info!("resampled {path} in {:.2}s", start.elapsed().as_secs_f32());
 
-    Ok(Arc::new(output.into_inner()))
+    Ok(Arc::new(output))
   }
 
   pub(crate) fn new(options: &Options, sample_rate: u32) -> Self {
