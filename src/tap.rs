@@ -8,7 +8,7 @@ use {
     combinator::An,
     prelude::U0,
     realseq::SequencerBackend,
-    sequencer::{Fade, Sequencer},
+    sequencer::{Fade, ReplayMode, Sequencer},
     wave::{Wave, WavePlayer},
   },
   rubato::{Fft, FixedSync},
@@ -123,7 +123,7 @@ impl Tap {
   }
 
   pub(crate) fn new(options: &Options, sample_rate: u32) -> Self {
-    let mut sequencer = Sequencer::new(false, Self::CHANNELS.into());
+    let mut sequencer = Sequencer::new(0, Self::CHANNELS.into(), ReplayMode::None);
     sequencer.set_sample_rate(sample_rate.into());
     let sequencer_backend = sequencer.backend();
     let paused = Arc::new(AtomicBool::new(false));

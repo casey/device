@@ -1,6 +1,6 @@
 use {
   super::*,
-  fundsp::hacker32::{saw_hz, sine_hz},
+  fundsp::prelude32::{saw_hz, sine_hz},
 };
 
 #[derive(Clone, Copy, Default)]

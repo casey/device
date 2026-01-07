@@ -1,6 +1,6 @@
 use {
   super::*,
-  fundsp::hacker32::{brown, constant, lfo, pink, ramp_hz, shape_fn, sine_hz, white},
+  fundsp::prelude32::{brown, constant, lfo, pink, ramp_hz, shape_fn, sine_hz, white},
 };
 
 #[derive(Clone, Copy, ValueEnum)]
