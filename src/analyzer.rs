@@ -81,10 +81,17 @@ impl Analyzer {
           c.norm() * weight
         }),
     );
-    self.rms = state.alpha
-      * (self.frequencies.iter().map(|&f| f * f).sum::<f32>()
-        / self.frequencies.len().max(1) as f32)
-        .sqrt()
-      + (1.0 - state.alpha) * self.rms;
+
+    let rms = (self.frequencies.iter().map(|&f| f * f).sum::<f32>()
+      / self.frequencies.len().max(1) as f32)
+      .sqrt();
+
+    let alpha = if rms > self.rms {
+      state.alpha
+    } else {
+      state.alpha / 5.0
+    };
+
+    self.rms = alpha * rms + (1.0 - alpha) * self.rms;
   }
 }
