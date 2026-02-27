@@ -139,6 +139,9 @@ capture-hello-landscape:
     --verbose \
     capture
 
+ttc:
+  cargo run --release -- --song 'things to come' run
+
 capture-hello: (capture "hello")
 capture-busy: (capture "busy")
 capture-noise: (capture "noise")
