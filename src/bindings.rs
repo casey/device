@@ -180,7 +180,9 @@ impl Bindings {
   pub(crate) fn button(&self, controller: Controller, button: u8, press: Press) -> Option<Command> {
     let entry = self.button.get(&(controller, button, press)).copied();
 
-    if entry.is_none() {
+    if let Some(entry) = &entry {
+      eprintln!("{}", entry.name);
+    } else {
       log::info!("unbound button: {controller:?} {button} {press:?}");
     }
 
@@ -194,7 +196,9 @@ impl Bindings {
   ) -> Option<fn(&mut State, u7) -> f32> {
     let entry = self.encoder.get(&(controller, encoder)).copied();
 
-    if entry.is_none() {
+    if let Some(entry) = &entry {
+      eprintln!("{}", entry.0);
+    } else {
       log::info!("unbound encoder: {controller:?} {encoder}");
     }
 
@@ -217,7 +221,9 @@ impl Bindings {
       _ => None,
     };
 
-    if entry.is_none() {
+    if let Some(entry) = &entry {
+      eprintln!("{}", entry.name);
+    } else {
       log::info!("unbound key: {key:?} {modifiers:?}");
     }
 

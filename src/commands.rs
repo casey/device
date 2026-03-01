@@ -218,8 +218,9 @@ pub(crate) fn execute_command(app: &mut App, event_loop: &ActiveEventLoop) {
     return;
   };
   let command = command.iter().flat_map(|c| c.chars()).collect::<String>();
-  if let Some(command) = app.commands.name(command.as_str()) {
-    app.dispatch(event_loop, command);
+  if let Some(resolved) = app.commands.name(command.as_str()) {
+    eprintln!("{command}");
+    app.dispatch(event_loop, resolved);
   } else {
     eprintln!("unknown command: {command}");
   }
