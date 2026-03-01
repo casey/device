@@ -27,7 +27,7 @@ impl Default for State {
   fn default() -> Self {
     Self {
       alpha: 0.5,
-      bandpass: Vec2f::new(20.0, 15_000.0),
+      bandpass: Vec2f::new(20.0, 400.0),
       position: None,
       callback: None,
       capture_status: false,
